@@ -1,0 +1,265 @@
+{
+  "chapter": "Complete Hindi, Chapter 01",
+  "words": [
+    {
+      "hindi": "चिड़िया",
+      "romanisation": "ciṛiyā",
+      "english": "bird",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["animals", "nature", "pos-noun"],
+      "syllables": "ci · ṛi · yā",
+      "forms": [
+        {"label": "direct plural", "hindi": "चिड़ियाँ", "roman": "ciṛiyā̃"}
+      ],
+      "collocations": [
+        {"hindi": "चिड़िया उड़ती है", "roman": "ciṛiyā uṛtī hai", "english": "the bird flies"},
+        {"hindi": "चिड़िया का घोंसला", "roman": "ciṛiyā kā ghõslā", "english": "bird's nest"},
+        {"hindi": "चिड़िया गाती है", "roman": "ciṛiyā gātī hai", "english": "the bird sings"}
+      ],
+      "usage_notes": "चिड़िया is the everyday word for a small bird. पक्षी is more formal and used in writing or for birds in general. In Delhi, परिंदा is also heard in songs and casual Urdu-flavoured speech.",
+      "related_words": [
+        {"hindi": "पक्षी", "roman": "pakṣī", "english": "bird (formal/literary)"},
+        {"hindi": "परिंदा", "roman": "parindā", "english": "bird (poetic/Urdu-influenced)"},
+        {"hindi": "चिड़ियाघर", "roman": "ciṛiyāghar", "english": "zoo (lit. bird-house)"}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "चटिका", "roman": "caṭikā", "meaning": "small bird, sparrow"},
+        {"stage": "Prakrit", "form": "चडिआ", "roman": "caḍiā", "meaning": "small bird"},
+        {"stage": "Hindi", "form": "चिड़िया", "roman": "ciṛiyā", "meaning": "bird (especially small)"}
+      ]
+    },
+    {
+      "hindi": "चिड़ियाँ",
+      "romanisation": "ciṛiyā̃",
+      "english": "birds",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["animals", "nature", "pos-noun"],
+      "syllables": "ci · ṛi · yā̃",
+      "usage_notes": "This is the plural of चिड़िया. Listed separately here as a vocabulary item, but in practice it is simply the plural form.",
+      "collocations": [
+        {"hindi": "चिड़ियाँ उड़ रही हैं", "roman": "ciṛiyā̃ uṛ rahī haĩ", "english": "the birds are flying"},
+        {"hindi": "चिड़ियाँ चहचहाती हैं", "roman": "ciṛiyā̃ cahcahātī haĩ", "english": "the birds chirp"},
+        {"hindi": "बहुत सारी चिड़ियाँ", "roman": "bahut sārī ciṛiyā̃", "english": "lots of birds"}
+      ],
+      "related_words": [
+        {"hindi": "चिड़िया", "roman": "ciṛiyā", "english": "bird (singular)"},
+        {"hindi": "पक्षी", "roman": "pakṣī", "english": "bird / birds (formal)"}
+      ]
+    },
+    {
+      "hindi": "प्रति",
+      "romanisation": "prati",
+      "english": "copy",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["education", "stationery", "pos-noun"],
+      "syllables": "pra · ti",
+      "forms": [
+        {"label": "direct plural", "hindi": "प्रतियाँ", "roman": "pratiyā̃"}
+      ],
+      "morphemes": [
+        {"part": "प्रति", "roman": "prati", "meaning": "copy, each, against, towards", "origin": "Sanskrit"}
+      ],
+      "collocations": [
+        {"hindi": "एक प्रति", "roman": "ek prati", "english": "one copy"},
+        {"hindi": "किताब की प्रति", "roman": "kitāb kī prati", "english": "a copy of the book"},
+        {"hindi": "प्रति लेना", "roman": "prati lenā", "english": "to get / take a copy"}
+      ],
+      "usage_notes": "In the sense of a printed copy (of a book, document), प्रति is the standard Hindi word. In Delhi offices and shops, कॉपी (kŏpī, from English 'copy') is also very common.",
+      "delhi_note": "Delhiites often say कॉपी instead of प्रति when asking for a copy of something at a shop or office.",
+      "related_words": [
+        {"hindi": "नकल", "roman": "nakal", "english": "copy, duplicate, imitation"},
+        {"hindi": "प्रतिलिपि", "roman": "pratilipi", "english": "copy, transcript (formal/official)"}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "प्रति", "roman": "prati", "meaning": "against, towards, each, in return — also used for copies/replicas"}
+      ]
+    },
+    {
+      "hindi": "प्रतियाँ",
+      "romanisation": "pratiyā̃",
+      "english": "copies (of a book)",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["education", "stationery", "pos-noun"],
+      "syllables": "pra · ti · yā̃",
+      "usage_notes": "Plural of प्रति. Used when referring to multiple copies of a book or document.",
+      "collocations": [
+        {"hindi": "पाँच प्रतियाँ", "roman": "pā̃c pratiyā̃", "english": "five copies"},
+        {"hindi": "प्रतियाँ बाँटना", "roman": "pratiyā̃ bā̃ṭnā", "english": "to distribute copies"},
+        {"hindi": "किताब की प्रतियाँ", "roman": "kitāb kī pratiyā̃", "english": "copies of the book"}
+      ],
+      "related_words": [
+        {"hindi": "प्रति", "roman": "prati", "english": "copy (singular)"},
+        {"hindi": "नकलें", "roman": "nakalẽ", "english": "copies, duplicates (plural of नकल)"}
+      ]
+    },
+    {
+      "hindi": "माताएँ",
+      "romanisation": "mātāẽ",
+      "english": "mothers",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["family", "pos-noun"],
+      "syllables": "mā · tā · ẽ",
+      "usage_notes": "माताएँ is the formal/respectful plural of माता (mother). In everyday Delhi speech, माँ is the usual word for mother, and its plural माँएँ or बहुत सारी माँ is used informally. माताएँ sounds more literary or ceremonial.",
+      "delhi_note": "In daily conversation, Delhiites say माँ (mā̃) rather than माता. माताएँ would sound formal or old-fashioned in casual speech.",
+      "collocations": [
+        {"hindi": "सभी माताएँ", "roman": "sabhī mātāẽ", "english": "all mothers"},
+        {"hindi": "माताएँ और बच्चे", "roman": "mātāẽ aur bacce", "english": "mothers and children"},
+        {"hindi": "माताएँ देखभाल करती हैं", "roman": "mātāẽ dekhbhāl kartī haĩ", "english": "mothers take care"}
+      ],
+      "related_words": [
+        {"hindi": "माता", "roman": "mātā", "english": "mother (formal/respectful singular)"},
+        {"hindi": "माँ", "roman": "mā̃", "english": "mum / mom (everyday word)"},
+        {"hindi": "अम्मा", "roman": "ammā", "english": "mum (warm, informal, common in Delhi)"}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "मातृ", "roman": "mātṛ", "meaning": "mother"},
+        {"stage": "Hindi", "form": "माता", "roman": "mātā", "meaning": "mother (respectful)"},
+        {"stage": "Hindi plural", "form": "माताएँ", "roman": "mātāẽ", "meaning": "mothers"}
+      ]
+    },
+    {
+      "hindi": "आशा",
+      "romanisation": "āśā",
+      "english": "hope",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["emotions", "abstract", "pos-noun"],
+      "syllables": "ā · śā",
+      "collocations": [
+        {"hindi": "आशा रखना", "roman": "āśā rakhnā", "english": "to hold on to hope"},
+        {"hindi": "आशा खोना", "roman": "āśā khonā", "english": "to lose hope"},
+        {"hindi": "आशा है कि", "roman": "āśā hai ki", "english": "I hope that / it is hoped that"},
+        {"hindi": "पूरी आशा", "roman": "pūrī āśā", "english": "full hope, complete confidence"}
+      ],
+      "usage_notes": "आशा is the formal/literary word for hope. उम्मीद (ummīd, from Persian) is more common in everyday Delhi speech for the same meaning.",
+      "delhi_note": "In daily conversation, Delhiites almost always say उम्मीद (ummīd) rather than आशा. आशा sounds bookish unless used in set phrases like आशा है कि.",
+      "related_words": [
+        {"hindi": "उम्मीद", "roman": "ummīd", "english": "hope (everyday, Urdu-origin)"},
+        {"hindi": "निराशा", "roman": "nirāśā", "english": "despair, hopelessness"},
+        {"hindi": "आशावादी", "roman": "āśāvādī", "english": "optimistic"}
+      ],
+      "sound_alikes": [
+        {"part": "āśā", "association": "Asha — a common Indian name meaning hope", "roman": "āśā", "language": "Sanskrit/Hindi", "note": "The name Asha literally means hope — a built-in mnemonic."}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "आशा", "roman": "āśā", "meaning": "hope, wish, expectation"},
+        {"stage": "Hindi", "form": "आशा", "roman": "āśā", "meaning": "hope (retained as formal/literary term)"}
+      ]
+    },
+    {
+      "hindi": "भाषा",
+      "romanisation": "bhāṣā",
+      "english": "language",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": ["language-learning", "communication", "pos-noun"],
+      "syllables": "bhā · ṣā",
+      "morphemes": [
+        {"part": "भाषा", "roman": "bhāṣā", "meaning": "speech, language", "origin": "Sanskrit root भाष् (bhāṣ) — to speak"}
+      ],
+      "collocations": [
+        {"hindi": "हिंदी भाषा", "roman": "hindī bhāṣā", "english": "the Hindi language"},
+        {"hindi": "भाषा बोलना", "roman": "bhāṣā bolnā", "english": "to speak a language"},
+        {"hindi": "मातृभाषा", "roman": "mātṛbhāṣā", "english": "mother tongue"},
+        {"hindi": "भाषा सीखना", "roman": "bhāṣā sīkhnā", "english": "to learn a language"}
+      ],
+      "related_words": [
+        {"hindi": "बोली", "roman": "bolī", "english": "dialect, spoken variety"},
+        {"hindi": "भाषाविज्ञान", "roman": "bhāṣāvijñān", "english": "linguistics"},
+        {"hindi": "बहुभाषी", "roman": "bahubhāṣī", "english": "multilingual"}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit root", "form": "भाष्", "roman": "bhāṣ", "meaning": "to speak, to say"},
+        {"stage": "Sanskrit noun", "form": "भाषा", "roman": "bhāṣā", "meaning": "speech, language"},
+        {"stage": "Hindi", "form": "भाषा", "roman": "bhāṣā", "meaning": "language (standard term, unchanged)"}
+      ]
+    },
+    {
+      "hindi": "बड़ा",
+      "romanisation": "baṛā",
+      "english": "big",
+      "pos": "adjective",
+      "anki_tags": ["size", "description", "pos-adjective"],
+      "syllables": "ba · ṛā",
+      "forms": [
+        {"label": "masculine oblique singular / masculine plural", "hindi": "बड़े", "roman": "baṛe"},
+        {"label": "feminine", "hindi": "बड़ी", "roman": "baṛī"}
+      ],
+      "collocations": [
+        {"hindi": "बड़ा घर", "roman": "baṛā ghar", "english": "a big house"},
+        {"hindi": "बड़ा भाई", "roman": "baṛā bhāī", "english": "elder brother"},
+        {"hindi": "बड़ी बात", "roman": "baṛī bāt", "english": "a big deal / important matter"},
+        {"hindi": "बड़ा होना", "roman": "baṛā honā", "english": "to grow up / to become big"}
+      ],
+      "usage_notes": "बड़ा means both 'big/large' and 'elder/older' (for people). Context makes the meaning clear. It is an inflecting adjective — it agrees in gender and number with the noun it modifies.",
+      "related_words": [
+        {"hindi": "छोटा", "roman": "choṭā", "english": "small, younger"},
+        {"hindi": "बड़ाई", "roman": "baṛāī", "english": "greatness, praise"},
+        {"hindi": "बढ़ना", "roman": "baṛhnā", "english": "to grow, to increase"}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "वृद्ध", "roman": "vṛddha", "meaning": "grown, old, great"},
+        {"stage": "Prakrit", "form": "वड्ड", "roman": "vaḍḍa", "meaning": "big, great"},
+        {"stage": "Hindi", "form": "बड़ा", "roman": "baṛā", "meaning": "big, elder"}
+      ]
+    },
+    {
+      "hindi": "छोटा",
+      "romanisation": "choṭā",
+      "english": "small",
+      "pos": "adjective",
+      "anki_tags": ["size", "description", "pos-adjective"],
+      "syllables": "cho · ṭā",
+      "forms": [
+        {"label": "masculine oblique singular / masculine plural", "hindi": "छोटे", "roman": "choṭe"},
+        {"label": "feminine", "hindi": "छोटी", "roman": "choṭī"}
+      ],
+      "collocations": [
+        {"hindi": "छोटा बच्चा", "roman": "choṭā baccā", "english": "a small child"},
+        {"hindi": "छोटा भाई", "roman": "choṭā bhāī", "english": "younger brother"},
+        {"hindi": "छोटी बात", "roman": "choṭī bāt", "english": "a small / trivial matter"},
+        {"hindi": "छोटा सा", "roman": "choṭā sā", "english": "a tiny little (softener, very common in speech)"}
+      ],
+      "usage_notes": "Like बड़ा, छोटा means both 'small/little' and 'younger/junior' when referring to people. The phrase छोटा सा (choṭā sā) is a very common softener in everyday Hindi, meaning 'a tiny little'.",
+      "related_words": [
+        {"hindi": "बड़ा", "roman": "baṛā", "english": "big, elder"},
+        {"hindi": "छोटापन", "roman": "choṭāpan", "english": "smallness, pettiness"},
+        {"hindi": "थोड़ा", "roman": "thoṛā", "english": "a little (quantity)"}
+      ]
+    },
+    {
+      "hindi": "दूसरा",
+      "romanisation": "dūsrā",
+      "english": "other, another, second",
+      "pos": "adjective",
+      "anki_tags": ["numbers-ordinals", "description", "pos-adjective"],
+      "syllables": "dū · srā",
+      "forms": [
+        {"label": "masculine oblique singular / masculine plural", "hindi": "दूसरे", "roman": "dūsre"},
+        {"label": "feminine", "hindi": "दूसरी", "roman": "dūsrī"}
+      ],
+      "collocations": [
+        {"hindi": "दूसरा आदमी", "roman": "dūsrā ādmī", "english": "another / the other man"},
+        {"hindi": "दूसरी बार", "roman": "dūsrī bār", "english": "a second time, again"},
+        {"hindi": "एक दूसरे को", "roman": "ek dūsre ko", "english": "each other (very common phrase)"},
+        {"hindi": "दूसरा रास्ता", "roman": "dūsrā rāstā", "english": "another way / alternative route"}
+      ],
+      "usage_notes": "दूसरा covers 'other', 'another', and 'second' (ordinal). The phrase एक दूसरे को / एक दूसरे से (ek dūsre ko / se) meaning 'each other' is extremely common in daily speech.",
+      "related_words": [
+        {"hindi": "अन्य", "roman": "anya", "english": "other (formal/written)"},
+        {"hindi": "और", "roman": "aur", "english": "and / other / more (in some contexts)"},
+        {"hindi": "तीसरा", "roman": "tīsrā", "english": "third"}
+      ],
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "द्वितीय", "roman": "dvitīya", "meaning": "second"},
+        {"stage": "Prakrit", "form": "दुविअ / दुसर", "roman": "duvia / dusar", "meaning": "second, other"},
+        {"stage": "Hindi", "form": "दूसरा", "roman": "dūsrā", "meaning": "other, another, second"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "chapter": "Complete Hindi, Chapter 01, Dialog 01",
+  "sentences": [
+    {
+      "hindi": "क्या आप कमला जी हैं ?",
+      "romanisation": "kyā āp Kamalā jī haĩ?",
+      "english": "Are you Kamala?",
+      "literal": "what you Kamala [honorific] are?",
+      "register": "formal",
+      "words": [
+        {
+          "hindi": "क्या",
+          "roman": "kyā",
+          "meaning": "question marker — turns the sentence into a yes/no question"
+        },
+        {
+          "hindi": "आप",
+          "roman": "āp",
+          "meaning": "you",
+          "note": "formal version of 'you' — use with strangers, elders, or anyone you want to show respect to"
+        },
+        {
+          "hindi": "कमला",
+          "roman": "Kamalā",
+          "meaning": "Kamala — the person's name",
+          "gender": "feminine",
+          "number": "singular"
+        },
+        {
+          "hindi": "जी",
+          "roman": "jī",
+          "meaning": "a respectful honorific placed after a name",
+          "note": "added after someone's name to show respect, like saying 'Mr.' or 'Ms.' but more versatile — used in both formal and polite everyday speech"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are",
+          "note": "the plural/formal form of 'is/are' — used here because आप (formal 'you') always takes this form"
+        }
+      ],
+      "anki_tags": ["greetings", "questions", "formal", "chapter-01", "dialog-01"]
+    }
+  ]
+}

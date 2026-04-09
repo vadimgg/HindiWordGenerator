@@ -1,0 +1,36 @@
+{
+  "chapter": "Complete Hindi, Chapter 01",
+  "words": [
+    {
+      "hindi": "भारतीय",
+      "romanisation": "bhāratīy",
+      "english": "Indian",
+      "pos": "adjective",
+      "anki_tags": ["identity-nationality", "pos-adjective"],
+      "syllables": "bhā · ra · tīy",
+      "collocations": [
+        {"hindi": "भारतीय खाना", "roman": "bhāratīy khānā", "english": "Indian food"},
+        {"hindi": "भारतीय संस्कृति", "roman": "bhāratīy saṃskṛti", "english": "Indian culture"},
+        {"hindi": "भारतीय नागरिक", "roman": "bhāratīy nāgarik", "english": "Indian citizen"},
+        {"hindi": "भारतीय रुपया", "roman": "bhāratīy rupayā", "english": "Indian rupee"}
+      ],
+      "related_words": [
+        {"hindi": "भारत", "roman": "bhārat", "english": "India"},
+        {"hindi": "भारतीय", "roman": "bhāratīy", "english": "Indian (person/noun use)"},
+        {"hindi": "हिंदुस्तानी", "roman": "hindustānī", "english": "Indian / Hindustani (informal, colloquial)"}
+      ],
+      "morphemes": [
+        {"part": "भारत", "roman": "bhārat", "meaning": "India", "origin": "Sanskrit"},
+        {"part": "-ईय", "roman": "-īy", "meaning": "suffix forming adjectives of belonging or origin", "origin": "Sanskrit"}
+      ],
+      "usage_notes": "Used for both the adjective ('Indian food') and noun ('an Indian person') without change of form. Does not inflect for gender or number, making it simpler than many Hindi adjectives.",
+      "delhi_note": "In casual Delhi speech, हिंदुस्तानी (hindustānī) or just देसी (desī) is often used instead when referring to people or things as locally Indian, especially in informal contexts.",
+      "etymology_journey": [
+        {"stage": "Sanskrit", "form": "भारत", "roman": "bhārata", "meaning": "name of the legendary king Bharata; later the subcontinent named after him"},
+        {"stage": "Sanskrit derived", "form": "भारतीय", "roman": "bhāratīya", "meaning": "belonging to Bharata / India"},
+        {"stage": "Modern Hindi", "form": "भारतीय", "roman": "bhāratīy", "meaning": "Indian"}
+      ],
+      "origin_note": "Derives from the Sanskrit name भरत (Bharata), the legendary ancestor-king of the Indian people. The suffix -īya is a classical Sanskrit adjectival marker meaning 'of' or 'belonging to'."
+    }
+  ]
+}

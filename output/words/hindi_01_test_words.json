@@ -1,0 +1,198 @@
+{
+  "chapter": "Complete Hindi, Chapter 01",
+  "words": [
+    {
+      "hindi": "घर",
+      "romanisation": "ghar",
+      "english": "home / house",
+      "pos": "noun",
+      "gender": "masculine",
+      "transitivity": null,
+      "anki_tags": ["home", "noun", "chapter-01"],
+      "syllables": "घर",
+      "forms": [
+        {
+          "label": "oblique plural",
+          "hindi": "घरों",
+          "roman": "gharõ"
+        }
+      ],
+      "morphemes": null,
+      "collocations": [
+        {
+          "hindi": "घर जाना",
+          "roman": "ghar jānā",
+          "english": "to go home"
+        },
+        {
+          "hindi": "घर पर",
+          "roman": "ghar par",
+          "english": "at home"
+        },
+        {
+          "hindi": "घर का काम",
+          "roman": "ghar kā kām",
+          "english": "housework / chores"
+        },
+        {
+          "hindi": "घर बनाना",
+          "roman": "ghar banānā",
+          "english": "to build a house"
+        }
+      ],
+      "usage_notes": "घर refers to one's home with a sense of belonging, while मकान (makān) is more neutral and refers to a physical building or dwelling. In daily Delhi speech, घर is strongly preferred when talking about one's own home.",
+      "related_words": [
+        {
+          "hindi": "मकान",
+          "roman": "makān",
+          "english": "house (building, more neutral)"
+        },
+        {
+          "hindi": "घरवाला",
+          "roman": "gharvālā",
+          "english": "husband / head of household"
+        },
+        {
+          "hindi": "घरेलू",
+          "roman": "gharelū",
+          "english": "domestic / household"
+        },
+        {
+          "hindi": "कमरा",
+          "roman": "kamrā",
+          "english": "room"
+        }
+      ],
+      "sound_alikes": [
+        {
+          "part": "घर (full word)",
+          "association": "gar",
+          "roman": "gar",
+          "language": "English",
+          "note": "\"Gar\" sounds like the start of \"garner\" or \"garage\" — think of a garage as part of your house, linking the sound directly to home."
+        },
+        {
+          "part": "घ (gh-)",
+          "association": "ghost",
+          "roman": "ghost",
+          "language": "English",
+          "note": "The breathy gh- sound is like the silent 'gh' in 'ghost' — imagine a ghost haunting your house."
+        }
+      ],
+      "etymology_journey": [
+        {
+          "stage": "Sanskrit",
+          "form": "गृह",
+          "roman": "gṛha",
+          "meaning": "house, home, dwelling"
+        },
+        {
+          "stage": "Prakrit",
+          "form": "घर",
+          "roman": "ghara",
+          "meaning": "house, home"
+        },
+        {
+          "stage": "Hindi",
+          "form": "घर",
+          "roman": "ghar",
+          "meaning": "home / house"
+        }
+      ],
+      "origin_note": "Descended from Sanskrit गृह (gṛha), meaning house or home, through Prakrit."
+    },
+    {
+      "hindi": "लड़का",
+      "romanisation": "laṛkā",
+      "english": "boy",
+      "pos": "noun",
+      "gender": "masculine",
+      "transitivity": null,
+      "anki_tags": ["people", "family", "noun", "chapter-01"],
+      "syllables": "लड़ · का",
+      "forms": [
+        {
+          "label": "oblique singular / direct plural",
+          "hindi": "लड़के",
+          "roman": "laṛke"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "लड़कों",
+          "roman": "laṛkõ"
+        }
+      ],
+      "morphemes": null,
+      "collocations": [
+        {
+          "hindi": "छोटा लड़का",
+          "roman": "choṭā laṛkā",
+          "english": "small boy / young boy"
+        },
+        {
+          "hindi": "लड़का पढ़ता है",
+          "roman": "laṛkā paṛhtā hai",
+          "english": "the boy studies"
+        },
+        {
+          "hindi": "अच्छा लड़का",
+          "roman": "acchā laṛkā",
+          "english": "good boy"
+        },
+        {
+          "hindi": "लड़का-लड़की",
+          "roman": "laṛkā-laṛkī",
+          "english": "boy and girl / boys and girls"
+        }
+      ],
+      "usage_notes": "लड़का is the standard everyday word for boy or young man. In informal contexts it can also refer to a young unmarried man. Its feminine counterpart is लड़की (laṛkī). The retroflex ड़ (ṛ) is a distinctive Hindi sound — it is not the same as ड (ḍ), so take care to pronounce it as a flapped retroflex.",
+      "related_words": [
+        {
+          "hindi": "लड़की",
+          "roman": "laṛkī",
+          "english": "girl"
+        },
+        {
+          "hindi": "बच्चा",
+          "roman": "baccā",
+          "english": "child (masculine)"
+        },
+        {
+          "hindi": "जवान",
+          "roman": "javān",
+          "english": "young man / youth"
+        },
+        {
+          "hindi": "बेटा",
+          "roman": "beṭā",
+          "english": "son"
+        }
+      ],
+      "sound_alikes": [
+        {
+          "part": "लड़ (laṛ-)",
+          "association": "lad",
+          "roman": "lad",
+          "language": "English",
+          "note": "\"Lad\" means boy in British English — the first syllable of लड़का sounds almost identical, making this a perfect memory hook."
+        },
+        {
+          "part": "-का (-kā)",
+          "association": "car",
+          "roman": "car",
+          "language": "English",
+          "note": "The ending -kā sounds like \"car\" — imagine a boy driving a toy car to lock in the full word लड़का."
+        }
+      ],
+      "etymology_journey": [
+        {
+          "stage": "Hindi",
+          "form": "लड़का",
+          "roman": "laṛkā",
+          "meaning": "boy"
+        }
+      ],
+      "origin_note": "Of Indo-Aryan origin; the precise Sanskrit or Prakrit ancestor is not reliably attested."
+    }
+  ]
+}
