@@ -1,0 +1,575 @@
+{
+  "chapter": "Complete Hindi Chapter 01",
+  "words": [
+    {
+      "hindi": "अच्छा",
+      "romanisation": "acchā",
+      "english": "good, nice; really?, Oh I see!",
+      "pos": "adjective",
+      "gender": "both",
+      "anki_tags": [
+        "quality",
+        "adjective"
+      ],
+      "syllables": "ac · chā",
+      "forms": [
+        {
+          "label": "feminine singular",
+          "hindi": "अच्छी",
+          "roman": "acchī"
+        },
+        {
+          "label": "masculine plural / oblique masculine singular",
+          "hindi": "अच्छे",
+          "roman": "acche"
+        }
+      ],
+      "usage_notes": "अच्छा (acchā) is also a very common conversation marker meaning 'OK', 'really?', or 'I see', depending on tone.",
+      "related_words": [
+        {
+          "hindi": "ठीक",
+          "roman": "ṭhīk",
+          "english": "OK, all right"
+        },
+        {
+          "hindi": "बढ़िया",
+          "roman": "baṛhiyā",
+          "english": "great, excellent"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "यह अच्छा कमरा है।",
+        "roman": "yah acchā kamrā hai.",
+        "english": "This is a good room.",
+        "breakdown": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "meaning": "this"
+          },
+          {
+            "hindi": "अच्छा",
+            "roman": "acchā",
+            "meaning": "good"
+          },
+          {
+            "hindi": "कमरा",
+            "roman": "kamrā",
+            "meaning": "room"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/01_acchā.mp3"
+    },
+    {
+      "hindi": "अलमारी",
+      "romanisation": "almārī",
+      "english": "cupboard",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": [
+        "home",
+        "noun"
+      ],
+      "syllables": "al · mā · rī",
+      "forms": [
+        {
+          "label": "direct plural",
+          "hindi": "अलमारियाँ",
+          "roman": "almāriyāṃ"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "अलमारियों",
+          "roman": "almāriyoṃ"
+        }
+      ],
+      "related_words": [
+        {
+          "hindi": "कमरा",
+          "roman": "kamrā",
+          "english": "room"
+        },
+        {
+          "hindi": "मेज़",
+          "roman": "mez",
+          "english": "table"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "अलमारी कमरे में है।",
+        "roman": "almārī kamre meṃ hai.",
+        "english": "The cupboard is in the room.",
+        "breakdown": [
+          {
+            "hindi": "अलमारी",
+            "roman": "almārī",
+            "meaning": "cupboard"
+          },
+          {
+            "hindi": "कमरे",
+            "roman": "kamre",
+            "meaning": "room, oblique form"
+          },
+          {
+            "hindi": "में",
+            "roman": "meṃ",
+            "meaning": "in"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/02_almārī.mp3"
+    },
+    {
+      "hindi": "आदमी",
+      "romanisation": "ādmī",
+      "english": "man, person",
+      "pos": "noun",
+      "gender": "masculine",
+      "anki_tags": [
+        "people",
+        "noun"
+      ],
+      "syllables": "ād · mī",
+      "usage_notes": "आदमी (ādmī) can mean either 'man' or, in many contexts, 'person'.",
+      "related_words": [
+        {
+          "hindi": "मानव",
+          "roman": "mānav",
+          "english": "human being"
+        },
+        {
+          "hindi": "लोग",
+          "roman": "log",
+          "english": "people"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "वह आदमी अच्छा है।",
+        "roman": "vah ādmī acchā hai.",
+        "english": "That man is good.",
+        "breakdown": [
+          {
+            "hindi": "वह",
+            "roman": "vah",
+            "meaning": "that, he"
+          },
+          {
+            "hindi": "आदमी",
+            "roman": "ādmī",
+            "meaning": "man"
+          },
+          {
+            "hindi": "अच्छा",
+            "roman": "acchā",
+            "meaning": "good"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/03_ādmī.mp3"
+    },
+    {
+      "hindi": "आप",
+      "romanisation": "āp",
+      "english": "you (formal)",
+      "pos": "pronoun",
+      "anki_tags": [
+        "pronouns",
+        "pronoun"
+      ],
+      "syllables": "āp",
+      "usage_notes": "Use आप (āp) for respectful, polite, or plural 'you'. It is the safest default with strangers and elders.",
+      "related_words": [
+        {
+          "hindi": "तुम",
+          "roman": "tum",
+          "english": "you, familiar"
+        },
+        {
+          "hindi": "तू",
+          "roman": "tū",
+          "english": "you, intimate"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "आप कैसे हैं?",
+        "roman": "āp kaise haiṃ?",
+        "english": "How are you?",
+        "breakdown": [
+          {
+            "hindi": "आप",
+            "roman": "āp",
+            "meaning": "you, respectful"
+          },
+          {
+            "hindi": "कैसे",
+            "roman": "kaise",
+            "meaning": "how"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haiṃ",
+            "meaning": "are"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/04_āp.mp3"
+    },
+    {
+      "hindi": "और",
+      "romanisation": "aur",
+      "english": "and",
+      "pos": "particle",
+      "anki_tags": [
+        "connectors",
+        "particle"
+      ],
+      "syllables": "aur",
+      "related_words": [
+        {
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "english": "but"
+        },
+        {
+          "hindi": "भी",
+          "roman": "bhī",
+          "english": "also, too"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "लड़का और लड़की यहाँ हैं।",
+        "roman": "laṛkā aur laṛkī yahāṃ haiṃ.",
+        "english": "The boy and the girl are here.",
+        "breakdown": [
+          {
+            "hindi": "लड़का",
+            "roman": "laṛkā",
+            "meaning": "boy"
+          },
+          {
+            "hindi": "और",
+            "roman": "aur",
+            "meaning": "and"
+          },
+          {
+            "hindi": "लड़की",
+            "roman": "laṛkī",
+            "meaning": "girl"
+          },
+          {
+            "hindi": "यहाँ",
+            "roman": "yahāṃ",
+            "meaning": "here"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haiṃ",
+            "meaning": "are"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/05_aur.mp3"
+    },
+    {
+      "hindi": "एक",
+      "romanisation": "ek",
+      "english": "one, a",
+      "pos": "other",
+      "anki_tags": [
+        "numbers",
+        "other"
+      ],
+      "syllables": "ek",
+      "usage_notes": "एक (ek) means 'one', but it also works like 'a/an' before a noun.",
+      "related_words": [
+        {
+          "hindi": "दो",
+          "roman": "do",
+          "english": "two"
+        },
+        {
+          "hindi": "तीन",
+          "roman": "tīn",
+          "english": "three"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "यह एक कमरा है।",
+        "roman": "yah ek kamrā hai.",
+        "english": "This is a room.",
+        "breakdown": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "meaning": "this"
+          },
+          {
+            "hindi": "एक",
+            "roman": "ek",
+            "meaning": "one, a"
+          },
+          {
+            "hindi": "कमरा",
+            "roman": "kamrā",
+            "meaning": "room"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/06_ek.mp3"
+    },
+    {
+      "hindi": "कमरा",
+      "romanisation": "kamrā",
+      "english": "room",
+      "pos": "noun",
+      "gender": "masculine",
+      "anki_tags": [
+        "home",
+        "noun"
+      ],
+      "syllables": "kam · rā",
+      "forms": [
+        {
+          "label": "direct plural / oblique singular",
+          "hindi": "कमरे",
+          "roman": "kamre"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "कमरों",
+          "roman": "kamroṃ"
+        }
+      ],
+      "related_words": [
+        {
+          "hindi": "मकान",
+          "roman": "makān",
+          "english": "house"
+        },
+        {
+          "hindi": "अलमारी",
+          "roman": "almārī",
+          "english": "cupboard"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "कमरा साफ़ है।",
+        "roman": "kamrā sāf hai.",
+        "english": "The room is clean.",
+        "breakdown": [
+          {
+            "hindi": "कमरा",
+            "roman": "kamrā",
+            "meaning": "room"
+          },
+          {
+            "hindi": "साफ़",
+            "roman": "sāf",
+            "meaning": "clean"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/07_kamrā.mp3"
+    },
+    {
+      "hindi": "काफ़ी",
+      "romanisation": "kāfī",
+      "english": "quite",
+      "pos": "adverb",
+      "anki_tags": [
+        "degree",
+        "adverb"
+      ],
+      "syllables": "kā · fī",
+      "usage_notes": "काफ़ी (kāfī) usually means 'quite' or 'fairly' before an adjective, and can also mean 'enough' in other contexts.",
+      "related_words": [
+        {
+          "hindi": "बहुत",
+          "roman": "bahut",
+          "english": "very"
+        },
+        {
+          "hindi": "ज़रूर",
+          "roman": "zarūr",
+          "english": "certainly"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "यह कमरा काफ़ी बड़ा है।",
+        "roman": "yah kamrā kāfī baṛā hai.",
+        "english": "This room is quite big.",
+        "breakdown": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "meaning": "this"
+          },
+          {
+            "hindi": "कमरा",
+            "roman": "kamrā",
+            "meaning": "room"
+          },
+          {
+            "hindi": "काफ़ी",
+            "roman": "kāfī",
+            "meaning": "quite"
+          },
+          {
+            "hindi": "बड़ा",
+            "roman": "baṛā",
+            "meaning": "big"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/08_kāfī.mp3"
+    },
+    {
+      "hindi": "कुरसी",
+      "romanisation": "kursī",
+      "english": "chair",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": [
+        "home",
+        "noun"
+      ],
+      "syllables": "kur · sī",
+      "forms": [
+        {
+          "label": "direct plural",
+          "hindi": "कुरसियाँ",
+          "roman": "kursiyāṃ"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "कुरसियों",
+          "roman": "kursiyoṃ"
+        }
+      ],
+      "delhi_note": "कुरसी (kursī) is understood, but the spelling कुर्सी (kursī) is more common in modern Hindi materials.",
+      "related_words": [
+        {
+          "hindi": "मेज़",
+          "roman": "mez",
+          "english": "table"
+        },
+        {
+          "hindi": "कमरा",
+          "roman": "kamrā",
+          "english": "room"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "कुरसी कमरे में है।",
+        "roman": "kursī kamre meṃ hai.",
+        "english": "The chair is in the room.",
+        "breakdown": [
+          {
+            "hindi": "कुरसी",
+            "roman": "kursī",
+            "meaning": "chair"
+          },
+          {
+            "hindi": "कमरे",
+            "roman": "kamre",
+            "meaning": "room, oblique form"
+          },
+          {
+            "hindi": "में",
+            "roman": "meṃ",
+            "meaning": "in"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/09_kursī.mp3"
+    },
+    {
+      "hindi": "क्या",
+      "romanisation": "kyā",
+      "english": "what; (question marker)",
+      "pos": "particle",
+      "anki_tags": [
+        "questions",
+        "particle"
+      ],
+      "syllables": "kyā",
+      "usage_notes": "At the start of a yes/no question, क्या (kyā) marks the sentence as a question. Elsewhere it can mean 'what'.",
+      "related_words": [
+        {
+          "hindi": "कौन",
+          "roman": "kaun",
+          "english": "who"
+        },
+        {
+          "hindi": "कहाँ",
+          "roman": "kahāṃ",
+          "english": "where"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "क्या यह कमरा है?",
+        "roman": "kyā yah kamrā hai?",
+        "english": "Is this a room?",
+        "breakdown": [
+          {
+            "hindi": "क्या",
+            "roman": "kyā",
+            "meaning": "question marker"
+          },
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "meaning": "this"
+          },
+          {
+            "hindi": "कमरा",
+            "roman": "kamrā",
+            "meaning": "room"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_01/10_kyā.mp3"
+    }
+  ]
+}
