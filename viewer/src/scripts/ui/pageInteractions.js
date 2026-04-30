@@ -111,9 +111,8 @@ function toggleSelCircle(circle) {
   // Determine if this is a sentence card or word card
   const article = circle.closest('article');
   if (!article) return;
-  const isSentence = article.closest('[id^="page-sentences"]') !== null ||
-                     circle.closest('[id="page-sentences"]') !== null ||
-                     circle.closest('.sc-card-wrapper') !== null;
+  const isSentence = article.hasAttribute('data-sentence-card') ||
+                     article.closest('[id="page-sentences"]') !== null;
 
   const nowSelected = !circle.classList.contains('is-selected');
   circle.classList.toggle('is-selected', nowSelected);

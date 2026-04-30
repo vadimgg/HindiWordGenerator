@@ -30,9 +30,7 @@ let globalIndex = 0;
     {chapter.sentences.map((sentence) => {
       const idx = globalIndex++;
       return (
-        <div data-sentence-card={idx}>
-          <SentenceCard index={idx} {...sentence} />
-        </div>
+        <SentenceCard index={idx} {...sentence} />
       );
     })}
   </>

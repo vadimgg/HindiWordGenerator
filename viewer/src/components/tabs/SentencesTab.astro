@@ -128,9 +128,7 @@ let globalIndex = 0;
                 {chapter.sentences.map((sentence) => {
                   const idx = globalIndex++;
                   return (
-                    <div class="sc-card-wrapper" data-sentence-card={idx}>
-                      <SentenceCard index={idx} {...sentence} audio={sentence.audio} audioBatch={sentence.audioBatch} selCircle={true} />
-                    </div>
+                    <SentenceCard index={idx} {...sentence} audio={sentence.audio} audioBatch={sentence.audioBatch} selCircle={true} />
                   );
                 })}
               </div>
