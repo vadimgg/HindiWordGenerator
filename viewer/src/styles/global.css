@@ -910,6 +910,168 @@ body {
   white-space: nowrap;
 }
 
+.anki-help-panel {
+  margin: -1rem 0 2rem;
+  background: linear-gradient(145deg, rgba(19,31,53,0.92), rgba(15,23,42,0.88));
+  border: 1px solid rgba(51,65,85,0.45);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.anki-help-summary {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.anki-help-summary::-webkit-details-marker { display: none; }
+
+.anki-help-summary:hover { background: rgba(30,41,59,0.28); }
+
+.anki-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.24);
+  color: #fbbf24;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.anki-help-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.anki-help-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  min-width: 0;
+}
+
+.anki-help-chevron {
+  color: #475569;
+  font-size: 12px;
+  transition: transform 0.16s ease, color 0.16s ease;
+}
+
+.anki-help-panel[open] .anki-help-chevron {
+  color: #fbbf24;
+  transform: rotate(180deg);
+}
+
+.anki-help-body {
+  border-top: 1px solid rgba(51,65,85,0.35);
+  padding: 1rem;
+}
+
+.anki-help-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.anki-help-card {
+  background: rgba(8,13,24,0.42);
+  border: 1px solid rgba(51,65,85,0.35);
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.anki-help-step {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #5eead4;
+  margin-bottom: 0.5rem;
+}
+
+.anki-help-card h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #e2e8f0;
+  margin: 0 0 0.35rem;
+}
+
+.anki-help-card p {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #94a3b8;
+  margin: 0 0 0.65rem;
+}
+
+.anki-help-card code {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #fbbf24;
+  background: rgba(15,23,42,0.75);
+  border: 1px solid rgba(51,65,85,0.38);
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  overflow-x: auto;
+}
+
+.anki-help-config {
+  margin-top: 0.8rem;
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(51,65,85,0.35);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.anki-help-config-label {
+  display: block;
+  padding: 0.6rem 0.75rem 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #64748b;
+}
+
+.anki-help-config pre {
+  margin: 0;
+  padding: 0.65rem 0.75rem 0.8rem;
+  overflow-x: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+@media (max-width: 720px) {
+  .anki-help-summary {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .anki-help-subtitle {
+    grid-column: 2 / 3;
+  }
+
+  .anki-help-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Deck config */
 .deck-config-section { margin-bottom: 2rem; }
 

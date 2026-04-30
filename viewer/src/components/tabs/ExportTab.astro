@@ -1,5 +1,14 @@
 ---
 // Responsible for: Deliver/Export page — AnkiConnect status, deck config, selected items, send button
+const ankiConnectConfig = `{
+  "apiKey": null,
+  "webBindAddress": "127.0.0.1",
+  "webBindPort": 8765,
+  "webCorsOriginList": [
+    "http://127.0.0.1:4321",
+    "http://localhost:4321"
+  ]
+}`;
 ---
 
 <div id="page-deliver" class="page">
@@ -20,6 +29,45 @@
     <span class="anki-status-spacer"></span>
     <span class="anki-status-deck">localhost:8765</span>
   </div>
+
+  <details class="anki-help-panel">
+    <summary class="anki-help-summary">
+      <span class="anki-help-icon">?</span>
+      <span class="anki-help-title">Anki setup</span>
+      <span class="anki-help-subtitle">Extension, permissions, and import config</span>
+      <span class="anki-help-chevron">▾</span>
+    </summary>
+
+    <div class="anki-help-body">
+      <div class="anki-help-grid">
+        <section class="anki-help-card">
+          <span class="anki-help-step">01</span>
+          <h2>AnkiConnect</h2>
+          <p>Install the AnkiConnect add-on in Anki, then restart Anki so the local bridge starts.</p>
+          <code>2055492159</code>
+        </section>
+
+        <section class="anki-help-card">
+          <span class="anki-help-step">02</span>
+          <h2>Allow Localhost</h2>
+          <p>In the add-on config, allow this viewer origin so the browser can talk to Anki.</p>
+          <code>http://127.0.0.1:4321</code>
+        </section>
+
+        <section class="anki-help-card">
+          <span class="anki-help-step">03</span>
+          <h2>Open Anki First</h2>
+          <p>Keep Anki open before sending. The status above should change from offline to connected.</p>
+          <code>localhost:8765</code>
+        </section>
+      </div>
+
+      <div class="anki-help-config">
+        <span class="anki-help-config-label">Typical AnkiConnect config</span>
+        <pre>{ankiConnectConfig}</pre>
+      </div>
+    </div>
+  </details>
 
   <!-- Deck configuration -->
   <div class="deck-config-section">
