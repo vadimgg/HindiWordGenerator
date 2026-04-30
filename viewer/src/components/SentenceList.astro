@@ -1,0 +1,39 @@
+---
+/**
+ * Sentence list with chapter group headers.
+ *
+ * Responsible for: rendering chapter group headers and delegating each sentence
+ * to SentenceCard.
+ *
+ * Dependencies: SentenceCard.astro, types.ts (SentenceChapter).
+ */
+// Responsible for: chapter-grouped sentence list with group headers
+import SentenceCard from './SentenceCard.astro';
+import type { SentenceChapter } from '../utils/types';
+
+interface Props { sentenceChapters: SentenceChapter[]; }
+const { sentenceChapters } = Astro.props;
+
+// Build a flat index across all chapters for sentence IDs
+let globalIndex = 0;
+---
+
+{sentenceChapters.map((chapter) => (
+  <>
+    <div class="flex items-center gap-2 px-1 pt-6 pb-2">
+      <span class="font-title text-[10px] font-semibold uppercase tracking-widest text-zinc-500 shrink-0">
+        {chapter.chapter}
+      </span>
+      <div class="flex-1 h-px bg-slate-800/60"></div>
+      <span class="text-[10px] text-zinc-700 shrink-0">{chapter.sentences.length}</span>
+    </div>
+    {chapter.sentences.map((sentence) => {
+      const idx = globalIndex++;
+      return (
+        <div data-sentence-card={idx}>
+          <SentenceCard index={idx} {...sentence} />
+        </div>
+      );
+    })}
+  </>
+))}

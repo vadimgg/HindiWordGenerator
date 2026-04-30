@@ -1,0 +1,183 @@
+---
+// Responsible for: Deliver/Export page — AnkiConnect status, deck config, selected items, send button
+---
+
+<div id="page-deliver" class="page">
+<div class="deliver-page">
+
+  <!-- Page header -->
+  <div class="deliver-header">
+    <h1 class="deliver-title">Deliver</h1>
+    <p class="deliver-subtitle">Review your selection and send to Anki</p>
+  </div>
+
+  <!-- AnkiConnect status bar -->
+  <div class="anki-status-bar" id="deliver-status-bar">
+    <span class="anki-status-dot anki-status-dot-offline" id="deliver-status-dot"></span>
+    <span class="anki-status-label" id="deliver-status-label">
+      <strong>AnkiConnect</strong> &nbsp;Checking…
+    </span>
+    <span class="anki-status-spacer"></span>
+    <span class="anki-status-deck">localhost:8765</span>
+  </div>
+
+  <!-- Deck configuration -->
+  <div class="deck-config-section">
+    <span class="deck-config-section-title">Deck Configuration</span>
+    <div class="deck-config-grid">
+
+      <!-- Words deck -->
+      <div class="deck-config-block">
+        <span class="deck-config-label">Words Deck</span>
+        <div class="deck-config-inputs">
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Main deck</span>
+            <input
+              class="deck-input"
+              id="export-deck-main"
+              type="text"
+              value="Hindi"
+              placeholder="Hindi"
+            />
+          </div>
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Subdeck</span>
+            <input
+              class="deck-input"
+              id="export-deck-sub"
+              type="text"
+              value="Vocabulary"
+              placeholder="Vocabulary"
+            />
+          </div>
+        </div>
+        <div class="deck-config-preview" id="export-deck-preview">Hindi::Vocabulary</div>
+      </div>
+
+      <!-- Sentences deck -->
+      <div class="deck-config-block">
+        <span class="deck-config-label">Sentences Deck</span>
+        <div class="deck-config-inputs">
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Main deck</span>
+            <input
+              class="deck-input"
+              id="export-sent-deck-main"
+              type="text"
+              value="Hindi"
+              placeholder="Hindi"
+            />
+          </div>
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Subdeck</span>
+            <input
+              class="deck-input"
+              id="export-sent-deck-sub"
+              type="text"
+              value="Sentences01"
+              placeholder="Sentences01"
+            />
+          </div>
+        </div>
+        <div class="deck-config-preview" id="export-sent-deck-preview">Hindi::Sentences01</div>
+      </div>
+
+    </div>
+
+    <!-- Options row: replace toggle + txt download -->
+    <div class="flex items-center gap-6 mt-3">
+      <label class="flex items-start gap-3 cursor-pointer group">
+        <div class="relative mt-0.5 shrink-0">
+          <input id="export-override-toggle" type="checkbox" class="sr-only peer" />
+          <div class="w-9 h-5 rounded-full bg-slate-700 peer-checked:bg-red-700/70 transition-colors"></div>
+          <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-slate-400 peer-checked:bg-red-300 peer-checked:translate-x-4 transition-all"></div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-400 group-has-[:checked]:text-red-400 transition-colors leading-tight">Replace deck</p>
+          <p class="text-[10px] text-slate-600 mt-0.5 leading-snug">Deletes existing cards, then adds selected</p>
+        </div>
+      </label>
+      <button
+        id="export-txt-btn"
+        class="text-xs text-slate-600 hover:text-slate-300 transition-colors text-left"
+      >
+        Download .txt for manual import
+      </button>
+    </div>
+  </div>
+
+  <!-- Populated state -->
+  <div id="deliver-main">
+
+    <!-- Selected items compact list -->
+    <div class="deliver-items" id="deliver-items-list">
+
+      <!-- Words section -->
+      <div class="deliver-items-section-header">
+        <span class="deliver-items-section-label">Words</span>
+        <span class="deliver-items-section-count" id="export-word-count">0</span>
+        <span class="deliver-items-section-line"></span>
+      </div>
+
+      <div class="deliver-row-list" id="export-word-rows">
+        <!-- Populated by exportPane.js -->
+      </div>
+
+      <!-- Sentences section -->
+      <div class="deliver-items-section-header">
+        <span class="deliver-items-section-label">Sentences</span>
+        <span class="deliver-items-section-count" id="export-sent-count">0</span>
+        <span class="deliver-items-section-line"></span>
+      </div>
+
+      <div class="deliver-row-list" id="export-sent-rows">
+        <!-- Populated by exportPane.js -->
+      </div>
+
+    </div>
+
+    <!-- Send to Anki hero action -->
+    <div class="deliver-action">
+      <div class="deliver-confirm-lines" id="deliver-confirm-lines">
+        <div class="deliver-confirm-line">
+          <span class="deliver-confirm-count" id="deliver-confirm-word-count">0 word cards</span>
+          <span class="deliver-confirm-arrow">→</span>
+          <span class="deliver-confirm-deck" id="deliver-confirm-deck">Hindi::Vocabulary</span>
+        </div>
+        <div class="deliver-confirm-line" id="deliver-confirm-sent-line" style="display:none;">
+          <span class="deliver-confirm-count" id="deliver-confirm-sent-count">0 sentence cards</span>
+          <span class="deliver-confirm-arrow">→</span>
+          <span class="deliver-confirm-deck" id="deliver-confirm-sent-deck">Hindi::Sentences01</span>
+        </div>
+      </div>
+      <button
+        id="export-btn"
+        disabled
+        class="send-btn"
+      >
+        <span class="send-btn-icon">⊙</span>
+        <span class="send-btn-text">Send to Anki</span>
+      </button>
+      <div id="export-feedback" class="hidden" style="margin-top:1rem;"></div>
+      <p class="deliver-action-meta" id="deliver-action-meta">
+        Select words on the Words page to begin
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Empty state (shown when nothing selected) -->
+  <div class="deliver-empty-state" id="deliver-empty" style="display:none;">
+    <div class="deliver-empty">
+      <span class="deliver-empty-icon">⊙</span>
+      <p class="deliver-empty-title">Nothing selected yet</p>
+      <p class="deliver-empty-body">
+        Go to <strong style="color:#64748b;">Words</strong> or
+        <strong style="color:#64748b;">Sentences</strong> and tap the
+        circle on any card to add it to your export.
+      </p>
+    </div>
+  </div>
+
+</div>
+</div>

@@ -1,0 +1,10 @@
+.env
+.env_*
+__pycache__/
+*.py[cod]
+
+node_modules/
+dist/
+viewer/node_modules/
+viewer/dist/
+viewer/.astro/

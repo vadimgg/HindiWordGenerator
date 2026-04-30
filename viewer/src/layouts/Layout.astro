@@ -1,0 +1,27 @@
+---
+// Responsible for: root HTML shell — doctype, meta tags, font imports, global CSS, slot
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+const { title = 'Hindi Vocabulary' } = Astro.props;
+---
+<!doctype html>
+<html lang="en" class="bg-slate-950 text-zinc-100">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Plus Jakarta Sans (body) · Barlow Condensed (titles) · DM Mono (romanisation dense) · Tiro Devanagari Hindi (script) · PT Serif (Cyrillic) · Frank Ruhl Libre (Hebrew) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=DM+Mono&family=Frank+Ruhl+Libre:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <slot />
+  </body>
+</html>

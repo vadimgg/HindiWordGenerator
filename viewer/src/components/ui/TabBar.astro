@@ -1,0 +1,27 @@
+---
+// Responsible for: DaVinci Resolve-style bottom-fixed tab bar (Words | Sentences | Export)
+---
+
+<nav class="fixed bottom-0 inset-x-0 h-14 z-30 bg-zinc-950 border-t border-zinc-800 flex items-stretch justify-center">
+  <button
+    data-tab="words"
+    class="flex items-center gap-2 px-10 text-sm font-title font-semibold tracking-wide transition-all duration-150 border-t-2 border-transparent text-zinc-500 hover:text-zinc-300"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Words
+  </button>
+  <button
+    data-tab="sentences"
+    class="flex items-center gap-2 px-10 text-sm font-title font-semibold tracking-wide transition-all duration-150 border-t-2 border-transparent text-zinc-500 hover:text-zinc-300"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+    Sentences
+  </button>
+  <button
+    data-tab="export"
+    class="flex items-center gap-2 px-10 text-sm font-title font-semibold tracking-wide transition-all duration-150 border-t-2 border-transparent text-zinc-500 hover:text-zinc-300"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Export
+  </button>
+</nav>

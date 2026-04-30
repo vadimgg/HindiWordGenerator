@@ -1,0 +1,59 @@
+---
+/**
+ * Persistent top navigation bar — Words | Sentences | Deliver.
+ *
+ * Responsible for: rendering the sticky top nav bar with brand mark and three
+ * page-switching buttons. Active state is driven by JS (tabs.js) adding
+ * the `is-active` class to the matching [data-tab] button.
+ *
+ * Dependencies: none.
+ */
+// Responsible for: sticky top nav bar with brand mark and page-switching buttons
+---
+
+<nav class="nav-bar" role="navigation" aria-label="Main navigation">
+
+  <!-- Brand -->
+  <span class="nav-brand" aria-label="HindiWeb">
+    <span class="nav-brand-icon">✦</span>
+    <span class="nav-brand-name">HindiWeb</span>
+  </span>
+
+  <!-- Nav items -->
+  <div class="nav-items">
+
+    <button
+      class="nav-item"
+      id="nav-words"
+      data-tab="words"
+      aria-label="Words"
+      aria-current="false"
+    >
+      <span class="nav-item-icon">◈</span>
+      <span class="nav-item-label">Words</span>
+    </button>
+
+    <button
+      class="nav-item"
+      id="nav-sentences"
+      data-tab="sentences"
+      aria-label="Sentences"
+      aria-current="false"
+    >
+      <span class="nav-item-icon">❝</span>
+      <span class="nav-item-label">Sentences</span>
+    </button>
+
+    <button
+      class="nav-item"
+      id="nav-deliver"
+      data-tab="deliver"
+      aria-label="Deliver"
+      aria-current="false"
+    >
+      <span class="nav-item-icon">⊙</span>
+      <span class="nav-item-label">Deliver</span>
+    </button>
+
+  </div>
+</nav>

@@ -154,6 +154,18 @@ uv run main.py audio --type words
 uv run main.py audio output/words/some_batch.json
 ```
 
+Open the local viewer:
+
+```bash
+cd viewer
+npm install
+npm run dev
+```
+
+The viewer reads live JSON from `output/words/` and `output/sentences/`, and
+serves MP3s from `audio/`. Refresh the browser after generation to pick up new
+batches or newly written audio paths.
+
 ## Model Configuration
 
 The default model is read from `MODEL` and falls back to:
@@ -341,6 +353,20 @@ audio/sentences/<batch-stem>/
 The batch JSON is then rewritten with relative `audio` paths. Because this uses
 `gTTS`, audio generation depends on external network and service availability.
 
+## Viewer
+
+The integrated Astro viewer lives in `viewer/`. It is a local study/debug UI for
+generated batches:
+
+- Words tab for generated word cards
+- Sentences tab for generated sentence cards
+- Audio play buttons when a card has an `audio` field
+- Search and selection UI from the older `hindiweb` prototype
+
+The viewer intentionally reads the generator's live output directories instead
+of keeping a copied `vocab/` folder. This avoids drift: run generation, refresh
+the browser, and the new cards appear.
+
 ## Manual QA Review
 
 The repo includes reviewer prompts:
@@ -388,4 +414,3 @@ uv run main.py run --no-fail-fast
   existing output state.
 - Filename typos are reflected in derived chapter names unless the CSV contains
   an explicit `#` chapter title.
-

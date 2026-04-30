@@ -1,0 +1,244 @@
+---
+/**
+ * Words page — page header, filter panel, group dividers, word cards with selection circles.
+ *
+ * Responsible for: rendering the full Words page with collapsible filter panel,
+ * group-section dividers (one per vocab file), and word cards with sel-circle buttons.
+ * The card header and article shell are rendered here; the expandable body
+ * is delegated to WordCard with innerOnly=true.
+ *
+ * Dependencies: WordCard.astro.
+ */
+// Responsible for: Words page content — header, filter panel, group dividers, word cards
+import WordCard from '../WordCard.astro';
+import { categoryStyle } from '../../utils/cardHelpers';
+import { resolveWordAudioSrc } from '../../utils/audioHelpers';
+
+interface Props {
+  allWords: any[];
+  vocabFilesCount: number;
+  wordGroups: { id: string; title: string; words: { w: any; i: number }[] }[];
+}
+const { allWords, vocabFilesCount, wordGroups } = Astro.props;
+
+// Collect unique month-year labels for filter chips
+const allDates = [...new Set(allWords.map(w => w.date_added).filter(Boolean) as string[])].sort((a, b) => b.localeCompare(a));
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dateChips = [...new Map(allDates.map(d => {
+  const [y, mo] = d.split('-');
+  return [d.slice(0, 7), { prefix: d.slice(0, 7), label: `${months[parseInt(mo) - 1]} ${y}` }];
+})).values()];
+---
+
+<div id="page-words" class="page mode-web">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1 class="page-title">
+        Words
+        <span class="page-selection-badge is-hidden" id="pw-selection-badge">0 selected</span>
+      </h1>
+      <p class="page-subtitle">{allWords.length} {allWords.length === 1 ? 'word' : 'words'} &middot; {vocabFilesCount} {vocabFilesCount === 1 ? 'file' : 'files'}</p>
+    </div>
+    <!-- Header controls: filter + view mode toggle -->
+    <div style="display:flex;align-items:flex-start;gap:0.5rem;flex-shrink:0;">
+      <button class="page-filter-btn" id="pw-filter-btn" aria-expanded="false">
+        <span class="page-filter-btn-icon">▿</span>
+        <span>Filter</span>
+      </button>
+      <div class="view-mode-toggle" role="group" aria-label="View mode">
+        <button class="view-mode-btn is-active" id="pw-mode-web" aria-pressed="true">
+          <span class="view-mode-btn-icon">≋</span>
+          <span>Web</span>
+        </button>
+        <button class="view-mode-btn" id="pw-mode-anki" aria-pressed="false">
+          <span class="view-mode-btn-icon">◈</span>
+          <span>Anki</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Web mode: filter panel + group-based card list -->
+  <div class="web-card-area">
+
+    <!-- Filter panel (collapsed by default) -->
+    <div class="pw-filter-panel is-hidden" id="pw-filter-panel">
+      <div class="pw-filter-search-wrap">
+        <input
+          class="pw-filter-search-input"
+          data-search-input
+          type="text"
+          placeholder="Search मैं, maĩ, I…"
+          autocomplete="off"
+        />
+        <button class="pw-filter-search-clear" data-search-clear aria-label="Clear search">✕</button>
+      </div>
+      {dateChips.length > 0 && (
+        <div class="pw-filter-group-row" id="pw-filter-chips">
+          <button class="pw-filter-chip is-active" data-date-chip="all">All</button>
+          {dateChips.map(chip => (
+            <button class="pw-filter-chip" data-date-chip={chip.label} data-date-prefix={chip.prefix}>{chip.label}</button>
+          ))}
+        </div>
+      )}
+      <div class="pw-filter-results">
+        <span class="pw-filter-count" id="pw-filter-count">Showing <strong>{allWords.length}</strong> words</span>
+        <button class="pw-filter-clear" id="pw-filter-clear">Clear all</button>
+      </div>
+    </div>
+
+    <!-- Drag-to-select hint -->
+    <p class="drag-select-hint">Drag to select multiple</p>
+
+    <!-- Word groups -->
+    {wordGroups.map((group) => (
+      <>
+        {/* Group divider header */}
+        <div class="card-group-wrapper" id={`cgw-${group.id}`}>
+          <div class="card-group-divider">
+            <div class="card-group-header" data-group-toggle={`cgw-${group.id}`}>
+              <span
+                class="card-group-checkbox"
+                role="checkbox"
+                aria-checked="false"
+                aria-label={`Select all in ${group.title}`}
+                data-group-checkbox={`cgw-${group.id}`}
+              ></span>
+              <span class="card-group-label">{group.title}</span>
+              <span class="card-group-line"></span>
+              <span class="card-group-count">{group.words.length} {group.words.length === 1 ? 'word' : 'words'}</span>
+              <span class="card-group-chevron">▾</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card list for this group */}
+        <div class="card-list" data-group={`cgw-${group.id}`}>
+          {group.words.map(({ w, i }) => (
+            <article
+              id={`card-${i}`}
+              class="wc-card is-collapsed"
+              data-word-card={i}
+              data-word-date={w.date_added ? w.date_added.slice(0, 7) : ''}
+              style="background: linear-gradient(145deg, #131f35 0%, #0f172a 100%); box-shadow: 0 0 0 1px rgba(51,65,85,0.5), 0 4px 24px rgba(0,0,0,0.4); border-radius: 1rem; overflow: hidden; border: 1px solid rgba(51,65,85,0.4);"
+            >
+              {/* Card header */}
+              <div
+                class="card-header wc-header flex px-4 sm:px-5 py-3 sm:py-4 gap-2 cursor-pointer hover:bg-slate-800/20 transition-colors select-none"
+                role="button"
+                aria-expanded="false"
+              >
+                <div class="flex-1 min-w-0 flex flex-col gap-1.5 py-1">
+                  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span class="wc-hindi text-2xl sm:text-3xl font-bold leading-none shrink-0" lang="hi"
+                      style="background: linear-gradient(135deg, #fbbf24, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                      {w.hindi}
+                    </span>
+                    <span class="text-slate-700 shrink-0">·</span>
+                    <span class="word-roman text-base sm:text-lg leading-none shrink-0">{w.romanisation}</span>
+                    {w.syllables && (
+                      <>
+                        <span class="text-slate-700 shrink-0">·</span>
+                        <span class="text-teal-300/60 text-sm font-mono-dm tracking-widest shrink-0">{w.syllables}</span>
+                      </>
+                    )}
+                  </div>
+                  {/* Audio button (word pronunciation) */}
+                  {resolveWordAudioSrc(w) && (
+                    <div class="wc-audio-row">
+                      <button class="wc-audio-btn" data-src={resolveWordAudioSrc(w)} data-label="Play">🔊 Play</button>
+                    </div>
+                  )}
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-slate-200 text-sm leading-none">{(w.english as string).split(',')[0].trim()}</span>
+                    {(w.english as string).includes(',') && (
+                      <span class="text-slate-500 text-xs leading-none">
+                        {(w.english as string).split(',').slice(1).join(',').trim()}
+                      </span>
+                    )}
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap mt-0.5">
+                    {w.pos && (
+                      <span class:list={['text-xs font-title font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg', categoryStyle(w.pos)]}>
+                        {w.pos}
+                      </span>
+                    )}
+                    {w.gender === 'masculine' && (
+                      <span class="text-xs font-title font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-blue-900/20 text-blue-300/80 border border-blue-700/30">m</span>
+                    )}
+                    {w.gender === 'feminine' && (
+                      <span class="text-xs font-title font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-pink-900/20 text-pink-300/80 border border-pink-700/30">f</span>
+                    )}
+                    {w.gender === 'both' && (
+                      <span class="text-xs font-title font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-indigo-900/20 text-indigo-300/80 border border-indigo-700/30">m/f</span>
+                    )}
+                    {w.transitivity && w.pos && (w.pos as string).toLowerCase().includes('verb') && (
+                      <span class="text-xs font-title font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-800/60 text-slate-400 border border-slate-700/40">
+                        {w.transitivity === 'transitive' ? 'trans.' : 'intrans.'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {/* Selection circle */}
+                <button
+                  class="sel-circle"
+                  aria-label={`Select ${w.hindi}`}
+                  data-sel-circle={i}
+                ></button>
+              </div>
+
+              {/* Expandable body — delegates to WordCard sections */}
+              <div class="card-expandable">
+                <WordCard
+                  hindi={w.hindi}
+                  romanisation={w.romanisation}
+                  english={w.english}
+                  date_added={w.date_added}
+                  english_usage={w.english_usage}
+                  forms={w.forms}
+                  morphemes={w.morphemes}
+                  pos={w.pos}
+                  gender={w.gender}
+                  transitivity={w.transitivity}
+                  syllables={w.syllables}
+                  collocations={w.collocations}
+                  usage_notes={w.usage_notes}
+                  related_words={w.related_words}
+                  sound_alikes={w.sound_alikes}
+                  example_sentence={w.example_sentence}
+                  etymology_journey={w.etymology_journey}
+                  origin_note={w.origin_note}
+                  delhi_note={w.delhi_note}
+                  audio={w.audio}
+                  audioBatch={w.audioBatch}
+                  index={i}
+                  innerOnly={true}
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+      </>
+    ))}
+
+    <div id="words-no-results" class="hidden py-20 text-center">
+      <p class="text-zinc-600 text-sm">No words match your search.</p>
+    </div>
+
+    <footer class="mt-20 text-xs text-zinc-700">
+      Generate word batches into <code class="text-zinc-600">output/words/</code>, then refresh.
+    </footer>
+
+  </div><!-- /.web-card-area -->
+
+  <!-- Anki mode area — populated by ankiPreview.js -->
+  <div class="anki-mode-area" id="pw-anki-area">
+    <!-- Empty state — shown when no words are selected -->
+    <p class="anki-mode-notice" id="pw-anki-notice">Switch to Web view to select words, then come back to preview Anki cards.</p>
+    <!-- Flip cards injected here by ankiPreview.js -->
+    <div id="pw-anki-cards"></div>
+  </div>
+
+</div>

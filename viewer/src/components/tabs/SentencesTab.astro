@@ -1,0 +1,153 @@
+---
+/**
+ * Sentences page — page header, filter panel, chapter-grouped sentence cards.
+ *
+ * Responsible for: rendering the Sentences page with collapsible filter panel,
+ * chapter-section dividers, and sentence cards with sel-circle selection buttons.
+ *
+ * Dependencies: SentenceCard.astro, types.ts (SentenceChapter).
+ */
+// Responsible for: Sentences page content — header, filter panel, chapter dividers, sentence cards
+import SentenceCard from '../SentenceCard.astro';
+import type { SentenceChapter } from '../../utils/types';
+
+interface Props {
+  allSentences: any[];
+  sentenceChapters: SentenceChapter[];
+}
+const { allSentences, sentenceChapters } = Astro.props;
+
+// Build flat index for sentence IDs matching the pattern in SentenceList.astro
+let globalIndex = 0;
+---
+
+<div id="page-sentences" class="page mode-web">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1 class="page-title">
+        Sentences
+        <span class="page-selection-badge is-hidden" id="ps-selection-badge">0 selected</span>
+      </h1>
+      <p class="page-subtitle">
+        {allSentences.length === 0
+          ? 'No sentences loaded yet'
+          : `${allSentences.length} ${allSentences.length === 1 ? 'sentence' : 'sentences'}`}
+      </p>
+    </div>
+    <!-- Header controls: filter + view mode toggle -->
+    <div style="display:flex;align-items:flex-start;gap:0.5rem;flex-shrink:0;">
+      <button class="page-filter-btn" id="ps-filter-btn" aria-expanded="false">
+        <span class="page-filter-btn-icon">▿</span>
+        <span>Filter</span>
+      </button>
+      <div class="view-mode-toggle" role="group" aria-label="View mode">
+        <button class="view-mode-btn is-active" id="ps-mode-web" aria-pressed="true">
+          <span class="view-mode-btn-icon">≋</span>
+          <span>Web</span>
+        </button>
+        <button class="view-mode-btn" id="ps-mode-anki" aria-pressed="false">
+          <span class="view-mode-btn-icon">◈</span>
+          <span>Anki</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Web mode: filter panel + group-based card list -->
+  <div class="web-card-area">
+
+    <!-- Filter panel (collapsed by default) -->
+    <div class="pw-filter-panel is-hidden" id="ps-filter-panel">
+      <div class="pw-filter-search-wrap">
+        <input
+          class="pw-filter-search-input"
+          data-search-input
+          type="text"
+          placeholder="Search sentences…"
+          autocomplete="off"
+        />
+        <button class="pw-filter-search-clear" data-search-clear aria-label="Clear search">✕</button>
+      </div>
+      {sentenceChapters.length > 0 && (
+        <div class="pw-filter-group-row" id="ps-filter-chips">
+          <button class="pw-filter-chip is-active" data-chapter-chip="all">All</button>
+          {sentenceChapters.map(ch => (
+            <button class="pw-filter-chip" data-chapter-chip={ch.chapter}>{ch.chapter}</button>
+          ))}
+        </div>
+      )}
+      <div class="pw-filter-results">
+        <span class="pw-filter-count" id="ps-filter-count">
+          Showing <strong>{allSentences.length}</strong> sentences
+        </span>
+        <button class="pw-filter-clear" id="ps-filter-clear">Clear all</button>
+      </div>
+    </div>
+
+    {allSentences.length === 0 ? (
+      <div class="py-24 text-center">
+        <p class="text-zinc-600 text-sm mb-2">No sentences loaded yet.</p>
+        <p class="text-zinc-700 text-xs">Generate sentence batches into <code class="text-zinc-600">output/sentences/</code>, then refresh.</p>
+      </div>
+    ) : (
+      <>
+        <!-- Drag-to-select hint -->
+        <p class="drag-select-hint">Drag to select multiple</p>
+
+        <!-- Chapter groups -->
+        {sentenceChapters.map((chapter) => {
+          const chapterId = `cgw-s-${chapter.chapter.toLowerCase().replace(/\s+/g, '-')}`;
+          return (
+            <>
+              {/* Group divider header */}
+              <div class="card-group-wrapper" id={chapterId}>
+                <div class="card-group-divider">
+                  <div class="card-group-header" data-group-toggle={chapterId}>
+                    <span
+                      class="card-group-checkbox"
+                      role="checkbox"
+                      aria-checked="false"
+                      aria-label={`Select all in ${chapter.chapter}`}
+                      data-group-checkbox={chapterId}
+                    ></span>
+                    <span class="card-group-label">{chapter.chapter}</span>
+                    <span class="card-group-line"></span>
+                    <span class="card-group-count">
+                      {chapter.sentences.length} {chapter.sentences.length === 1 ? 'sentence' : 'sentences'}
+                    </span>
+                    <span class="card-group-chevron">▾</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sentence cards */}
+              <div class="card-list" data-group={chapterId}>
+                {chapter.sentences.map((sentence) => {
+                  const idx = globalIndex++;
+                  return (
+                    <div class="sc-card-wrapper" data-sentence-card={idx}>
+                      <SentenceCard index={idx} {...sentence} audio={sentence.audio} audioBatch={sentence.audioBatch} selCircle={true} />
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })}
+
+        <div id="sentences-no-results" class="hidden py-20 text-center">
+          <p class="text-zinc-600 text-sm">No sentences match your search.</p>
+        </div>
+      </>
+    )}
+
+  </div><!-- /.web-card-area -->
+
+  <!-- Anki mode area -->
+  <div class="anki-mode-area" id="ps-anki-area">
+    <p class="anki-mode-notice">Anki preview — select sentences on the web view first.</p>
+  </div>
+
+</div>
