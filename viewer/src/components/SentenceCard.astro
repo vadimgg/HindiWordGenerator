@@ -14,6 +14,7 @@
 import { registerStyle } from '../utils/cardHelpers';
 import { resolveSentenceAudioSrc } from '../utils/audioHelpers';
 import type { Sentence } from '../utils/types';
+import SentenceTokensSection from './cards/sections/SentenceTokensSection.astro';
 import WordBreakdownSection from './cards/sections/WordBreakdownSection.astro';
 
 interface Props extends Sentence {
@@ -23,7 +24,7 @@ interface Props extends Sentence {
   /** Sentence batch filename without extension — used to resolve audio paths. */
   audioBatch?: string;
 }
-const { index, hindi, romanisation, english, literal, register, words, selCircle = false, audioBatch, audio } = Astro.props;
+const { index, hindi, romanisation, english, literal, register, tokens, words, selCircle = false, audioBatch, audio } = Astro.props;
 
 const audioSrc = resolveSentenceAudioSrc({ audio, audioBatch, english });
 ---
@@ -115,6 +116,8 @@ const audioSrc = resolveSentenceAudioSrc({ audio, audioBatch, english });
         </p>
       </div>
     )}
+
+    <SentenceTokensSection tokens={tokens} words={words} />
 
     <!-- Word breakdown (if words present) -->
     {words && words.length > 0 && (

@@ -87,12 +87,20 @@ export interface SentenceWord {
   number?: 'singular' | 'plural';
 }
 
+export interface SentenceToken {
+  hindi: string;
+  roman: string;
+  kind: 'word' | 'punct';
+  word_index?: number;
+}
+
 export interface Sentence {
   hindi: string;
   romanisation: string;
   english: string;
   literal?: string;
   register?: 'formal' | 'neutral' | 'standard' | 'casual' | 'colloquial';
+  tokens?: SentenceToken[];
   words?: SentenceWord[];
   anki_tags?: string[];
   /** Relative public audio path, if available in the source JSON. */

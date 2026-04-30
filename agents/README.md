@@ -20,6 +20,7 @@ Each role file should define:
 - `audio-worker.md`
 - `output-auditor.md`
 - `language-teacher-reviewer.md`
+- `astro-viewer.md`
 - `reviewer.md`
 
 ## Source Priority
@@ -70,6 +71,7 @@ To avoid overlap, assign agents by responsibility:
 - Audio worker: `audio_generator.py`, audio paths, batch enrichment
 - Output auditor: review generated JSON and report issues, not implementation
 - Language teacher reviewer: review output quality from a Delhi learner-teacher perspective
+- Astro viewer engineer: `viewer/`, live card UI, browser interactions, viewer build
 - Reviewer: close-gate review for code, prompt, data, and workflow changes
 
 ## Shared Standards
@@ -79,6 +81,8 @@ To avoid overlap, assign agents by responsibility:
 - `standards/coding.md`: Python/CLI coding standards adapted from the Brief
   agent standards, including file/function size, CLI output, error handling,
   testing, comments, and reuse.
+- `standards/astro-viewer.md`: Astro, TypeScript, CSS, browser interaction, and
+  live generated-data viewing standards for `viewer/`.
 
 ## Suggested Workflow
 
@@ -88,7 +92,9 @@ To avoid overlap, assign agents by responsibility:
 4. Hand audio work to `audio-worker.md`.
 5. Use `output-auditor.md` to inspect a sample output set before large runs.
 6. Use `language-teacher-reviewer.md` to decide whether prompt changes are needed for teaching quality.
-7. Use `reviewer.md` before considering a task complete when behavior, prompts,
+7. Use `astro-viewer.md` for viewer UI, Astro, TypeScript, browser behavior, and
+   local web validation.
+8. Use `reviewer.md` before considering a task complete when behavior, prompts,
    generated data, or workflow docs changed.
 
 ## Stop Conditions
