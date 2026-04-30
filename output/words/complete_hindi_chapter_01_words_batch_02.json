@@ -1,0 +1,548 @@
+{
+  "chapter": "Complete Hindi Chapter 01",
+  "words": [
+    {
+      "hindi": "ख़ाली",
+      "romanisation": "khālī",
+      "english": "empty, vacant",
+      "pos": "adjective",
+      "gender": "both",
+      "anki_tags": [
+        "quality",
+        "adjective"
+      ],
+      "syllables": "khā · lī",
+      "related_words": [
+        {
+          "hindi": "साफ़",
+          "roman": "sāf",
+          "english": "clean"
+        },
+        {
+          "hindi": "कमरा",
+          "roman": "kamrā",
+          "english": "room"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "यह कमरा ख़ाली है।",
+        "roman": "yah kamrā khālī hai.",
+        "english": "This room is empty.",
+        "breakdown": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "meaning": "this"
+          },
+          {
+            "hindi": "कमरा",
+            "roman": "kamrā",
+            "meaning": "room"
+          },
+          {
+            "hindi": "ख़ाली",
+            "roman": "khālī",
+            "meaning": "empty"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/01_khālī.mp3"
+    },
+    {
+      "hindi": "खिड़की",
+      "romanisation": "khiṛkī",
+      "english": "window",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": [
+        "home",
+        "noun"
+      ],
+      "syllables": "khiṛ · kī",
+      "forms": [
+        {
+          "label": "direct plural",
+          "hindi": "खिड़कियाँ",
+          "roman": "khiṛkiyāṃ"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "खिड़कियों",
+          "roman": "khiṛkiyoṃ"
+        }
+      ],
+      "related_words": [
+        {
+          "hindi": "कमरा",
+          "roman": "kamrā",
+          "english": "room"
+        },
+        {
+          "hindi": "मकान",
+          "roman": "makān",
+          "english": "house"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "खिड़की खुली है।",
+        "roman": "khiṛkī khulī hai.",
+        "english": "The window is open.",
+        "breakdown": [
+          {
+            "hindi": "खिड़की",
+            "roman": "khiṛkī",
+            "meaning": "window"
+          },
+          {
+            "hindi": "खुली",
+            "roman": "khulī",
+            "meaning": "open"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/02_khiṛkī.mp3"
+    },
+    {
+      "hindi": "गाड़ी",
+      "romanisation": "gāṛī",
+      "english": "car",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": [
+        "transport",
+        "noun"
+      ],
+      "syllables": "gā · ṛī",
+      "forms": [
+        {
+          "label": "direct plural",
+          "hindi": "गाड़ियाँ",
+          "roman": "gāṛiyāṃ"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "गाड़ियों",
+          "roman": "gāṛiyoṃ"
+        }
+      ],
+      "related_words": [
+        {
+          "hindi": "साइकिल",
+          "roman": "sāikil",
+          "english": "bicycle"
+        },
+        {
+          "hindi": "बड़ी",
+          "roman": "baṛī",
+          "english": "big, feminine"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "यह गाड़ी सस्ती है।",
+        "roman": "yah gāṛī sastī hai.",
+        "english": "This car is cheap.",
+        "breakdown": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "meaning": "this"
+          },
+          {
+            "hindi": "गाड़ी",
+            "roman": "gāṛī",
+            "meaning": "car"
+          },
+          {
+            "hindi": "सस्ती",
+            "roman": "sastī",
+            "meaning": "cheap"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/03_gāṛī.mp3"
+    },
+    {
+      "hindi": "चिड़िया",
+      "romanisation": "ciṛiyā",
+      "english": "small bird",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": [
+        "animals",
+        "noun"
+      ],
+      "syllables": "ci · ṛi · yā",
+      "forms": [
+        {
+          "label": "direct plural",
+          "hindi": "चिड़ियाँ",
+          "roman": "ciṛiyāṃ"
+        },
+        {
+          "label": "oblique plural",
+          "hindi": "चिड़ियों",
+          "roman": "ciṛiyoṃ"
+        }
+      ],
+      "related_words": [
+        {
+          "hindi": "छोटा",
+          "roman": "choṭā",
+          "english": "small"
+        },
+        {
+          "hindi": "सुन्दर",
+          "roman": "sundar",
+          "english": "beautiful"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "छोटी चिड़िया सुन्दर है।",
+        "roman": "choṭī ciṛiyā sundar hai.",
+        "english": "The small bird is beautiful.",
+        "breakdown": [
+          {
+            "hindi": "छोटी",
+            "roman": "choṭī",
+            "meaning": "small, feminine"
+          },
+          {
+            "hindi": "चिड़िया",
+            "roman": "ciṛiyā",
+            "meaning": "bird"
+          },
+          {
+            "hindi": "सुन्दर",
+            "roman": "sundar",
+            "meaning": "beautiful"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/04_ciṛiyā.mp3"
+    },
+    {
+      "hindi": "छोटा",
+      "romanisation": "choṭā",
+      "english": "small",
+      "pos": "adjective",
+      "gender": "both",
+      "anki_tags": [
+        "size",
+        "adjective"
+      ],
+      "syllables": "cho · ṭā",
+      "forms": [
+        {
+          "label": "feminine singular",
+          "hindi": "छोटी",
+          "roman": "choṭī"
+        },
+        {
+          "label": "masculine plural / oblique masculine singular",
+          "hindi": "छोटे",
+          "roman": "choṭe"
+        }
+      ],
+      "related_words": [
+        {
+          "hindi": "बड़ा",
+          "roman": "baṛā",
+          "english": "big"
+        },
+        {
+          "hindi": "बच्चा",
+          "roman": "baccā",
+          "english": "child"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "लड़का छोटा है।",
+        "roman": "laṛkā choṭā hai.",
+        "english": "The boy is small.",
+        "breakdown": [
+          {
+            "hindi": "लड़का",
+            "roman": "laṛkā",
+            "meaning": "boy"
+          },
+          {
+            "hindi": "छोटा",
+            "roman": "choṭā",
+            "meaning": "small"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/05_choṭā.mp3"
+    },
+    {
+      "hindi": "जनवरी",
+      "romanisation": "janvarī",
+      "english": "January",
+      "pos": "noun",
+      "gender": "feminine",
+      "anki_tags": [
+        "time",
+        "noun"
+      ],
+      "syllables": "jan · va · rī",
+      "related_words": [
+        {
+          "hindi": "रविवार",
+          "roman": "ravivār",
+          "english": "Sunday"
+        },
+        {
+          "hindi": "साल",
+          "roman": "sāl",
+          "english": "year"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "जनवरी में ठंड है।",
+        "roman": "janvarī meṃ ṭhaṇḍ hai.",
+        "english": "It is cold in January.",
+        "breakdown": [
+          {
+            "hindi": "जनवरी",
+            "roman": "janvarī",
+            "meaning": "January"
+          },
+          {
+            "hindi": "में",
+            "roman": "meṃ",
+            "meaning": "in"
+          },
+          {
+            "hindi": "ठंड",
+            "roman": "ṭhaṇḍ",
+            "meaning": "cold"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/06_janvarī.mp3"
+    },
+    {
+      "hindi": "ज़रूर",
+      "romanisation": "zarūr",
+      "english": "of course, certainly",
+      "pos": "adverb",
+      "anki_tags": [
+        "conversation",
+        "adverb"
+      ],
+      "syllables": "za · rūr",
+      "usage_notes": "ज़रूर (zarūr) is useful for reassuring someone that you will definitely do something.",
+      "related_words": [
+        {
+          "hindi": "ठीक",
+          "roman": "ṭhīk",
+          "english": "OK"
+        },
+        {
+          "hindi": "हाँ",
+          "roman": "hāṃ",
+          "english": "yes"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "मैं ज़रूर आऊँगा।",
+        "roman": "maiṃ zarūr āūṃgā.",
+        "english": "I will certainly come.",
+        "breakdown": [
+          {
+            "hindi": "मैं",
+            "roman": "maiṃ",
+            "meaning": "I"
+          },
+          {
+            "hindi": "ज़रूर",
+            "roman": "zarūr",
+            "meaning": "certainly"
+          },
+          {
+            "hindi": "आऊँगा",
+            "roman": "āūṃgā",
+            "meaning": "will come, masculine speaker"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/07_zarūr.mp3"
+    },
+    {
+      "hindi": "जी",
+      "romanisation": "jī",
+      "english": "(respect marker)",
+      "pos": "particle",
+      "anki_tags": [
+        "respect",
+        "particle"
+      ],
+      "syllables": "jī",
+      "usage_notes": "जी (jī) adds respect after names, titles, and family words. It can also be a polite 'yes' by itself.",
+      "related_words": [
+        {
+          "hindi": "आप",
+          "roman": "āp",
+          "english": "you, respectful"
+        },
+        {
+          "hindi": "नमस्ते",
+          "roman": "namaste",
+          "english": "hello, goodbye"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "नमस्ते दादी जी।",
+        "roman": "namaste dādī jī.",
+        "english": "Hello, Grandma.",
+        "breakdown": [
+          {
+            "hindi": "नमस्ते",
+            "roman": "namaste",
+            "meaning": "hello"
+          },
+          {
+            "hindi": "दादी",
+            "roman": "dādī",
+            "meaning": "grandmother"
+          },
+          {
+            "hindi": "जी",
+            "roman": "jī",
+            "meaning": "respect marker"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/08_jī.mp3"
+    },
+    {
+      "hindi": "ठीक",
+      "romanisation": "ṭhīk",
+      "english": "all right, OK",
+      "pos": "adjective",
+      "gender": "both",
+      "anki_tags": [
+        "quality",
+        "adjective"
+      ],
+      "syllables": "ṭhīk",
+      "usage_notes": "ठीक (ṭhīk) is a very common everyday word for 'OK', 'fine', or 'correct'.",
+      "related_words": [
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "english": "good"
+        },
+        {
+          "hindi": "ज़रूर",
+          "roman": "zarūr",
+          "english": "certainly"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "सब ठीक है।",
+        "roman": "sab ṭhīk hai.",
+        "english": "Everything is OK.",
+        "breakdown": [
+          {
+            "hindi": "सब",
+            "roman": "sab",
+            "meaning": "all, everything"
+          },
+          {
+            "hindi": "ठीक",
+            "roman": "ṭhīk",
+            "meaning": "OK"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "meaning": "is"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/09_ṭhīk.mp3"
+    },
+    {
+      "hindi": "तीन",
+      "romanisation": "tīn",
+      "english": "three",
+      "pos": "other",
+      "anki_tags": [
+        "numbers",
+        "other"
+      ],
+      "syllables": "tīn",
+      "related_words": [
+        {
+          "hindi": "एक",
+          "roman": "ek",
+          "english": "one"
+        },
+        {
+          "hindi": "दो",
+          "roman": "do",
+          "english": "two"
+        }
+      ],
+      "example_sentence": {
+        "hindi": "तीन लड़के यहाँ हैं।",
+        "roman": "tīn laṛke yahāṃ haiṃ.",
+        "english": "Three boys are here.",
+        "breakdown": [
+          {
+            "hindi": "तीन",
+            "roman": "tīn",
+            "meaning": "three"
+          },
+          {
+            "hindi": "लड़के",
+            "roman": "laṛke",
+            "meaning": "boys"
+          },
+          {
+            "hindi": "यहाँ",
+            "roman": "yahāṃ",
+            "meaning": "here"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haiṃ",
+            "meaning": "are"
+          }
+        ]
+      },
+      "audio": "audio/words/complete_hindi_chapter_01_words_batch_02/10_tīn.mp3"
+    }
+  ]
+}
