@@ -29,8 +29,9 @@ export const getWordGroupTitles = () => window.__APP_DATA__?.wordGroupTitles ?? 
 export const getWordSearchIndex = () => window.__APP_DATA__?.wordSearchIndex ?? [];
 
 /**
- * Returns the compact search index for sentences: [{ i, h, r, e, d }].
- * @returns {{ i: number, h: string, r: string, e: string, d: string }[]}
+ * Returns the compact search index for sentences: [{ i, h, r, e, d, ch }].
+ * i=index, h=hindi, r=romanisation, e=english, d=date_added, ch=chapter.
+ * @returns {{ i: number, h: string, r: string, e: string, d: string, ch: string }[]}
  */
 export const getSentenceIndex = () => window.__APP_DATA__?.sentenceSearchIndex ?? [];
 

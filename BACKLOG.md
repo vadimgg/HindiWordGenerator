@@ -11,3 +11,4 @@ Status values: `open`, `in-progress`, `done`.
 |---|---|---|---|
 | Extract shared Anki preview template rendering into `viewer/src/scripts/anki/renderTemplate.js` and add a smoke check that preview fields/templates stay aligned with export fields/templates | P2 | done | Preview and export share `wordToAnkiFields`, `sentenceToAnkiFields`, note templates, and the preview renderer. `npm run check:anki` verifies representative word and sentence previews. |
 | Move `data-sentence-card` onto `SentenceCard`'s own `<article>` | P2 | done | Matches the word card DOM pattern and removes wrapper-only selection/search markers. |
+| Update `getSentenceIndex()` JSDoc to document the `ch` chapter field | P2 | done | Keeps the client data contract aligned with `sentenceSearchIndex`. |
