@@ -48,20 +48,32 @@ CRITICAL RULES — never break these
    Omit any optional field you are not confident about rather than guessing.
 5. Omit optional fields entirely when they have nothing to contribute — do not
    include them as null. Required fields (hindi, romanisation, english, literal,
-   register, words, anki_tags) must always be present. In each word object,
+   register, tokens, words, anki_tags) must always be present. In each word object,
    gender, number, and note are optional — omit them when not applicable.
-6. words: include every token in the sentence — do not skip particles, question
-   markers, honorifics, or short connecting words. They are often the most
-   important to understand.
-7. notes in the word breakdown must use plain English only. No grammar terms
+6. tokens: include every exact surface token in the sentence, in order, including
+   spaces and punctuation such as commas, dashes, question marks, and danda/full stop signs.
+   When you join all token.hindi values together with no separator, they must reproduce
+   the sentence exactly. The same is true for token.roman and the full romanisation.
+7. words: include every actual word token in the sentence — do not skip particles,
+   question markers, honorifics, or short connecting words. They are often the most
+   important to understand. Punctuation belongs in tokens, not words.
+8. notes in the word breakdown must use plain English only. No grammar terms
    the learner would need to look up. Explain the behaviour, not the label.
    Good: "formal version of 'you' — use with strangers and elders"
    Bad: "second-person formal pronoun"
-8. literal: render every word as directly as possible, in Hindi word order.
+9. literal: render every word as directly as possible, in Hindi word order.
    Show the structure even when it sounds unnatural in English. This is intentional.
-9. anki_tags: always include at least one topic tag, one register tag, and a
+10. anki_tags: always include at least one topic tag, one register tag, and a
    chapter tag.
-10. Do NOT include a date_added field anywhere in the output.
+11. Do NOT include a date_added field anywhere in the output.
+12. Judge register and word notes by actual Delhi usage, not textbook Hindi.
+    If a sentence sounds formal, casual, old-fashioned, stiff, affectionate, or likely
+    to switch into English in real Delhi speech, reflect that in register and notes.
+    Do not label something "formal" just because it is polite, and do not label something
+    "neutral" if a Delhi speaker would clearly hear it as stiff or bookish.
+13. Prefer modern Delhi speech over textbook vocabulary whenever the source sentence allows it.
+    If the source itself is clearly formal, classroom-like, literary, or old-fashioned, preserve
+    that meaning but make the register/note reflect it honestly instead of pretending it is neutral.
 
 ---
 
@@ -81,6 +93,14 @@ Sentence card object:
   "english": "natural English translation",
   "literal": "word-for-word English in Hindi word order",
   "register": "casual | neutral | formal",
+  "tokens": [
+    {
+      "hindi": "exact surface token from the sentence",
+      "roman": "exact surface token from the romanisation",
+      "kind": "word | punct | space",
+      "word_index": "required for kind=word; omit for kind=punct and kind=space"
+    }
+  ],
   "words": [
     {
       "hindi": "word in Devanagari",
@@ -113,6 +133,31 @@ register:
   casual  — used with friends, family, people younger than you
   neutral — appropriate in most everyday situations with strangers
   formal  — used with elders, strangers you want to respect, professional settings
+Choose the label by how the full sentence sounds in Delhi today, not by grammar alone.
+For example, very polite imperatives may still be neutral in daily speech; some textbook
+phrases may be grammatically fine but sound more formal or dated in Delhi.
+If a sentence feels classroom-textbook Hindi, say so through `register` or a `note`.
+
+tokens — exact display tokens in order, including punctuation and symbols.
+This field exists so the app can map taps/selections back to the sentence without guessing.
+
+  For `kind: "word"`:
+  - `hindi` must exactly match the corresponding `words[word_index].hindi`
+  - `roman` must exactly match the corresponding `words[word_index].roman`
+  - `word_index` is required
+
+  For `kind: "space"`:
+  - use the exact whitespace between words, usually `" "`
+  - `hindi` and `roman` should both be the same whitespace
+  - omit `word_index`
+
+  For `kind: "punct"`:
+  - use punctuation or symbols exactly as they appear in the sentence, such as `,`, `?`, `–`, `.`, `।`
+  - omit `word_index`
+
+  Very important:
+  - when all token.hindi values are joined together with no separator, they must equal `hindi` exactly
+  - when all token.roman values are joined together with no separator, they must equal `romanisation` exactly
 
 words — one object per token in the sentence, in order. Include everything:
 question markers, honorifics, connecting words, verb endings that stand alone.
@@ -132,6 +177,7 @@ Never skip a token.
   - What makes this word special or easy to get wrong
   - When to use it vs a similar word
   - If it has no direct English equivalent, explain what job it does
+  - If Delhi speakers would often switch to English here, say that plainly
   Omit entirely if there is nothing essential to add.
 
 anki_tags — always a non-empty array. Include at minimum: one topic tag

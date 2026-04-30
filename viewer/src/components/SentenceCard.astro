@@ -27,6 +27,9 @@ interface Props extends Sentence {
 const { index, hindi, romanisation, english, literal, register, tokens, words, selCircle = false, audioBatch, audio } = Astro.props;
 
 const audioSrc = resolveSentenceAudioSrc({ audio, audioBatch, english });
+const hasTokens = Array.isArray(tokens) && tokens.length > 0;
+const tokenWordCount = hasTokens ? tokens.filter(token => token.kind === 'word').length : 0;
+const tokenWordLabel = tokenWordCount === 1 ? '1 word' : `${tokenWordCount} words`;
 ---
 
 <article
@@ -76,6 +79,16 @@ const audioSrc = resolveSentenceAudioSrc({ audio, audioBatch, english });
             {register}
           </span>
         )}
+        <span
+          class:list={[
+            'text-[10px] font-title font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border',
+            hasTokens
+              ? 'bg-teal-900/20 text-teal-300/80 border-teal-700/30'
+              : 'bg-amber-900/20 text-amber-300/80 border-amber-700/30',
+          ]}
+        >
+          {hasTokens ? tokenWordLabel : 'legacy'}
+        </span>
       </div>
 
     </div>

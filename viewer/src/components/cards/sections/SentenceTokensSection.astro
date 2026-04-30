@@ -14,10 +14,11 @@ interface Props {
 
 const { tokens = [], words = [] } = Astro.props;
 const hasTokens = tokens.length > 0;
+const visibleTokens = tokens.filter((token) => token.kind === 'word');
 const wordByIndex = new Map(words.map((word, index) => [index, word]));
 ---
 
-<details class="group/det border-t border-slate-700/40">
+<details class="group/det border-t border-slate-700/40" open={hasTokens}>
   <summary
     class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4
            cursor-pointer list-none select-none
@@ -38,7 +39,7 @@ const wordByIndex = new Map(words.map((word, index) => [index, word]));
             : 'bg-amber-900/20 text-amber-300/80 border-amber-700/30',
         ]}
       >
-        {hasTokens ? `${tokens.length} tokens` : 'missing'}
+        {hasTokens ? `${visibleTokens.length} shown` : 'missing'}
       </span>
       <span
         class="text-slate-600 group-open/det:rotate-180
@@ -52,7 +53,7 @@ const wordByIndex = new Map(words.map((word, index) => [index, word]));
   <div class="px-4 sm:px-6 pb-4 pt-1">
     {hasTokens ? (
       <div class="flex flex-wrap gap-2">
-        {tokens.map((token) => {
+        {visibleTokens.map((token) => {
           const linkedWord = typeof token.word_index === 'number'
             ? wordByIndex.get(token.word_index)
             : undefined;
@@ -91,4 +92,3 @@ const wordByIndex = new Map(words.map((word, index) => [index, word]));
     )}
   </div>
 </details>
-

@@ -1,0 +1,227 @@
+{
+  "chapter": "Complete Hindi Chapter 02",
+  "sentences": [
+    {
+      "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+      "english": "Teacher ji, how many students are there here?",
+      "literal": "teacher ji, here how many students are",
+      "register": "formal",
+      "words": [
+        {
+          "hindi": "अध्यापक",
+          "roman": "adhyāpak",
+          "meaning": "teacher",
+          "gender": "masculine",
+          "number": "singular"
+        },
+        {
+          "hindi": "जी",
+          "roman": "jī",
+          "meaning": "respectful address marker",
+          "note": "Adds respect. Very common with names and family words, like 'ji' after someone's name."
+        },
+        {
+          "hindi": "यहाँ",
+          "roman": "yahā̃",
+          "meaning": "here"
+        },
+        {
+          "hindi": "कितने",
+          "roman": "kitne",
+          "meaning": "how many",
+          "number": "plural"
+        },
+        {
+          "hindi": "विद्यार्थी",
+          "roman": "vidyārthī",
+          "meaning": "students",
+          "gender": "masculine",
+          "number": "plural"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are"
+        }
+      ],
+      "anki_tags": [
+        "school",
+        "formal",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/01_adhyāpak_jī_yahā_kitne_vidyārthī_haĩ.mp3"
+    },
+    {
+      "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
+      "english": "At the moment there are 14 – nine girls and five boys.",
+      "literal": "right now fourteen are – nine girls and five boys",
+      "register": "neutral",
+      "words": [
+        {
+          "hindi": "अभी",
+          "roman": "abhī",
+          "meaning": "right now"
+        },
+        {
+          "hindi": "चौदह",
+          "roman": "caudah",
+          "meaning": "fourteen"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are"
+        },
+        {
+          "hindi": "नौ",
+          "roman": "nau",
+          "meaning": "nine"
+        },
+        {
+          "hindi": "लड़कियाँ",
+          "roman": "laṛkiyā̃",
+          "meaning": "girls",
+          "gender": "feminine",
+          "number": "plural"
+        },
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "meaning": "and"
+        },
+        {
+          "hindi": "पाँच",
+          "roman": "pā̃c",
+          "meaning": "five"
+        },
+        {
+          "hindi": "लड़के",
+          "roman": "laṛke",
+          "meaning": "boys",
+          "gender": "masculine",
+          "number": "plural"
+        }
+      ],
+      "anki_tags": [
+        "numbers",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/02_abhī_caudah_haĩ_nau_laṛkiyā_aur_pāc_laṛke.mp3"
+    },
+    {
+      "hindi": "यह किताब कैसी है?",
+      "romanisation": "yah kitāb kaisī hai?",
+      "english": "What kind of book is this?",
+      "literal": "this book how-is",
+      "register": "neutral",
+      "words": [
+        {
+          "hindi": "यह",
+          "roman": "yah",
+          "meaning": "this"
+        },
+        {
+          "hindi": "किताब",
+          "roman": "kitāb",
+          "meaning": "book",
+          "gender": "feminine",
+          "number": "singular"
+        },
+        {
+          "hindi": "कैसी",
+          "roman": "kaisī",
+          "meaning": "what kind"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is"
+        }
+      ],
+      "anki_tags": [
+        "describing-things",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/03_yah_kitāb_kaisī_hai.mp3"
+    },
+    {
+      "hindi": "क्या यह अच्छी है?",
+      "romanisation": "kyā yah acchī hai?",
+      "english": "Is it good?",
+      "literal": "question-marker this good-is",
+      "register": "neutral",
+      "words": [
+        {
+          "hindi": "क्या",
+          "roman": "kyā",
+          "meaning": "question marker",
+          "note": "Puts the sentence into a yes/no question. Often left out in casual speech, but common in careful Hindi."
+        },
+        {
+          "hindi": "यह",
+          "roman": "yah",
+          "meaning": "it / this"
+        },
+        {
+          "hindi": "अच्छी",
+          "roman": "acchī",
+          "meaning": "good",
+          "gender": "feminine",
+          "number": "singular"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is"
+        }
+      ],
+      "anki_tags": [
+        "describing-things",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/04_kyā_yah_acchī_hai.mp3"
+    },
+    {
+      "hindi": "हाँ, बुरी नहीं है।",
+      "romanisation": "hā̃, burī nahī̃ hai.",
+      "english": "Yes, it's not bad.",
+      "literal": "yes, bad not is",
+      "register": "casual",
+      "words": [
+        {
+          "hindi": "हाँ",
+          "roman": "hā̃",
+          "meaning": "yes"
+        },
+        {
+          "hindi": "बुरी",
+          "roman": "burī",
+          "meaning": "bad",
+          "gender": "feminine",
+          "number": "singular"
+        },
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "meaning": "not"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is"
+        }
+      ],
+      "anki_tags": [
+        "describing-things",
+        "casual",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/05_hā_burī_nahī_hai.mp3"
+    }
+  ]
+}

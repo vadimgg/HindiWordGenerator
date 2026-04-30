@@ -90,7 +90,7 @@ export interface SentenceWord {
 export interface SentenceToken {
   hindi: string;
   roman: string;
-  kind: 'word' | 'punct';
+  kind: 'word' | 'punct' | 'space';
   word_index?: number;
 }
 

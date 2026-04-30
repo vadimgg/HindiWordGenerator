@@ -116,6 +116,7 @@ let globalIndex = 0;
                     <span class="card-group-line"></span>
                     <span class="card-group-count">
                       {chapter.sentences.length} {chapter.sentences.length === 1 ? 'sentence' : 'sentences'}
+                      {chapter.batches?.length > 1 ? ` · ${chapter.batches.length} batches` : ''}
                     </span>
                     <span class="card-group-chevron">▾</span>
                   </div>

@@ -15,6 +15,9 @@ Each role file should define:
 ## Recommended Agents
 
 - `pipeline-planner.md`
+- `word-batch-generator.md`
+- `sentence-batch-generator.md`
+- `sentence-input-reviewer.md`
 - `prompt-tuner.md`
 - `schema-guardian.md`
 - `audio-worker.md`
@@ -39,6 +42,23 @@ but they do not override explicit scope, protected files, validation commands, o
 stop conditions.
 
 ## How To Use Them
+
+For generation without external API keys, batch agents should use the
+script-assisted workflow:
+
+1. `python3 process.py check --type <words|sentences> --batch-size <n>`
+2. take one returned batch object
+3. enrich exactly that object's `csv` with the relevant prompt
+4. save raw JSON to a temporary file
+5. `python3 process.py write <type> <stem> <batch_num> <total_batches> <count> <json_file>`
+
+Use `uv run main.py run ...` only when the user explicitly wants the
+API-backed runtime pipeline and credentials are configured.
+
+When the user says current output can be replaced for testing, batch agents may
+overwrite a small, explicit set of output batch files through `process.py write`.
+They should not edit source CSVs under that permission alone, and they should
+report exactly which output/audio files changed.
 
 When delegating work, give the sub-agent:
 - the role file name
@@ -66,6 +86,12 @@ Done when: invalid outputs fail fast and check reports quality gaps clearly.
 To avoid overlap, assign agents by responsibility:
 
 - Planner: `main.py`, planning logic, CLI ergonomics
+- Sentence input reviewer: source sentence CSV quality, translation accuracy,
+  romanisation, duplicates, and input structure before generation
+- Word batch generator: small bounded word conversion runs from `input/words/`
+  to `output/words/` using the current word prompt
+- Sentence batch generator: small bounded sentence enrichment runs from
+  `input/sentences/` to `output/sentences/` using the current sentence prompt
 - Prompt tuner: generation prompt files
 - Schema guardian: `process.py`, validation logic
 - Audio worker: `audio_generator.py`, audio paths, batch enrichment
@@ -87,14 +113,18 @@ To avoid overlap, assign agents by responsibility:
 ## Suggested Workflow
 
 1. Start with `pipeline-planner.md` to scope the task.
-2. Hand schema changes to `schema-guardian.md`.
-3. Hand prompt quality changes to `prompt-tuner.md`.
-4. Hand audio work to `audio-worker.md`.
-5. Use `output-auditor.md` to inspect a sample output set before large runs.
-6. Use `language-teacher-reviewer.md` to decide whether prompt changes are needed for teaching quality.
-7. Use `astro-viewer.md` for viewer UI, Astro, TypeScript, browser behavior, and
+2. Use `sentence-input-reviewer.md` before sentence generation when source rows
+   were produced by an AI or look risky.
+3. Use `word-batch-generator.md` for small word conversion runs.
+4. Use `sentence-batch-generator.md` for small sentence enrichment runs.
+5. Hand schema changes to `schema-guardian.md`.
+6. Hand prompt quality changes to `prompt-tuner.md`.
+7. Hand audio work to `audio-worker.md`.
+8. Use `output-auditor.md` to inspect a sample output set before large runs.
+9. Use `language-teacher-reviewer.md` to decide whether prompt changes are needed for teaching quality.
+10. Use `astro-viewer.md` for viewer UI, Astro, TypeScript, browser behavior, and
    local web validation.
-8. Use `reviewer.md` before considering a task complete when behavior, prompts,
+11. Use `reviewer.md` before considering a task complete when behavior, prompts,
    generated data, or workflow docs changed.
 
 ## Stop Conditions

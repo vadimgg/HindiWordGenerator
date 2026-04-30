@@ -70,8 +70,7 @@ const wordGroups = (() => {
 
 // ── Load sentences ────────────────────────────────────────────────────────────
 const sentenceFiles = await readJsonFiles(join(PROJECT_ROOT, 'output', 'sentences'));
-// Each file is { chapter, sentences[] }
-const sentenceChapters: { chapter: string; sentences: any[] }[] = sentenceFiles
+const sentenceBatchFiles = sentenceFiles
   .map(({ stem, data }) => {
     const audioBatch = stem;
     const chapter = (typeof data === 'object' && !Array.isArray(data) && data.sentences)
@@ -80,11 +79,25 @@ const sentenceChapters: { chapter: string; sentences: any[] }[] = sentenceFiles
     const rawSentences = (typeof data === 'object' && !Array.isArray(data) && data.sentences)
       ? data.sentences
       : Array.isArray(data) ? data : [];
-    // Stamp each sentence with its audioBatch
     const sentences = rawSentences.map((s: any) => ({ ...s, audioBatch }));
-    return { chapter, sentences };
+    return { chapter, stem, sentences };
   })
-  .filter(chapter => chapter.sentences.length > 0);
+  .filter(batch => batch.sentences.length > 0);
+
+const sentenceChapters: { chapter: string; sentences: any[]; batches: string[] }[] = (() => {
+  const merged = new Map<string, { chapter: string; sentences: any[]; batches: string[] }>();
+
+  for (const batch of sentenceBatchFiles) {
+    if (!merged.has(batch.chapter)) {
+      merged.set(batch.chapter, { chapter: batch.chapter, sentences: [], batches: [] });
+    }
+    const group = merged.get(batch.chapter)!;
+    group.batches.push(batch.stem);
+    group.sentences.push(...batch.sentences);
+  }
+
+  return [...merged.values()];
+})();
 const allSentences: any[] = sentenceChapters.flatMap(c => c.sentences);
 
 // Build a parallel array mapping sentence index → chapter name for search filtering
