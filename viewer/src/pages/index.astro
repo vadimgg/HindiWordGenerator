@@ -79,7 +79,7 @@ const sentenceBatchFiles = sentenceFiles
     const rawSentences = (typeof data === 'object' && !Array.isArray(data) && data.sentences)
       ? data.sentences
       : Array.isArray(data) ? data : [];
-    const sentences = rawSentences.map((s: any) => ({ ...s, audioBatch }));
+    const sentences = rawSentences.map((s: any) => ({ ...s, audioBatch, chapter }));
     return { chapter, stem, sentences };
   })
   .filter(batch => batch.sentences.length > 0);

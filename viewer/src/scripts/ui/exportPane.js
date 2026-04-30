@@ -20,6 +20,7 @@ import { sendToAnki, overrideDeck, ensureSentenceNoteType, sentenceToAnkiFields,
 import { downloadAnkiTxt }                               from '../anki/txtFallback.js';
 import { getSelectedWordObjects, getSelectedSentenceIndices } from '../state/selection.js';
 import { getAllSentences }                                from '../data.js';
+import { resolveSentenceAudioSrc }                        from '../../utils/audioHelpers.ts';
 
 /** @type {number|null} setInterval handle; non-null while polling is active. */
 let pollInterval = null;
@@ -210,6 +211,13 @@ function populateWordTable() {
   // Populate sentence rows
   if (sentRows) {
     sentRows.innerHTML = sentences.map(s => {
+      const wordTokenCount = (s.tokens ?? []).filter(token => token.kind === 'word').length;
+      const tokenBadge = wordTokenCount > 0
+        ? `<span class="deliver-row-chip">${wordTokenCount} words</span>`
+        : '<span class="deliver-row-chip is-muted">legacy</span>';
+      const audioBadge = resolveSentenceAudioSrc(s)
+        ? '<span class="deliver-row-chip">audio</span>'
+        : '';
       const badge = s.register
         ? `<span class="deliver-row-badge"><span class="reg reg-${s.register}" style="font-size:11px;padding:0.1rem 0.45rem;">${s.register}</span></span>`
         : '';
@@ -219,6 +227,8 @@ function populateWordTable() {
           <span class="deliver-row-sep">·</span>
           <span class="deliver-row-english">${s.english || ''}</span>
           ${badge}
+          ${tokenBadge}
+          ${audioBadge}
         </div>`;
     }).join('');
   }

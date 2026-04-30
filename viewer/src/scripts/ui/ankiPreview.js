@@ -9,9 +9,12 @@
  */
 // Responsible for: rendering Anki flip-card previews for selected words in the Words page Anki mode area
 
-import { wordToAnkiFields }     from '../anki/fields/index.js';
+import { wordToAnkiFields } from '../anki/fields/index.js';
 import { ANKI_FRONT, ANKI_BACK } from '../anki/noteType.js';
-import { getSelectedWordObjects } from '../state/selection.js';
+import { ANKI_SENTENCE_FRONT, ANKI_SENTENCE_BACK } from '../anki/sentenceNoteType.js';
+import { sentenceToAnkiFields } from '../anki/export.js';
+import { getSelectedWordObjects, getSelectedSentenceIndices } from '../state/selection.js';
+import { getAllSentences } from '../data.js';
 
 /**
  * Replaces {{FieldName}} tokens in a Mustache-style template string.
@@ -39,10 +42,9 @@ function renderTemplate(template, fields) {
  * @param {number} index - Zero-based index used for unique element IDs.
  * @returns {string} HTML string for a .anki-flip-card element.
  */
-function renderFlipCard(word, index) {
-  const fields   = wordToAnkiFields(word);
-  const frontHtml = renderTemplate(ANKI_FRONT, fields);
-  const backHtml  = renderTemplate(ANKI_BACK, fields);
+function renderFlipCard(fields, frontTemplate, backTemplate, index) {
+  const frontHtml = renderTemplate(frontTemplate, fields);
+  const backHtml  = renderTemplate(backTemplate, fields);
 
   return `
     <div class="anki-flip-card" id="preview-card-${index}">
@@ -107,7 +109,42 @@ function populateAnkiPreview() {
   }
 
   notice.style.display = 'none';
-  container.innerHTML  = selectedWords.map((w, i) => renderFlipCard(w, i)).join('');
+  container.innerHTML  = selectedWords
+    .map((w, i) => renderFlipCard(wordToAnkiFields(w), ANKI_FRONT, ANKI_BACK, i))
+    .join('');
+  container.querySelectorAll('.anki-flip-card').forEach(initFlipCard);
+}
+
+/**
+ * Populates #ps-anki-cards with flip cards for currently selected sentences.
+ *
+ * @returns {void}
+ */
+function populateSentenceAnkiPreview() {
+  const notice    = document.getElementById('ps-anki-notice');
+  const container = document.getElementById('ps-anki-cards');
+  if (!notice || !container) return;
+
+  const allSentences = getAllSentences();
+  const selectedSentences = getSelectedSentenceIndices()
+    .map(i => allSentences[i])
+    .filter(Boolean);
+
+  if (selectedSentences.length === 0) {
+    notice.style.display = '';
+    container.innerHTML = '';
+    return;
+  }
+
+  notice.style.display = 'none';
+  container.innerHTML = selectedSentences
+    .map((s, i) => renderFlipCard(
+      sentenceToAnkiFields(s, s.chapter ?? ''),
+      ANKI_SENTENCE_FRONT,
+      ANKI_SENTENCE_BACK,
+      i
+    ))
+    .join('');
   container.querySelectorAll('.anki-flip-card').forEach(initFlipCard);
 }
 
@@ -120,11 +157,20 @@ function populateAnkiPreview() {
  */
 export function initAnkiPreview() {
   populateAnkiPreview();
+  populateSentenceAnkiPreview();
 
-  window.addEventListener('selectionchange', () => populateAnkiPreview());
+  window.addEventListener('selectionchange', () => {
+    populateAnkiPreview();
+    populateSentenceAnkiPreview();
+  });
 
   const ankiModeBtn = document.getElementById('pw-mode-anki');
   if (ankiModeBtn) {
     ankiModeBtn.addEventListener('click', () => populateAnkiPreview());
+  }
+
+  const sentenceAnkiModeBtn = document.getElementById('ps-mode-anki');
+  if (sentenceAnkiModeBtn) {
+    sentenceAnkiModeBtn.addEventListener('click', () => populateSentenceAnkiPreview());
   }
 }
