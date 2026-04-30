@@ -18,9 +18,8 @@ import {
   ANKI_SENTENCE_CSS, ANKI_SENTENCE_FRONT, ANKI_SENTENCE_BACK,
 } from './sentenceNoteType.js';
 import { wordToAnkiFields }                                      from './fields/index.js';
-import { buildWordBreakdown }                                    from './fields/sentenceBreakdown.js';
+import { sentenceToAnkiFields }                                  from './fields/sentence.js';
 import { buildWordTags }                                         from './tagUtils.js';
-import { esc }                                                   from './fields/utils.js';
 import { resolveSentenceAudioSrc, resolveWordAudioSrc }          from '../../utils/audioHelpers.ts';
 
 /**
@@ -112,30 +111,7 @@ export async function ensureSentenceNoteType() {
   }
 }
 
-/**
- * Converts a sentence object into the Anki fields object for the Hindi Sentence note type.
- *
- * @param {object} sentence - Sentence object with {hindi, romanisation, english, literal?, register?, words?, anki_tags?}.
- * @param {string} chapter  - Chapter label to populate the Chapter field.
- * @returns {object} Fields object keyed by ANKI_SENTENCE_FIELDS names.
- */
-export function sentenceToAnkiFields(sentence, chapter) {
-  const sanitised = (sentence.english ?? '').replace(/\s+/g, '_').replace(/[?!.,]/g, '');
-  const audio = sentence.audioBatch && resolveSentenceAudioSrc(sentence)
-    ? `[sound:${sentence.audioBatch}__${sanitised}__sentence.mp3]`
-    : '';
-  return {
-    English:       esc(sentence.english ?? ''),
-    Hindi:         esc(sentence.hindi ?? ''),
-    Audio:         audio,
-    Romanisation:  esc(sentence.romanisation ?? ''),
-    Literal:       esc(sentence.literal ?? ''),
-    Register:      esc(sentence.register ?? ''),
-    WordBreakdown: buildWordBreakdown(sentence.words),
-    Chapter:       esc(chapter ?? ''),
-    Tags:          (sentence.anki_tags ?? []).join(' '),
-  };
-}
+export { sentenceToAnkiFields };
 
 /**
  * Fetches a sentence's audio file and uploads it to Anki's media store via

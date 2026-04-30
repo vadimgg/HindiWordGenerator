@@ -1,44 +1,29 @@
 /**
- * Anki preview renderer for the Words page Anki mode area.
+ * Anki preview renderer for the Words and Sentences Anki mode areas.
  *
- * Responsible for: rendering flip-card previews for selected words inside
- * #pw-anki-area. Listens for selectionchange events and Anki mode button
- * clicks to re-populate the preview with up-to-date selected words.
+ * Responsible for: rendering flip-card previews for selected words and
+ * sentences. Uses the same field builders and templates as the Anki export
+ * path, plus a small local renderer that simulates Anki's template tags.
  *
- * Dependencies: anki/fields/index.js, anki/noteType.js, state/selection.js
+ * Dependencies: anki/fields, anki/noteType.js, anki/sentenceNoteType.js,
+ *               anki/renderTemplate.js, state/selection.js, data.js.
  */
-// Responsible for: rendering Anki flip-card previews for selected words in the Words page Anki mode area
+// Responsible for: rendering Anki flip-card previews for selected words and sentences
 
 import { wordToAnkiFields } from '../anki/fields/index.js';
 import { ANKI_FRONT, ANKI_BACK } from '../anki/noteType.js';
 import { ANKI_SENTENCE_FRONT, ANKI_SENTENCE_BACK } from '../anki/sentenceNoteType.js';
-import { sentenceToAnkiFields } from '../anki/export.js';
+import { sentenceToAnkiFields } from '../anki/fields/sentence.js';
+import { renderTemplate } from '../anki/renderTemplate.js';
 import { getSelectedWordObjects, getSelectedSentenceIndices } from '../state/selection.js';
 import { getAllSentences } from '../data.js';
 
 /**
- * Replaces {{FieldName}} tokens in a Mustache-style template string.
- * Unsupported block tags ({{#Foo}}…{{/Foo}}) are resolved naively:
- * the block content is included when the field is non-empty, omitted otherwise.
- *
- * @param {string} template - Template string with {{Token}} placeholders.
- * @param {Record<string, string>} fields - Map of field name → HTML string.
- * @returns {string} Rendered HTML string.
- */
-function renderTemplate(template, fields) {
-  // Strip block tags: {{#Foo}}...{{/Foo}} — keep inner content when field is truthy
-  let out = template.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, inner) =>
-    fields[key] ? inner : ''
-  );
-  // Replace simple {{Token}} with field value (or empty string)
-  out = out.replace(/\{\{(\w+)\}\}/g, (_, key) => fields[key] ?? '');
-  return out;
-}
-
-/**
  * Renders the HTML string for a single Anki flip card.
  *
- * @param {object} word  - Vocabulary word object from the vocab JSON files.
+ * @param {Record<string, string>} fields - Anki field values for the card.
+ * @param {string} frontTemplate - Front template HTML.
+ * @param {string} backTemplate - Back template HTML.
  * @param {number} index - Zero-based index used for unique element IDs.
  * @returns {string} HTML string for a .anki-flip-card element.
  */
