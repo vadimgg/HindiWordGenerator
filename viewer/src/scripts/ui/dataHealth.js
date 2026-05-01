@@ -10,7 +10,7 @@
 
 import { getAllWords, getAllSentences } from '../data.js';
 import { getSelectedWordIndices, getSelectedSentenceIndices } from '../state/selection.js';
-import { countSentenceTokenIssues, hasExactSentenceTokens } from '../quality/sentenceTokens.js';
+import { countSentenceTokenIssues, getSentenceTokenIssue } from '../quality/sentenceTokens.js';
 import { resolveWordAudioSrc, resolveSentenceAudioSrc } from '../../utils/audioHelpers.ts';
 
 const setText = (id, value) => {
@@ -42,8 +42,9 @@ function collectIssues(words, sentences) {
     .filter(sentence => !resolveSentenceAudioSrc(sentence))
     .map(card => ({ type: 'sentence', reason: 'missing audio', card }));
   const sentenceTokenIssues = sentences
-    .filter(sentence => !hasExactSentenceTokens(sentence))
-    .map(card => ({ type: 'sentence', reason: 'tokens do not reconstruct exactly', card }));
+    .map(card => ({ card, issue: getSentenceTokenIssue(card) }))
+    .filter(item => item.issue)
+    .map(({ card, issue }) => ({ type: 'sentence', reason: issue.reason, card }));
 
   return [...wordIssues, ...sentenceAudioIssues, ...sentenceTokenIssues];
 }
