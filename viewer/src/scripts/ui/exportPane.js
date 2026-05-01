@@ -9,14 +9,13 @@
  * Does NOT perform the actual Anki API calls (anki/export.js) or selection
  * state management (state/selection.js) — it coordinates them.
  *
- * Dependencies: anki/connect.js, anki/export.js (sendToAnki, overrideDeck,
- *               ensureSentenceNoteType, sentenceToAnkiFields, uploadSentenceAudio),
+ * Dependencies: anki/connect.js, anki/export.js (sendToAnki, overrideDeck, sendSentencesToAnki),
  *               anki/txtFallback.js, state/selection.js, data.js.
  */
 // Responsible for: deliver page controller — word list, sentence list, AnkiConnect polling, export button
 
-import { checkAnkiConnect, ankiRequest }                  from '../anki/connect.js';
-import { sendToAnki, overrideDeck, ensureSentenceNoteType, sentenceToAnkiFields, uploadSentenceAudio } from '../anki/export.js';
+import { checkAnkiConnect }                              from '../anki/connect.js';
+import { sendToAnki, overrideDeck, sendSentencesToAnki } from '../anki/export.js';
 import { downloadAnkiTxt }                               from '../anki/txtFallback.js';
 import { getSelectedWordObjects, getSelectedSentenceIndices } from '../state/selection.js';
 import { getAllSentences }                                from '../data.js';
@@ -265,36 +264,6 @@ function buildSendMessage(added, skipped, deckName) {
   if (added === 0 && skipped > 0) return `All ${skipped} card${plural(skipped)} already exist in "${deckName}".`;
   if (skipped > 0) return `Done! ${added} card${plural(added)} added · ${skipped} already existed.`;
   return `Done! ${added} card${plural(added)} added to "${deckName}".`;
-}
-
-/**
- * Exports selected sentences to Anki incrementally (skipping duplicates).
- *
- * @param {object[]} sentences - Sentence objects to export.
- * @param {string}   deckName  - Target Anki deck name.
- * @returns {Promise<{ added: number, skipped: number }>}
- */
-async function sendSentencesToAnki(sentences, deckName) {
-  await ankiRequest('createDeck', { deck: deckName });
-  await ensureSentenceNoteType();
-  // Upload audio files before adding notes (failures are silently ignored)
-  await Promise.all(sentences.map(s => uploadSentenceAudio(s)));
-  const notes  = sentences.map(s => ({
-    deckName,
-    modelName: 'Hindi Sentence',
-    fields:    sentenceToAnkiFields(s, s.chapter ?? ''),
-    tags:      s.anki_tags ?? [],
-    options:   { allowDuplicate: false, duplicateScope: 'deck' },
-  }));
-  const canAdd  = await ankiRequest('canAddNotes', { notes });
-  const toAdd   = notes.filter((_, i) => canAdd[i]);
-  const skipped = notes.length - toAdd.length;
-  let added = 0;
-  if (toAdd.length > 0) {
-    const results = await ankiRequest('addNotes', { notes: toAdd });
-    added = Array.isArray(results) ? results.filter(r => typeof r === 'number').length : 0;
-  }
-  return { added, skipped };
 }
 
 /**

@@ -13,7 +13,8 @@
  *   4. initTooltip   — annotates example cards + tooltip positioning.
  *   5. initExportPane — export pane AnkiConnect polling and send logic.
  *   6. initQA        — QA issue list actions.
- *   7. initTabs      — fires the initial 'tabchange' event last, after all
+ *   7. initQuickExport — group-level quick Anki export buttons.
+ *   8. initTabs      — fires the initial 'tabchange' event last, after all
  *                      listeners are registered.
  */
 // Responsible for: bootstrapper — imports all modules and initialises them after DOMContentLoaded
@@ -28,6 +29,7 @@ import { initAnkiPreview }      from './ui/ankiPreview.js';
 import { initAudio }            from './ui/audio.js';
 import { initDataHealth }       from './ui/dataHealth.js';
 import { initQA }               from './ui/qa.js';
+import { initQuickExport }      from './ui/quickExport.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initSelection();          // seed selection state from all words
@@ -39,5 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initAudio();              // delegated audio playback for .wc-audio-btn elements
   initDataHealth();         // Deliver data readiness counts
   initQA();                 // QA issue jump actions
+  initQuickExport();        // chapter/group-level quick exports to Anki
   initTabs();               // last: fires initial tabchange event after all modules are ready
 });

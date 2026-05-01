@@ -334,9 +334,9 @@ function handlePageClick(e) {
     return;
   }
 
-  // Group header (collapse/expand) — but not on the checkbox itself
+  // Group header (collapse/expand) — but not on controls inside the header
   const groupHeader = e.target.closest('.card-group-header');
-  if (groupHeader && !e.target.closest('.card-group-checkbox')) {
+  if (groupHeader && !e.target.closest('.card-group-checkbox, .quick-export-btn')) {
     toggleGroupCollapse(groupHeader);
     return;
   }

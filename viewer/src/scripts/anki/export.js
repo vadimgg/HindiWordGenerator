@@ -200,6 +200,36 @@ export async function sendToAnki(words, deckName) {
 }
 
 /**
+ * Exports selected sentences to Anki, skipping cards that already exist in the deck.
+ *
+ * @param {object[]} sentences - Sentence objects to export.
+ * @param {string}   deckName  - Target Anki deck name.
+ * @returns {Promise<{ added: number, skipped: number }>} Counts of added and skipped cards.
+ */
+export async function sendSentencesToAnki(sentences, deckName) {
+  await ankiRequest('createDeck', { deck: deckName });
+  await ensureSentenceNoteType();
+  // Upload audio files before adding notes (failures are silently ignored)
+  await Promise.all(sentences.map(s => uploadSentenceAudio(s)));
+  const notes = sentences.map(s => ({
+    deckName,
+    modelName: ANKI_SENTENCE_NOTE_TYPE,
+    fields:    sentenceToAnkiFields(s, s.chapter ?? ''),
+    tags:      s.anki_tags ?? [],
+    options:   { allowDuplicate: false, duplicateScope: 'deck' },
+  }));
+  const canAdd  = await ankiRequest('canAddNotes', { notes });
+  const toAdd   = notes.filter((_, i) => canAdd[i]);
+  const skipped = notes.length - toAdd.length;
+  let added = 0;
+  if (toAdd.length > 0) {
+    const results = await ankiRequest('addNotes', { notes: toAdd });
+    added = Array.isArray(results) ? results.filter(r => typeof r === 'number').length : 0;
+  }
+  return { added, skipped };
+}
+
+/**
  * Replaces all cards in the target deck with the given words.
  *
  * Deletes every existing note in the deck first, then adds all selected words

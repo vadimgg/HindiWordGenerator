@@ -118,6 +118,14 @@ let globalIndex = 0;
                       {chapter.sentences.length} {chapter.sentences.length === 1 ? 'sentence' : 'sentences'}
                       {chapter.batches?.length > 1 ? ` · ${chapter.batches.length} batches` : ''}
                     </span>
+                    <button
+                      class="quick-export-btn"
+                      type="button"
+                      data-quick-export="sentences"
+                      data-quick-export-title={chapter.chapter}
+                    >
+                      Quick export
+                    </button>
                     <span class="card-group-chevron">▾</span>
                   </div>
                 </div>

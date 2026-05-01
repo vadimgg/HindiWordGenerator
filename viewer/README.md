@@ -64,3 +64,9 @@ Sentence batches should have this shape:
 
 Cards with an `audio` field render a play button. Cards without audio still
 render normally.
+
+## Anki Export Workflow
+
+Use the quick export buttons in Words or Sentences to send a whole chapter or
+group to Anki immediately. Use Deliver when you want an advanced custom export
+based on the current selected cards.

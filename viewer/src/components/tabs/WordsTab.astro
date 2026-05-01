@@ -109,6 +109,14 @@ const dateChips = [...new Map(allDates.map(d => {
               <span class="card-group-label">{group.title}</span>
               <span class="card-group-line"></span>
               <span class="card-group-count">{group.words.length} {group.words.length === 1 ? 'word' : 'words'}</span>
+              <button
+                class="quick-export-btn"
+                type="button"
+                data-quick-export="words"
+                data-quick-export-title={group.title}
+              >
+                Quick export
+              </button>
               <span class="card-group-chevron">▾</span>
             </div>
           </div>
