@@ -1707,6 +1707,31 @@ body {
   color: #64748b;
 }
 
+.qa-view-card-btn {
+  margin-top: 0.45rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid rgba(94,234,212,0.24);
+  background: rgba(94,234,212,0.08);
+  color: #5eead4;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.qa-view-card-btn:hover {
+  border-color: rgba(94,234,212,0.45);
+  background: rgba(94,234,212,0.12);
+}
+
+.qa-jump-highlight {
+  border-color: rgba(251,191,36,0.9) !important;
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.22), 0 10px 30px rgba(0,0,0,0.32);
+}
+
 .qa-diff-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

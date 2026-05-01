@@ -11,6 +11,7 @@
 
 interface QaIssue {
   type: 'audio' | 'tokens';
+  sentenceIndex: number;
   label: string;
   hindi: string;
   english: string;
@@ -83,6 +84,13 @@ const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
                   <strong lang="hi">{issue.hindi}</strong>
                   <p>{issue.english}</p>
                   <small>{issue.chapter} · {issue.label}</small>
+                  <button
+                    class="qa-view-card-btn"
+                    data-qa-jump-sentence={issue.sentenceIndex}
+                    type="button"
+                  >
+                    View card
+                  </button>
                 </div>
               </div>
               {issue.expected && issue.actual && (

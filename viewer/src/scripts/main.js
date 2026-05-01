@@ -12,7 +12,8 @@
  *                             drag-to-select; needs selection state to be seeded.
  *   4. initTooltip   — annotates example cards + tooltip positioning.
  *   5. initExportPane — export pane AnkiConnect polling and send logic.
- *   6. initTabs      — fires the initial 'tabchange' event last, after all
+ *   6. initQA        — QA issue list actions.
+ *   7. initTabs      — fires the initial 'tabchange' event last, after all
  *                      listeners are registered.
  */
 // Responsible for: bootstrapper — imports all modules and initialises them after DOMContentLoaded
@@ -26,6 +27,7 @@ import { initExportPane }       from './ui/exportPane.js';
 import { initAnkiPreview }      from './ui/ankiPreview.js';
 import { initAudio }            from './ui/audio.js';
 import { initDataHealth }       from './ui/dataHealth.js';
+import { initQA }               from './ui/qa.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initSelection();          // seed selection state from all words
@@ -36,5 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initAnkiPreview();        // populate Anki flip-card preview on Words page
   initAudio();              // delegated audio playback for .wc-audio-btn elements
   initDataHealth();         // Deliver data readiness counts
+  initQA();                 // QA issue jump actions
   initTabs();               // last: fires initial tabchange event after all modules are ready
 });

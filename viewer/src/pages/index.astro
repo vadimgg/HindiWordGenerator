@@ -128,12 +128,13 @@ const dataHealth = {
   sentenceTokenReady: allSentences.filter(hasExactSentenceTokens).length,
 };
 
-const qaIssues = allSentences.flatMap((sentence) => {
+const qaIssues = allSentences.flatMap((sentence, index) => {
   const issues = [];
   const tokenIssue = getSentenceTokenIssue(sentence);
   if (tokenIssue) {
     issues.push({
       type: 'tokens',
+      sentenceIndex: index,
       label: tokenIssue.reason,
       hindi: sentence.hindi ?? '',
       english: sentence.english ?? '',
@@ -145,6 +146,7 @@ const qaIssues = allSentences.flatMap((sentence) => {
   if (!sentence.audio) {
     issues.push({
       type: 'audio',
+      sentenceIndex: index,
       label: 'missing audio path',
       hindi: sentence.hindi ?? '',
       english: sentence.english ?? '',
