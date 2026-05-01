@@ -96,6 +96,16 @@ const ankiConnectConfig = `{
           {(dataHealth.totalWords + dataHealth.totalSentences) - (dataHealth.wordAudioReady + dataHealth.sentenceAudioReady)}
         </strong>
       </div>
+      <div class="data-health-bar-row">
+        <span>Selected sentences missing exact tokens</span>
+        <strong id="data-health-selected-token-issues">
+          {dataHealth.totalSentences - dataHealth.sentenceTokenReady}
+        </strong>
+      </div>
+      <div class="data-health-bar-row data-health-status-row" id="data-health-selected-status">
+        <span>Selected export readiness</span>
+        <strong id="data-health-selected-status-label">Ready</strong>
+      </div>
     </div>
   </section>
 

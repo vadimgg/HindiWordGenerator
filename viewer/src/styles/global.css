@@ -997,7 +997,7 @@ body {
 
 .data-health-bars {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
   margin-top: 0.65rem;
 }
@@ -1023,6 +1023,19 @@ body {
 .data-health-bar-row strong {
   font-family: 'DM Mono', monospace;
   font-size: 13px;
+  color: #fbbf24;
+}
+
+.data-health-status-row strong {
+  color: #4ade80;
+}
+
+.data-health-status-row.has-warning {
+  border-color: rgba(251,191,36,0.35);
+  background: rgba(251,191,36,0.08);
+}
+
+.data-health-status-row.has-warning strong {
   color: #fbbf24;
 }
 
