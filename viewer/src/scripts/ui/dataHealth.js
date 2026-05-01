@@ -4,25 +4,19 @@
  * Responsible for: keeping the Deliver page health summary in sync with the
  * current word and sentence selection.
  *
- * Dependencies: data.js, state/selection.js, audioHelpers.ts.
+ * Dependencies: data.js, state/selection.js, quality/sentenceTokens.js, audioHelpers.ts.
  */
 // Responsible for: updating the Deliver data health panel from selected cards
 
 import { getAllWords, getAllSentences } from '../data.js';
 import { getSelectedWordIndices, getSelectedSentenceIndices } from '../state/selection.js';
+import { countSentenceTokenIssues } from '../quality/sentenceTokens.js';
 import { resolveWordAudioSrc, resolveSentenceAudioSrc } from '../../utils/audioHelpers.ts';
 
 const setText = (id, value) => {
   const el = document.getElementById(id);
   if (el) el.textContent = String(value);
 };
-
-function hasExactSentenceTokens(sentence) {
-  if (!Array.isArray(sentence.tokens) || sentence.tokens.length === 0) return false;
-  const joinedHindi = sentence.tokens.map(token => token.hindi ?? '').join('');
-  const joinedRoman = sentence.tokens.map(token => token.roman ?? '').join('');
-  return joinedHindi === (sentence.hindi ?? '') && joinedRoman === (sentence.romanisation ?? '');
-}
 
 function countMissingAudio(words, sentences) {
   const missingWords = words.filter(word => !resolveWordAudioSrc(word)).length;
@@ -47,7 +41,7 @@ function updateDataHealthPanel() {
   const selectedSentences = getSelectedSentenceIndices().map(i => allSentences[i]).filter(Boolean);
   const selectedTotal = selectedWords.length + selectedSentences.length;
   const selectedMissingAudio = countMissingAudio(selectedWords, selectedSentences);
-  const selectedTokenIssues = selectedSentences.filter(sentence => !hasExactSentenceTokens(sentence)).length;
+  const selectedTokenIssues = countSentenceTokenIssues(selectedSentences);
 
   setText('data-health-selected-total', selectedTotal);
   setText('data-health-selected-words', selectedWords.length);

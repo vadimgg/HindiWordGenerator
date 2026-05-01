@@ -8,6 +8,7 @@
     "prebuild": "node scripts/sync-audio.js",
     "build": "astro build",
     "check:anki": "node scripts/check-anki-preview.js",
+    "check:quality": "node scripts/check-sentence-quality.js",
     "preview": "astro preview",
     "sync:audio": "node scripts/sync-audio.js"
   },
