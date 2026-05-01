@@ -5,23 +5,23 @@
  * page panels, updating the top nav bar button styling (is-active class),
  * and dispatching a 'tabchange' CustomEvent so other modules can react.
  *
- * Page panels are: #page-words, #page-sentences, #page-deliver.
+ * Page panels are: #page-words, #page-sentences, #page-deliver, #page-qa.
  * Each panel uses `.page` / `.page.is-active` (display:none → display:block).
  *
  * Nav buttons are `[data-tab]` buttons in NavBar.astro, identified by id:
- *   #nav-words, #nav-sentences, #nav-deliver.
+ *   #nav-words, #nav-sentences, #nav-deliver, #nav-qa.
  *
  * No dependencies on other project modules.
  */
 // Responsible for: active tab state, DOM panel switching, and tabchange event dispatch
 
-/** @type {'words'|'sentences'|'deliver'} Currently active tab name. */
+/** @type {'words'|'sentences'|'deliver'|'qa'} Currently active tab name. */
 let activeTab = 'words';
 
 /**
  * Returns the currently active tab name.
  *
- * @returns {'words'|'sentences'|'deliver'}
+ * @returns {'words'|'sentences'|'deliver'|'qa'}
  */
 export function getActiveTab() { return activeTab; }
 
@@ -45,7 +45,7 @@ export function initTabs() {
  * Adds `is-active` class to the active button and removes it from others.
  * Also sets aria-current attribute for accessibility.
  *
- * @param {'words'|'sentences'|'deliver'} name - The newly active tab name.
+ * @param {'words'|'sentences'|'deliver'|'qa'} name - The newly active tab name.
  * @returns {void}
  */
 function updateNavButtons(name) {
@@ -60,15 +60,15 @@ function updateNavButtons(name) {
  * Activates a tab by name: shows its page panel, hides the others,
  * updates the nav bar button styling, and dispatches a 'tabchange' event.
  *
- * Page panel IDs: #page-words, #page-sentences, #page-deliver.
+ * Page panel IDs: #page-words, #page-sentences, #page-deliver, #page-qa.
  *
- * @param {'words'|'sentences'|'deliver'} name - The tab to activate.
+ * @param {'words'|'sentences'|'deliver'|'qa'} name - The tab to activate.
  * @returns {void}
  */
 export function switchTab(name) {
   activeTab = name;
 
-  const PAGES = ['words', 'sentences', 'deliver'];
+  const PAGES = ['words', 'sentences', 'deliver', 'qa'];
   PAGES.forEach(p => {
     const pageEl = document.getElementById(`page-${p}`);
     if (pageEl) pageEl.classList.toggle('is-active', p === name);

@@ -5,7 +5,8 @@ import NavBar      from '../components/NavBar.astro';
 import WordsTab    from '../components/tabs/WordsTab.astro';
 import SentencesTab from '../components/tabs/SentencesTab.astro';
 import ExportTab   from '../components/tabs/ExportTab.astro';
-import { hasExactSentenceTokens } from '../scripts/quality/sentenceTokens.js';
+import QATab       from '../components/tabs/QATab.astro';
+import { getSentenceTokenIssue, hasExactSentenceTokens } from '../scripts/quality/sentenceTokens.js';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -126,6 +127,32 @@ const dataHealth = {
   sentenceAudioReady: allSentences.filter(sentence => Boolean(sentence.audio)).length,
   sentenceTokenReady: allSentences.filter(hasExactSentenceTokens).length,
 };
+
+const qaIssues = allSentences.flatMap((sentence) => {
+  const issues = [];
+  const tokenIssue = getSentenceTokenIssue(sentence);
+  if (tokenIssue) {
+    issues.push({
+      type: 'tokens',
+      label: tokenIssue.reason,
+      hindi: sentence.hindi ?? '',
+      english: sentence.english ?? '',
+      chapter: sentence.chapter ?? '',
+      expected: tokenIssue.expected,
+      actual: tokenIssue.actual,
+    });
+  }
+  if (!sentence.audio) {
+    issues.push({
+      type: 'audio',
+      label: 'missing audio path',
+      hindi: sentence.hindi ?? '',
+      english: sentence.english ?? '',
+      chapter: sentence.chapter ?? '',
+    });
+  }
+  return issues;
+});
 ---
 
 <Layout title="Hindi Vocabulary">
@@ -140,6 +167,7 @@ const dataHealth = {
       <WordsTab allWords={allWords} vocabFilesCount={wordFiles.length} wordGroups={wordGroups} />
       <SentencesTab allSentences={allSentences} sentenceChapters={sentenceChapters} />
       <ExportTab dataHealth={dataHealth} />
+      <QATab qaIssues={qaIssues} totalSentences={allSentences.length} totalWords={allWords.length} />
 
     </main>
 
