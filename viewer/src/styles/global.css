@@ -910,8 +910,124 @@ body {
   white-space: nowrap;
 }
 
-.anki-help-panel {
+.data-health-panel {
   margin: -1rem 0 2rem;
+  padding: 1rem;
+  background: linear-gradient(145deg, rgba(19,31,53,0.92), rgba(15,23,42,0.88));
+  border: 1px solid rgba(51,65,85,0.45);
+  border-radius: 10px;
+}
+
+.data-health-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.data-health-kicker,
+.data-health-label {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.data-health-kicker { color: #5eead4; margin-bottom: 0.25rem; }
+
+.data-health-head h2 {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #e2e8f0;
+}
+
+.data-health-total {
+  min-width: 5.25rem;
+  text-align: right;
+}
+
+.data-health-total span {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 1.7rem;
+  line-height: 1;
+  color: #fbbf24;
+}
+
+.data-health-total small,
+.data-health-stat small {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.data-health-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.data-health-stat {
+  min-width: 0;
+  padding: 0.8rem;
+  background: rgba(8,13,24,0.42);
+  border: 1px solid rgba(51,65,85,0.35);
+  border-radius: 8px;
+}
+
+.data-health-label {
+  color: #64748b;
+  margin-bottom: 0.4rem;
+}
+
+.data-health-stat strong {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  color: #cbd5e1;
+}
+
+.data-health-bars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.65rem;
+}
+
+.data-health-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(15,23,42,0.58);
+  border: 1px solid rgba(51,65,85,0.28);
+}
+
+.data-health-bar-row span {
+  min-width: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.data-health-bar-row strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: #fbbf24;
+}
+
+.anki-help-panel {
+  margin: 0 0 2rem;
   background: linear-gradient(145deg, rgba(19,31,53,0.92), rgba(15,23,42,0.88));
   border: 1px solid rgba(51,65,85,0.45);
   border-radius: 10px;
@@ -1069,6 +1185,15 @@ body {
 
   .anki-help-grid {
     grid-template-columns: 1fr;
+  }
+
+  .data-health-head {
+    align-items: center;
+  }
+
+  .data-health-grid,
+  .data-health-bars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

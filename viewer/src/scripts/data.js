@@ -47,3 +47,17 @@ export const getHoverData = () => window.__APP_DATA__?.hoverData ?? [];
  * @returns {object[]}
  */
 export const getAllSentences = () => window.__APP_DATA__?.allSentences ?? [];
+
+/**
+ * Returns build-time health totals for loaded card data.
+ * @returns {{ wordFiles:number, sentenceFiles:number, totalWords:number, totalSentences:number, wordAudioReady:number, sentenceAudioReady:number, sentenceTokenReady:number }}
+ */
+export const getDataHealth = () => window.__APP_DATA__?.dataHealth ?? {
+  wordFiles: 0,
+  sentenceFiles: 0,
+  totalWords: 0,
+  totalSentences: 0,
+  wordAudioReady: 0,
+  sentenceAudioReady: 0,
+  sentenceTokenReady: 0,
+};

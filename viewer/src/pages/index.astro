@@ -115,6 +115,23 @@ const hoverData           = allWords.map((w, i) => ({
 }));
 const wordGroupTitles: string[] = new Array(allWords.length).fill('Hindi Vocabulary');
 wordGroups.forEach(g => g.words.forEach(({ i }) => { wordGroupTitles[i] = g.title; }));
+
+const sentenceHasExactTokens = (sentence: any) => {
+  if (!Array.isArray(sentence.tokens) || sentence.tokens.length === 0) return false;
+  const joinedHindi = sentence.tokens.map((token: any) => token.hindi ?? '').join('');
+  const joinedRoman = sentence.tokens.map((token: any) => token.roman ?? '').join('');
+  return joinedHindi === (sentence.hindi ?? '') && joinedRoman === (sentence.romanisation ?? '');
+};
+
+const dataHealth = {
+  wordFiles: wordFiles.length,
+  sentenceFiles: sentenceFiles.length,
+  totalWords: allWords.length,
+  totalSentences: allSentences.length,
+  wordAudioReady: allWords.filter(word => Boolean(word.audio)).length,
+  sentenceAudioReady: allSentences.filter(sentence => Boolean(sentence.audio)).length,
+  sentenceTokenReady: allSentences.filter(sentenceHasExactTokens).length,
+};
 ---
 
 <Layout title="Hindi Vocabulary">
@@ -128,7 +145,7 @@ wordGroups.forEach(g => g.words.forEach(({ i }) => { wordGroupTitles[i] = g.titl
 
       <WordsTab allWords={allWords} vocabFilesCount={wordFiles.length} wordGroups={wordGroups} />
       <SentencesTab allSentences={allSentences} sentenceChapters={sentenceChapters} />
-      <ExportTab />
+      <ExportTab dataHealth={dataHealth} />
 
     </main>
 
@@ -143,7 +160,7 @@ wordGroups.forEach(g => g.words.forEach(({ i }) => { wordGroupTitles[i] = g.titl
     </div>
   </div>
 
-<script define:vars={{ __d: { allWords, wordGroupTitles, wordSearchIndex, sentenceSearchIndex, hoverData, allSentences } }}>
+<script define:vars={{ __d: { allWords, wordGroupTitles, wordSearchIndex, sentenceSearchIndex, hoverData, allSentences, dataHealth } }}>
   window.__APP_DATA__ = __d;
 </script>
 <script>
