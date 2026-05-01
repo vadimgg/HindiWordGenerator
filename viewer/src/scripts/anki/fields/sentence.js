@@ -4,11 +4,12 @@
  * Responsible for: mapping a sentence object to the complete field object used
  * by both Anki export and the web Anki preview.
  *
- * Dependencies: sentenceBreakdown.js, utils.js.
+ * Dependencies: sentenceBreakdown.js, media.js, utils.js.
  */
 // Responsible for: assembling sentenceToAnkiFields() for Hindi Sentence cards
 
 import { buildWordBreakdown } from './sentenceBreakdown.js';
+import { sentenceMediaFilename, soundTag } from '../media.js';
 import { esc } from './utils.js';
 
 /**
@@ -19,8 +20,7 @@ import { esc } from './utils.js';
  */
 export function buildSentenceAudio(sentence) {
   if (!sentence.audioBatch || !sentence.audio) return '';
-  const sanitised = (sentence.english ?? '').replace(/\s+/g, '_').replace(/[?!.,]/g, '');
-  return `[sound:${sentence.audioBatch}__${sanitised}__sentence.mp3]`;
+  return soundTag(sentenceMediaFilename(sentence));
 }
 
 /**

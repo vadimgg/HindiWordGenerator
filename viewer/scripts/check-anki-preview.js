@@ -9,6 +9,7 @@ import {
   ANKI_SENTENCE_FIELDS,
 } from '../src/scripts/anki/sentenceNoteType.js';
 import { renderTemplate } from '../src/scripts/anki/renderTemplate.js';
+import { sentenceMediaFilename, wordMediaFilename } from '../src/scripts/anki/media.js';
 
 function assertRendered(name, html, expectedSnippets) {
   assert(!html.includes('{{'), `${name} still contains an unresolved template token`);
@@ -36,6 +37,7 @@ const word = {
 
 const wordFields = wordToAnkiFields(word);
 assert.deepEqual(Object.keys(wordFields), ANKI_FIELDS, 'word field keys must match ANKI_FIELDS');
+assert.equal(wordFields.Audio, `[sound:${wordMediaFilename(word)}]`, 'word audio field must match shared media filename');
 assertRendered('word front preview', renderTemplate(ANKI_FRONT, wordFields), ['window']);
 assertRendered('word back preview', renderTemplate(ANKI_BACK, wordFields), ['खिड़की', 'khiṛkī']);
 
@@ -58,6 +60,7 @@ const sentence = {
 
 const sentenceFields = sentenceToAnkiFields(sentence, 'Complete Hindi Chapter 01');
 assert.deepEqual(Object.keys(sentenceFields), ANKI_SENTENCE_FIELDS, 'sentence field keys must match ANKI_SENTENCE_FIELDS');
+assert.equal(sentenceFields.Audio, `[sound:${sentenceMediaFilename(sentence)}]`, 'sentence audio field must match shared media filename');
 assertRendered('sentence front preview', renderTemplate(ANKI_SENTENCE_FRONT, sentenceFields), ['Is this a window?', 'standard']);
 assertRendered('sentence back preview', renderTemplate(ANKI_SENTENCE_BACK, sentenceFields), [
   'क्या यह खिड़की है?',

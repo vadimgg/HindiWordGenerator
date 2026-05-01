@@ -20,6 +20,7 @@ import {
 import { wordToAnkiFields }                                      from './fields/index.js';
 import { sentenceToAnkiFields }                                  from './fields/sentence.js';
 import { buildWordTags }                                         from './tagUtils.js';
+import { sentenceMediaFilename, wordMediaFilename }               from './media.js';
 import { resolveSentenceAudioSrc, resolveWordAudioSrc }          from '../../utils/audioHelpers.ts';
 
 /**
@@ -125,9 +126,8 @@ export { sentenceToAnkiFields };
  */
 export async function uploadSentenceAudio(sentence) {
   const path = resolveSentenceAudioSrc(sentence);
-  if (!path || !sentence.audioBatch) return;
-  const sanitised = (sentence.english ?? '').replace(/\s+/g, '_').replace(/[?!.,]/g, '');
-  const filename = `${sentence.audioBatch}__${sanitised}__sentence.mp3`;
+  const filename = sentenceMediaFilename(sentence);
+  if (!path || !filename) return;
   try {
     const response = await fetch(path);
     if (!response.ok) return;
@@ -156,8 +156,8 @@ export async function uploadSentenceAudio(sentence) {
  */
 async function uploadWordAudio(word) {
   const path = resolveWordAudioSrc(word);
-  if (!path || !word.audioBatch) return;
-  const filename = `${word.audioBatch}__${word.hindi}_${word.romanisation}__word.mp3`;
+  const filename = wordMediaFilename(word);
+  if (!path || !filename) return;
   try {
     const response = await fetch(path);
     if (!response.ok) return;

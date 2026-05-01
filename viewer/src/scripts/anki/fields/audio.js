@@ -6,9 +6,11 @@
  * so the filename is namespaced with the audioBatch and word identifiers
  * to ensure uniqueness across all exported words.
  *
- * Dependencies: none.
+ * Dependencies: anki/media.js.
  */
 // Responsible for: building the Anki Audio field with [sound:] syntax for word pronunciation
+
+import { soundTag, wordMediaFilename } from '../media.js';
 
 /**
  * Builds the Anki Audio field value for a vocabulary word.
@@ -24,6 +26,5 @@
  */
 export function buildAnkiAudio(word) {
   if (!word.audioBatch || !word.audio) return '';
-  const filename = `${word.audioBatch}__${word.hindi}_${word.romanisation}__word.mp3`;
-  return `[sound:${filename}]`;
+  return soundTag(wordMediaFilename(word));
 }
