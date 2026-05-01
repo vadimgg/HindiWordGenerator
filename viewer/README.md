@@ -28,9 +28,13 @@ will read the latest `output/` files and serve audio through
 ```bash
 npm install
 npm run dev
+npm run check
 npm run build
 npm run preview
 ```
+
+Use `npm run check` before committing viewer changes. It runs sentence quality
+checks, Anki preview/export parity checks, and a production Astro build.
 
 The dev server usually opens at:
 
@@ -60,4 +64,3 @@ Sentence batches should have this shape:
 
 Cards with an `audio` field render a play button. Cards without audio still
 render normally.
-
