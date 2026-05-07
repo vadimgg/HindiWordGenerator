@@ -1,0 +1,221 @@
+/* ─── Highlighted script / label spans (inserted via set:html) ──────────── */
+
+.hl-deva {
+  font-family: 'Tiro Devanagari Hindi', serif;
+  font-size: 1.25em;
+  line-height: 1.8;
+  color: var(--hl-devanagari);
+}
+
+.hl-cyrillic {
+  font-family: 'PT Serif', Georgia, serif;
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--hl-cyrillic);
+}
+
+.hl-hebrew {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 1.1em;
+  color: var(--hl-hebrew);
+}
+
+.hl-lang    { color: var(--hl-language);  font-weight: 600; }
+.hl-country { color: var(--hl-country);   font-weight: 600; }
+
+/* ── Per-language name colours (muted but distinct) ─────────────────────── */
+.hl-lang-pie      { color: #99f6e4; font-weight: 600; opacity: 0.75; } /* teal-200   — Proto-Indo-European / PIE   */
+.hl-lang-sanskrit { color: #fcd34d; font-weight: 600; opacity: 0.80; } /* amber-300  — Sanskrit                    */
+.hl-lang-prakrit  { color: #fde68a; font-weight: 600; opacity: 0.65; } /* amber-200  — Prakrit / Apabhraṃśa        */
+.hl-lang-hindi    { color: #fbbf24; font-weight: 600; opacity: 0.80; } /* amber-400  — Hindi                       */
+.hl-lang-urdu     { color: #f59e0b; font-weight: 600; opacity: 0.75; } /* amber-500  — Urdu                        */
+.hl-lang-arabic   { color: #fb923c; font-weight: 600; opacity: 0.75; } /* orange-400 — Arabic                      */
+.hl-lang-persian  { color: #f472b6; font-weight: 600; opacity: 0.70; } /* pink-400   — Persian                     */
+.hl-lang-english  { color: #38bdf8; font-weight: 600; opacity: 0.75; } /* sky-400    — English                     */
+.hl-lang-russian  { color: #67e8f9; font-weight: 600; opacity: 0.75; } /* cyan-300   — Russian                     */
+.hl-lang-hebrew   { color: #6ee7b7; font-weight: 600; opacity: 0.75; } /* emerald-300 — Hebrew                    */
+.hl-lang-latin    { color: #c4b5fd; font-weight: 600; opacity: 0.70; } /* violet-300 — Latin                       */
+.hl-lang-greek    { color: #818cf8; font-weight: 600; opacity: 0.70; } /* indigo-400 — Greek                       */
+.hl-lang-french   { color: #a78bfa; font-weight: 600; opacity: 0.70; } /* violet-400 — French                      */
+.hl-lang-german   { color: #94a3b8; font-weight: 600; opacity: 0.70; } /* slate-400  — German                      */
+.hl-lang-italian  { color: #86efac; font-weight: 600; opacity: 0.70; } /* green-300  — Italian                     */
+.hl-lang-spanish  { color: #fca5a5; font-weight: 600; opacity: 0.70; } /* red-300    — Spanish                     */
+.hl-roman   { color: var(--hl-romanised); }
+.hl-masc    { color: var(--color-masc);   font-weight: 600; }
+.hl-fem     { color: var(--color-fem);    font-weight: 600; }
+
+
+/* ─── Form chips (gender + grammatical function) ────────────────────────── */
+
+.form-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  font-weight: 500;
+  /* neutral fallback */
+  color: #94a3b8;
+  background: color-mix(in srgb, #94a3b8 10%, transparent);
+  border-color: color-mix(in srgb, #94a3b8 28%, transparent);
+}
+
+/* Gender */
+.form-chip-masc {
+  color: var(--color-masc);
+  background: color-mix(in srgb, var(--color-masc) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-masc) 45%, transparent);
+}
+.form-chip-fem {
+  color: var(--color-fem);
+  background: color-mix(in srgb, var(--color-fem) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-fem) 45%, transparent);
+}
+
+/* Grammatical function chips */
+.form-chip-teal    { color: #2dd4bf; background: color-mix(in srgb, #2dd4bf 12%, transparent); border-color: color-mix(in srgb, #2dd4bf 40%, transparent); }
+.form-chip-sky     { color: #38bdf8; background: color-mix(in srgb, #38bdf8 12%, transparent); border-color: color-mix(in srgb, #38bdf8 40%, transparent); }
+.form-chip-amber   { color: #fbbf24; background: color-mix(in srgb, #fbbf24 12%, transparent); border-color: color-mix(in srgb, #fbbf24 40%, transparent); }
+.form-chip-violet  { color: #a78bfa; background: color-mix(in srgb, #a78bfa 12%, transparent); border-color: color-mix(in srgb, #a78bfa 40%, transparent); }
+.form-chip-emerald { color: #34d399; background: color-mix(in srgb, #34d399 12%, transparent); border-color: color-mix(in srgb, #34d399 40%, transparent); }
+.form-chip-rose    { color: #fb7185; background: color-mix(in srgb, #fb7185 12%, transparent); border-color: color-mix(in srgb, #fb7185 40%, transparent); }
+.form-chip-indigo  { color: #818cf8; background: color-mix(in srgb, #818cf8 12%, transparent); border-color: color-mix(in srgb, #818cf8 40%, transparent); }
+
+
+/* ─── Card accent utilities (used in WordCard.astro) ────────────────────── */
+
+.word-hindi { color: var(--color-hindi); }
+.word-roman { color: var(--color-roman); }
+
+
+/* ─── Word selection ────────────────────────────────────────────────────── */
+
+/* Deselect button on cards — hidden until selection-mode is active */
+.deselect-btn {
+  display: flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #71717a; /* zinc-500 — visible but not loud */
+  border: 1px solid #3f3f46; /* zinc-700 */
+  transition: color 0.1s, background-color 0.1s, border-color 0.1s;
+  cursor: pointer;
+}
+.deselect-btn:hover {
+  color: #fca5a5; /* red-300 */
+  background-color: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Selected card */
+article.is-selected {
+  border-color: var(--color-hindi);
+  background-color: color-mix(in srgb, var(--color-hindi) 5%, #0f172a);
+}
+
+/* ─── Index collapse button (left of date group header) ─────────────────── */
+
+.collapse-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 3px;
+  color: #52525b; /* zinc-600 */
+  font-size: 0.6rem;
+  cursor: pointer;
+  transition: color 0.1s, background-color 0.1s;
+}
+.collapse-btn:hover { color: #a1a1aa; background-color: rgba(63,63,70,0.4); }
+.collapse-btn .chevron { display: inline-block; transition: transform 0.15s; }
+.collapse-btn.is-collapsed .chevron { transform: rotate(-90deg); }
+
+/* ─── Index checkbox (right side of rows) ───────────────────────────────── */
+
+.idx-checkbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1.5px solid #3f3f46; /* zinc-700 */
+  background: transparent;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+.idx-checkbox:hover { border-color: #71717a; /* zinc-500 */ }
+.idx-checkbox.is-on {
+  background-color: var(--color-hindi);
+  border-color: var(--color-hindi);
+}
+.idx-checkbox.is-on::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 0;
+  width: 4px; height: 8px;
+  border: 1.5px solid #09090b;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ─── Index rows ─────────────────────────────────────────────────────────── */
+
+.idx-row {
+  user-select: none;
+  transition: background-color 0.1s;
+}
+.idx-row:hover              { background-color: rgba(63, 63, 70, 0.35); }
+.idx-row.is-sel             { background-color: color-mix(in srgb, var(--color-hindi) 7%, transparent); }
+.idx-row.is-active          { background-color: rgba(63, 63, 70, 0.25); }
+.idx-row.is-active .text-zinc-500 { color: #a1a1aa; }
+
+/* ─── Date group header ──────────────────────────────────────────────────── */
+
+.date-group-hdr { user-select: none; }
+.date-group-toggle { background: none; border: none; padding: 0; }
+.date-group-toggle:hover .group-hdr-label { color: #a1a1aa; }
+
+.date-group-words.collapsed { display: none; }
+
+
+/* ─── Vocab hint spans (interactive words in examples) ─────────────────── */
+
+.vocab-hint {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: currentColor;
+  opacity: 0.85;
+  border-radius: 2px;
+  transition: opacity 0.1s, background-color 0.1s;
+}
+.vocab-hint:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+
+/* ─── Card collapse ─────────────────────────────────────────────────────── */
+
+article.is-collapsed .card-expandable { display: none; }
+
+/* ─── Devanagari font applied to every lang="hi" element ────────────────── */
+
+[lang="hi"],
+.hl-deva {
+  font-family: 'Tiro Devanagari Hindi', serif;
+}
+
+
+/* ─── Page background depth ─────────────────────────────────────────────── */

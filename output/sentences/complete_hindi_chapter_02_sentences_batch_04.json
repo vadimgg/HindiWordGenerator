@@ -1,0 +1,486 @@
+{
+  "title": "Complete Hindi",
+  "subtitle": "Chapter 02",
+  "sentences": [
+    {
+      "hindi": "और आप कैसे हैं?",
+      "romanisation": "aur āp kaise haĩ?",
+      "english": "And how are you?",
+      "literal": "and you how are",
+      "register": "formal",
+      "tokens": [
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "kind": "word",
+          "word_index": 0
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "आप",
+          "roman": "āp",
+          "kind": "word",
+          "word_index": 1
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "kind": "word",
+          "word_index": 2
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "kind": "word",
+          "word_index": 3
+        },
+        {
+          "hindi": "?",
+          "roman": "?",
+          "kind": "punct"
+        }
+      ],
+      "words": [
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "meaning": "and"
+        },
+        {
+          "hindi": "आप",
+          "roman": "āp",
+          "meaning": "you",
+          "note": "Polite 'you'; use with elders, strangers, or anyone you want to show respect to."
+        },
+        {
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "meaning": "how",
+          "number": "plural",
+          "note": "Used here because the polite 'you' takes plural-style wording."
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are"
+        }
+      ],
+      "anki_tags": [
+        "greetings",
+        "formal",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_04/01_aur_āp_kaise_haĩ.mp3"
+    },
+    {
+      "hindi": "मैं भी अच्छा हूँ, शुक्रिया।",
+      "romanisation": "maĩ bhī acchā hū̃, śukriyā.",
+      "english": "I'm well too, thank you.",
+      "literal": "I also good am, thanks",
+      "register": "neutral",
+      "tokens": [
+        {
+          "hindi": "मैं",
+          "roman": "maĩ",
+          "kind": "word",
+          "word_index": 0
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "भी",
+          "roman": "bhī",
+          "kind": "word",
+          "word_index": 1
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "kind": "word",
+          "word_index": 2
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "हूँ",
+          "roman": "hū̃",
+          "kind": "word",
+          "word_index": 3
+        },
+        {
+          "hindi": ",",
+          "roman": ",",
+          "kind": "punct"
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "शुक्रिया",
+          "roman": "śukriyā",
+          "kind": "word",
+          "word_index": 4
+        },
+        {
+          "hindi": "।",
+          "roman": ".",
+          "kind": "punct"
+        }
+      ],
+      "words": [
+        {
+          "hindi": "मैं",
+          "roman": "maĩ",
+          "meaning": "I"
+        },
+        {
+          "hindi": "भी",
+          "roman": "bhī",
+          "meaning": "also; too"
+        },
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "meaning": "well; fine",
+          "gender": "masculine",
+          "number": "singular",
+          "note": "The speaker uses the masculine form here."
+        },
+        {
+          "hindi": "हूँ",
+          "roman": "hū̃",
+          "meaning": "am"
+        },
+        {
+          "hindi": "शुक्रिया",
+          "roman": "śukriyā",
+          "meaning": "thank you"
+        }
+      ],
+      "anki_tags": [
+        "greetings",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_04/02_maĩ_bhī_acchā_hū_śukriyā.mp3"
+    },
+    {
+      "hindi": "ऋषि और संगीता कैसे हैं?",
+      "romanisation": "Ṛṣi aur Sangītā kaise haĩ?",
+      "english": "How are Rishi and Sangeeta?",
+      "literal": "Rishi and Sangeeta how are",
+      "register": "neutral",
+      "tokens": [
+        {
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "kind": "word",
+          "word_index": 0
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "kind": "word",
+          "word_index": 1
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "kind": "word",
+          "word_index": 2
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "kind": "word",
+          "word_index": 3
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "kind": "word",
+          "word_index": 4
+        },
+        {
+          "hindi": "?",
+          "roman": "?",
+          "kind": "punct"
+        }
+      ],
+      "words": [
+        {
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "meaning": "Rishi",
+          "gender": "masculine",
+          "number": "singular"
+        },
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "meaning": "and"
+        },
+        {
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "meaning": "Sangeeta",
+          "gender": "feminine",
+          "number": "singular"
+        },
+        {
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "meaning": "how",
+          "number": "plural",
+          "note": "Used because two people are being asked about."
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are"
+        }
+      ],
+      "anki_tags": [
+        "greetings",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_04/03_ṛṣi_aur_sangītā_kaise_haĩ.mp3"
+    },
+    {
+      "hindi": "ऋषि अच्छा है, लेकिन संगीता अच्छी नहीं है।",
+      "romanisation": "Ṛṣi acchā hai, lekin Sangītā acchī nahī̃ hai.",
+      "english": "Rishi is well, but Sangeeta isn't all right.",
+      "literal": "Rishi good is, but Sangeeta good not is",
+      "register": "neutral",
+      "tokens": [
+        {
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "kind": "word",
+          "word_index": 0
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "kind": "word",
+          "word_index": 1
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_index": 2
+        },
+        {
+          "hindi": ",",
+          "roman": ",",
+          "kind": "punct"
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "kind": "word",
+          "word_index": 3
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "kind": "word",
+          "word_index": 4
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "अच्छी",
+          "roman": "acchī",
+          "kind": "word",
+          "word_index": 5
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "kind": "word",
+          "word_index": 6
+        },
+        {
+          "hindi": " ",
+          "roman": " ",
+          "kind": "space"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_index": 2
+        },
+        {
+          "hindi": "।",
+          "roman": ".",
+          "kind": "punct"
+        }
+      ],
+      "words": [
+        {
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "meaning": "Rishi",
+          "gender": "masculine",
+          "number": "singular"
+        },
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "meaning": "well; fine",
+          "gender": "masculine",
+          "number": "singular",
+          "note": "Masculine form because it describes Rishi."
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is"
+        },
+        {
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "meaning": "but"
+        },
+        {
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "meaning": "Sangeeta",
+          "gender": "feminine",
+          "number": "singular"
+        },
+        {
+          "hindi": "अच्छी",
+          "roman": "acchī",
+          "meaning": "well; fine",
+          "gender": "feminine",
+          "number": "singular",
+          "note": "Feminine form because it describes Sangeeta."
+        },
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "meaning": "not"
+        }
+      ],
+      "anki_tags": [
+        "health",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_04/04_ṛṣi_acchā_hai_lekin_sangītā_acchī_nahī_hai.mp3"
+    },
+    {
+      "hindi": "क्यों?",
+      "romanisation": "kyõ?",
+      "english": "Why?",
+      "literal": "why",
+      "register": "neutral",
+      "tokens": [
+        {
+          "hindi": "क्यों",
+          "roman": "kyõ",
+          "kind": "word",
+          "word_index": 0
+        },
+        {
+          "hindi": "?",
+          "roman": "?",
+          "kind": "punct"
+        }
+      ],
+      "words": [
+        {
+          "hindi": "क्यों",
+          "roman": "kyõ",
+          "meaning": "why"
+        }
+      ],
+      "anki_tags": [
+        "questions",
+        "neutral",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_04/05_kyõ.mp3"
+    }
+  ]
+}

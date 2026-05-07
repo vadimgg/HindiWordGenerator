@@ -6,155 +6,23 @@ import WordsTab    from '../components/tabs/WordsTab.astro';
 import SentencesTab from '../components/tabs/SentencesTab.astro';
 import ExportTab   from '../components/tabs/ExportTab.astro';
 import QATab       from '../components/tabs/QATab.astro';
-import { getSentenceTokenIssue, hasExactSentenceTokens } from '../scripts/quality/sentenceTokens.js';
-import { readdir, readFile } from 'node:fs/promises';
+import { loadGeneratedData } from '../utils/loadGeneratedData.js';
 import { join } from 'node:path';
 
 const PROJECT_ROOT = join(process.cwd(), '..');
-
-async function readJsonFiles(dir: string) {
-  try {
-    const files = (await readdir(dir)).filter(f => f.endsWith('.json')).sort();
-    const loaded = await Promise.all(
-      files.map(async (file) => {
-        try {
-          return {
-            file,
-            stem: file.replace('.json', ''),
-            data: JSON.parse(await readFile(join(dir, file), 'utf-8')),
-          };
-        } catch (error) {
-          console.warn(`[viewer] Skipping invalid JSON file: ${join(dir, file)}`);
-          console.warn(error);
-          return null;
-        }
-      })
-    );
-    return loaded.filter(Boolean);
-  } catch (error) {
-    console.warn(`[viewer] No readable JSON directory: ${dir}`);
-    return [];
-  }
-}
-
-// ── Load words ────────────────────────────────────────────────────────────────
-const wordFiles = await readJsonFiles(join(PROJECT_ROOT, 'output', 'words'));
-
-const allFiles = wordFiles.map(({ stem, data }) => {
-  const audioBatch = stem;
-  const title = (typeof data === 'object' && !Array.isArray(data))
-    ? (data.chapter ?? data.title ?? stem.replace(/_/g, ' '))
-    : stem.replace(/_/g, ' ');
-  const rawWords = Array.isArray(data) ? data : (data.words ?? []);
-  // Stamp each word with its audioBatch so components can resolve audio paths
-  const words = rawWords.map((w: any) => ({ ...w, audioBatch }));
-  return { title, words };
-});
-const allWords = allFiles.flatMap(f => f.words);
-
-const wordGroups = (() => {
-  let offset = 0;
-  const merged = new Map<string, { id: string; title: string; words: { w: any; i: number }[] }>();
-  let groupIndex = 0;
-
-  for (const file of allFiles.filter(f => f.words.length > 0)) {
-    if (!merged.has(file.title)) {
-      merged.set(file.title, { id: String(groupIndex++), title: file.title, words: [] });
-    }
-    const group = merged.get(file.title)!;
-    for (const w of file.words) {
-      group.words.push({ w, i: offset++ });
-    }
-  }
-
-  return [...merged.values()];
-})();
-
-// ── Load sentences ────────────────────────────────────────────────────────────
-const sentenceFiles = await readJsonFiles(join(PROJECT_ROOT, 'output', 'sentences'));
-const sentenceBatchFiles = sentenceFiles
-  .map(({ stem, data }) => {
-    const audioBatch = stem;
-    const chapter = (typeof data === 'object' && !Array.isArray(data) && data.sentences)
-      ? data.chapter ?? stem.replace(/_/g, ' ')
-      : stem.replace(/_/g, ' ');
-    const rawSentences = (typeof data === 'object' && !Array.isArray(data) && data.sentences)
-      ? data.sentences
-      : Array.isArray(data) ? data : [];
-    const sentences = rawSentences.map((s: any) => ({ ...s, audioBatch, chapter }));
-    return { chapter, stem, sentences };
-  })
-  .filter(batch => batch.sentences.length > 0);
-
-const sentenceChapters: { chapter: string; sentences: any[]; batches: string[] }[] = (() => {
-  const merged = new Map<string, { chapter: string; sentences: any[]; batches: string[] }>();
-
-  for (const batch of sentenceBatchFiles) {
-    if (!merged.has(batch.chapter)) {
-      merged.set(batch.chapter, { chapter: batch.chapter, sentences: [], batches: [] });
-    }
-    const group = merged.get(batch.chapter)!;
-    group.batches.push(batch.stem);
-    group.sentences.push(...batch.sentences);
-  }
-
-  return [...merged.values()];
-})();
-const allSentences: any[] = sentenceChapters.flatMap(c => c.sentences);
-
-// Build a parallel array mapping sentence index → chapter name for search filtering
-const sentenceChapterNames: string[] = sentenceChapters.flatMap(c =>
-  c.sentences.map(() => c.chapter)
-);
-
-// ── Client-side search + hover payloads ──────────────────────────────────────
-const wordSearchIndex     = allWords.map((w, i) => ({ i, h: w.hindi, r: w.romanisation, e: w.english, d: w.date_added ?? '' }));
-const sentenceSearchIndex = allSentences.map((s, i) => ({ i, h: s.hindi ?? '', r: s.romanisation ?? '', e: s.english ?? '', d: s.date_added ?? '', ch: sentenceChapterNames[i] ?? '' }));
-const hoverData           = allWords.map((w, i) => ({
-  i, hindi: w.hindi, roman: w.romanisation,
-  english: (w.english as string).split(',')[0].trim(),
-  forms: (w.forms || []).map((f: { hindi: string; roman: string }) => ({ h: f.hindi, r: f.roman })),
-}));
-const wordGroupTitles: string[] = new Array(allWords.length).fill('Hindi Vocabulary');
-wordGroups.forEach(g => g.words.forEach(({ i }) => { wordGroupTitles[i] = g.title; }));
-
-const dataHealth = {
-  wordFiles: wordFiles.length,
-  sentenceFiles: sentenceFiles.length,
-  totalWords: allWords.length,
-  totalSentences: allSentences.length,
-  wordAudioReady: allWords.filter(word => Boolean(word.audio)).length,
-  sentenceAudioReady: allSentences.filter(sentence => Boolean(sentence.audio)).length,
-  sentenceTokenReady: allSentences.filter(hasExactSentenceTokens).length,
-};
-
-const qaIssues = allSentences.flatMap((sentence, index) => {
-  const issues = [];
-  const tokenIssue = getSentenceTokenIssue(sentence);
-  if (tokenIssue) {
-    issues.push({
-      type: 'tokens',
-      sentenceIndex: index,
-      label: tokenIssue.reason,
-      hindi: sentence.hindi ?? '',
-      english: sentence.english ?? '',
-      chapter: sentence.chapter ?? '',
-      expected: tokenIssue.expected,
-      actual: tokenIssue.actual,
-    });
-  }
-  if (!sentence.audio) {
-    issues.push({
-      type: 'audio',
-      sentenceIndex: index,
-      label: 'missing audio path',
-      hindi: sentence.hindi ?? '',
-      english: sentence.english ?? '',
-      chapter: sentence.chapter ?? '',
-    });
-  }
-  return issues;
-});
+const {
+  wordFiles,
+  allWords,
+  wordGroups,
+  wordGroupTitles,
+  wordSearchIndex,
+  sentenceSearchIndex,
+  hoverData,
+  allSentences,
+  sentenceGroups,
+  dataHealth,
+  qaIssues,
+} = await loadGeneratedData(PROJECT_ROOT);
 ---
 
 <Layout title="Hindi Vocabulary">
@@ -167,7 +35,7 @@ const qaIssues = allSentences.flatMap((sentence, index) => {
     <main class="page-content" id="page-content">
 
       <WordsTab allWords={allWords} vocabFilesCount={wordFiles.length} wordGroups={wordGroups} />
-      <SentencesTab allSentences={allSentences} sentenceChapters={sentenceChapters} />
+      <SentencesTab allSentences={allSentences} sentenceGroups={sentenceGroups} />
       <ExportTab dataHealth={dataHealth} />
       <QATab qaIssues={qaIssues} totalSentences={allSentences.length} totalWords={allWords.length} />
 

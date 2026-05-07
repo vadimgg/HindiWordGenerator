@@ -9,19 +9,23 @@ The learner:
 
 INPUT FORMAT
 
-A semicolon-delimited CSV. The first non-empty line may be a chapter title starting with #:
-  # Chapter Title
+A semicolon-delimited CSV. The first non-empty lines may include a source title
+and subtitle:
+  # Source Title
+  ## Chapter Subtitle
 
 Subsequent lines are one word per line:
   DEVANAGARI (romanisation);English gloss
 
 Example:
-  # Complete Hindi, Chapter 01
+  # Complete Hindi
+  ## Chapter 01
   घर (ghar);home / house
   रसोई (rasoī);kitchen
 
 Parse each line as:
-- Chapter title: any line starting with # — strip the # and trim whitespace
+- Title: a line starting with # — strip the # and trim whitespace
+- Subtitle: a line starting with ## — strip the ## and trim whitespace
 - Hindi word: the Devanagari text before the space and parenthesis
 - Romanisation: the text inside the parentheses
 - English gloss: everything after the semicolon
@@ -30,7 +34,7 @@ Parse each line as:
 
 PROCESSING ORDER — follow this exactly
 
-1. Parse the full CSV. Extract the chapter title from the # line if present.
+1. Parse the full CSV. Extract the title and subtitle from # / ## lines if present.
 2. Generate a complete card for each word.
 3. Output the finished JSON object. Nothing else.
 
@@ -39,8 +43,9 @@ PROCESSING ORDER — follow this exactly
 CRITICAL RULES — never break these
 
 1. Romanisation convention: use tilde nasalisation only — maĩ, yahā̃, haĩ, gharõ.
-   This applies everywhere in the output, including forms, collocations, related_words,
-   and etymology_journey. Never use ṃ or o̐ for nasalisation — always use the tilde (̃).
+   This applies everywhere in the output, including forms, related_words,
+   and etymology_journey. Never use ṃ, ṁ, or o̐ for nasalised vowels — always use
+   the tilde (̃).
 2. Every word in non-Latin script must have a roman field or inline romanisation.
    This includes: Hindi, Sanskrit, Arabic, Hebrew, Russian, and any other non-Latin script.
    No exceptions — if a field contains a non-Latin word, it must be readable without
@@ -52,7 +57,7 @@ CRITICAL RULES — never break these
    Omit any optional field you are not confident about rather than guessing.
 6. Omit optional fields entirely when they have nothing to contribute — do not
    include them as null or empty arrays. Required fields (hindi, romanisation,
-   english, pos, anki_tags, syllables, collocations, related_words) must always
+   english, pos, anki_tags, syllables, related_words, example_sentence) must always
    be present. Optional fields (gender, transitivity, forms, morphemes,
    usage_notes, delhi_note, sound_alikes, etymology_journey, origin_note) should
    be omitted when empty or not applicable.
@@ -91,14 +96,47 @@ CRITICAL RULES — never break these
 8. anki_tags: always include at least one topic tag and one pos tag.
 9. morphemes: only include when the word is genuinely built from meaningful parts
    (compound or derived form). Omit entirely for simple roots. Never invent breakdowns.
-10. collocations: 2–4 entries. Every entry needs: hindi, roman, english.
-11. sound_alikes: cover as much of the word's sound as possible across entries.
-    Associations can be anything memorable — a word in any language, a character name,
-    a place, a brand, a sound — as long as it genuinely sounds similar. Never force a
-    match. Every entry needs: part, association, roman (romanisation of the association
-    if it is not already Latin script — use the association string itself if it is
-    already Latin), language, note.
-12. etymology_journey: attested stages only, chronological order. Each stage is an object
+10. delhi_note is NOT a decorative field. Make an explicit decision for every card:
+    either omit it because the word sounds natural in everyday Delhi Hindi as-is,
+    or include it because Delhi usage differs in a meaningful way. Never leave it
+    out by accident. Before finishing each card, actively check:
+    - would a Delhi speaker usually say this exact Hindi word in ordinary life?
+    - would they more often switch to English?
+    - would they prefer a different Hindi/Urdu/Hinglish word?
+    - does this sound bookish, stiff, old-fashioned, or regionally off for Delhi?
+    If any answer suggests a mismatch, include delhi_note with a concrete, practical explanation.
+11. If the same Hindi lemma appears more than once in the input across nearby items,
+    do not create conflicting analyses just to make the cards look different.
+    Keep the same core everyday sense and part of speech unless the input gloss clearly
+    requires a genuinely different sense. If there really are two distinct senses, make
+    the difference explicit in `english` and `usage_notes` instead of drifting silently.
+12. sound_alikes are strongly optional. It is completely acceptable to omit the field.
+    Only include `sound_alikes` when the mnemonic is genuinely strong and would really help
+    this learner remember the word.
+    Draw from English, Russian, and Hebrew — the learner speaks all three natively.
+    Use whichever language produces the best, most similar-sounding association for each
+    part. Never force a language preference — the closest, most vivid match wins.
+    Prefer concrete, vivid associations — an object, a place, a brand, a physical sensation
+    — over abstract function words (particles, conjunctions, prepositions) or personal names.
+    Personal names are arbitrary and carry no meaning to anchor the word. Abstract
+    grammatical words have no mental image. Both make weak hooks. Never use the Hindi word
+    itself, a transliteration of it, or a direct derivative of it as the association — that
+    is circular and teaches nothing. A good mnemonic gives the learner something external to
+    picture or feel.
+    Use normal, common words or very widely known brands/places only. Avoid obscure,
+    archaic, literary, dictionary-only, or specialist words. Avoid generic sound fragments
+    that are not really words, such as plain syllables, letter names, transliteration-like
+    snippets, or weak near-sounds like "ra", "cur", "city" for चिड़िया, or "kya" written
+    in another script.
+    Never use an association that is just the same loanword again in another form, such as
+    January for जनवरी. That teaches nothing new.
+    If you cannot find a genuinely helpful, familiar association, omit sound_alikes entirely.
+    Only English, Russian, and Hebrew are permitted as languages. Never use Hindi or any
+    other language as the source of an association.
+    Every entry needs: part, association, roman (romanisation of the association if it is not
+    already Latin script — use the association string itself if it is already Latin),
+    language, note.
+13. etymology_journey: attested stages only, chronological order. Each stage is an object
     with stage, form, roman, and meaning. No guessing or interpolating missing stages.
 
 ---
@@ -107,7 +145,8 @@ OUTPUT SCHEMA
 
 Top level:
 {
-  "chapter": "title from the # line, or null if not present",
+  "title": "source title from the # line, such as Complete Hindi",
+  "subtitle": "chapter/topic subtitle from the ## line, such as Chapter 01",
   "words": [ ]
 }
 
@@ -137,13 +176,6 @@ Card object:
       "origin": "Sanskrit | Persian | Arabic | etc."
     }
   ],
-  "collocations": [
-    {
-      "hindi": "collocation in Devanagari",
-      "roman": "romanised",
-      "english": "brief English gloss"
-    }
-  ],
   "usage_notes": "Practical note on register, near-synonym distinctions, or common learner errors (omit if nothing essential)",
   "delhi_note": "One or two sentences on actual Delhi usage — flag if English or a different word is more commonly used, or if this word sounds too formal or bookish for daily Delhi conversation (omit if the word is used naturally as-is)",
   "related_words": [
@@ -158,10 +190,22 @@ Card object:
       "part": "which syllable or portion of the Hindi word this covers",
       "association": "the word, name, or sound it reminds you of",
       "roman": "romanisation of the association (or the association itself if already Latin script)",
-      "language": "English | Russian | Hebrew | Hindi | name | other",
+      "language": "English | Russian | Hebrew",
       "note": "one sentence: how this helps you remember the Hindi word"
     }
   ],
+  "example_sentence": {
+    "hindi": "sentence in Devanagari",
+    "roman": "full romanised sentence (tilde nasalisation)",
+    "english": "natural English translation",
+    "breakdown": [
+      {
+        "hindi": "token in Devanagari",
+        "roman": "romanised token",
+        "meaning": "what this word/particle means in this sentence"
+      }
+    ]
+  },
   "etymology_journey": [
     {
       "stage": "language or period name",
@@ -199,30 +243,60 @@ forms. Skip direct singular and postposition combinations.
 morphemes — only for genuine compounds or derived forms. Omit entirely for simple roots.
 Every entry needs: part (Devanagari), roman, meaning, origin.
 
-collocations — 2–4 most common natural pairings a daily speaker would use.
-Every entry needs: hindi (Devanagari), roman, english.
-
 usage_notes — practical guidance only: register, synonym distinctions, learner errors.
 Omit if truly nothing useful.
+Any Hindi word mentioned must be followed immediately by its romanisation in parentheses —
+e.g. "मर्द (mard) is more emphatic", never bare Devanagari.
 
-delhi_note — Delhi naturalism note. Include when:
-- English is more commonly used than this Hindi word in Delhi (e.g. "thank you" vs धन्यवाद)
+delhi_note — same inline romanisation rule applies: any Hindi word must be followed by its
+romanisation in parentheses. Include when:
+- English is more commonly used than this Hindi word in Delhi (e.g. "thank you" vs धन्यवाद (dhanyavād))
 - This word sounds overly formal or textbook in everyday Delhi speech
 - A different Hindi word is what Delhiites actually say
 - There is a Punjabi-influenced variant commonly heard in Delhi
 Omit if the word is used naturally as-is in everyday Delhi conversation.
+Do not pad delhi_note for extremely normal everyday words unless there is a real learner-useful nuance.
+Make it specific and behavioural. Good delhi_note:
+- "In Delhi, people usually say 'thank you' more often than धन्यवाद (dhanyavād) in casual speech."
+- "नमस्कार (namaskār) sounds formal/bookish in Delhi; नमस्ते (namaste), hello, or hi are more common in daily use."
+Bad delhi_note:
+- "Used in Delhi."
+- "Common word."
+- vague comments with no comparison or practical takeaway.
 
-related_words — 2–4 words from the same semantic field. Mix of synonyms, antonyms,
-derived forms, or thematically linked words. Every entry needs: hindi, roman, english.
+related_words — 2–4 words only. Choose the most teaching-useful near-synonyms, common contrasts,
+or immediate contextual neighbors. Do NOT include random loosely related words just because they
+share a theme. Every entry needs: hindi, roman, english.
+Good: room -> house / hall / bedroom / outside
+Bad: room -> dream
 
-sound_alikes — cover as much of the word's sound as possible across entries. Associations
-can be anything genuinely similar-sounding and memorable: a word from any language, a
-character name, a place, a brand. Do not force a match. Every entry needs:
+sound_alikes — cover as much of the word's sound as possible across entries. Prioritise
+Russian and Hebrew associations (the learner speaks both natively) before falling back to
+English or other languages. Associations can be anything genuinely similar-sounding and
+memorable: a word from any language, a place, a brand, a physical sensation. Do not force
+a match. Prefer concrete, vivid associations — objects, places, brands — over abstract
+function words or personal names. Neither abstract grammatical particles nor arbitrary
+personal names give the learner anything to picture or feel. Use familiar, everyday words,
+not obscure dictionary entries or fake sound fragments. If no strong association exists,
+omit sound_alikes entirely. Every entry needs:
   part — which syllable or portion of the Hindi word
   association — what it sounds like
   roman — romanisation of the association (use the association itself if already Latin)
-  language — what language or category the association comes from
+  language — English, Russian, or Hebrew only
   note — one sentence on how this helps you remember
+
+example_sentence — always required. One short, natural, everyday sentence using the word
+as an ordinary Delhi speaker would say it. Prefer conversational Hindi over textbook Hindi.
+If the most natural Delhi usage would normally switch to an English word, let the sentence
+sound like real Delhi speech and explain the preference in delhi_note.
+The sentence object needs:
+  hindi — the sentence in Devanagari
+  roman — full romanised sentence (tilde nasalisation)
+  english — natural English translation
+  breakdown — word-by-word array, one object per word token, each with:
+    hindi — the token in Devanagari
+    roman — romanised token
+    meaning — what this word/particle means in this sentence
 
 etymology_journey — attested historical stages in chronological order. Every entry needs:
   stage — language or period (e.g. "Sanskrit", "Prakrit", "Arabic", "Persian", "Hindi")
@@ -232,3 +306,4 @@ etymology_journey — attested historical stages in chronological order. Every e
 Omit any stage you are not confident about.
 
 origin_note — one sentence only. Where this word comes from. Omit if unknown.
+Any non-Latin script word mentioned must be followed by its romanisation in parentheses.

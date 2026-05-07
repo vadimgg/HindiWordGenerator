@@ -13,7 +13,7 @@ HindiWordGenerator/
   generation_prompt_sentences.txt # System prompt for sentence cards
   review_prompt_words.txt         # System prompt for Delhi-native word card reviewer
   review_prompt_sentences.txt     # System prompt for Delhi-native sentence card reviewer
-  process.py                      # File management utility (manifest, batch splitting)
+  process.py                      # File management utility (manifest, batch splitting, write)
   manifest.json                   # Tracks processed files by content hash + prompt hash
   input/
     words/                        # Word CSV files go here
@@ -27,20 +27,24 @@ HindiWordGenerator/
 
 ## Input format
 
-Same format for both words and sentences. One item per line, optional chapter title first:
+Same format for both words and sentences. One item per line, source title and
+optional subtitle first:
 
 ```
-# Complete Hindi, Chapter 01
+# Complete Hindi
+## Chapter 01
 घर (ghar);home / house
 लड़का (laṛkā);boy
 ```
 
 ```
-# Complete Hindi, Chapter 01, Dialog 01
+# Complete Hindi
+## Chapter 01, Dialog 01
 क्या आप कमला जी हैं ? (kyā āp Kamalā jī haĩ?);Are you Kamala?
 ```
 
-- Lines starting with `#` → chapter title
+- Lines starting with `#` → source title
+- Lines starting with `##` → chapter/topic subtitle
 - Content lines → `HINDI (romanisation);English`
 
 ---
@@ -59,68 +63,83 @@ input/sentences/hindi_01.csv
   → output/sentences/hindi_01_batch_02.json
 ```
 
-Each batch file shares the same `chapter` value — the downstream tool groups by chapter.
+Each batch file shares the same `title` and `subtitle` values.
 
-Word batch top level: `{ "chapter": "...", "words": [ ] }`
-Sentence batch top level: `{ "chapter": "...", "sentences": [ ] }`
+Word batch top level: `{ "title": "...", "subtitle": "...", "words": [ ] }`
+Sentence batch top level: `{ "title": "...", "subtitle": "...", "sentences": [ ] }`
 
 ---
 
 ## Processing workflow
 
-When the user asks to process words or sentences, follow these steps exactly:
-
-### 1. Check what needs processing
+The easiest entrypoint is now:
 
 ```bash
-uv run process.py check                    # both words and sentences
-uv run process.py check --type words       # words only
-uv run process.py check --type sentences   # sentences only
-uv run process.py check --force            # reprocess everything
+uv run main.py check
+uv run main.py run
 ```
 
-Returns a JSON array of pending batches. Each item contains:
-- `type` — `"words"` or `"sentences"`
-- `stem` — input filename without extension
-- `batch_num` / `total_batches`
-- `chapter` — parsed from the `#` line
-- `csv` — the batch content to send to the agent
-- `count` — number of items in this batch
+Useful options:
 
-A file is pending if its CSV content or its prompt file has changed since last run.
-
-### 2. Spawn agents in parallel
-
-For each pending batch, spawn one agent with:
-- The full contents of the relevant prompt file as the system prompt:
-  - Words → `generation_prompt_words.txt`
-  - Sentences → `generation_prompt_sentences.txt`
-- The `csv` field from the check output as the input
-- Instruction to return raw JSON only
-
-All batches run in parallel regardless of type or file.
-
-### 3. Write outputs
-
-Before writing, check each agent's JSON response for these common schema violations and fix them:
-- A `forms` entry whose `hindi` value matches the base `hindi` field → remove that entry
-- Two `forms` entries with different Devanagari spellings incorrectly merged into one → split them
-- A `forms` field on an invariable adjective (like लाल, साफ़, ख़ाली) → remove the entire field
-- A `forms` field on a non-inflecting noun (like पिता, आदमी) where all forms = base word → remove it
-
-Then write to:
-```
-output/words/<stem>_batch_<nn>.json
-output/sentences/<stem>_batch_<nn>.json
-```
-
-### 4. Update the manifest
-
-Once all batches for a file are written:
 ```bash
-uv run process.py mark-done words     <stem> <total_batches> <total_items>
-uv run process.py mark-done sentences <stem> <total_batches> <total_items>
+uv run main.py check --type words --batch-size 5 --max-items 50
+uv run main.py run --type words --batch-size 5 --max-items 50
+uv run main.py run --type sentences --max-batches 1
+uv run main.py run --model anthropic:claude-sonnet-4-6
+uv run main.py run --model openai:gpt-5.4-mini
+uv run main.py audio
 ```
+
+Local API keys can live in a project-root `.env` file, for example:
+
+```bash
+OPENAI_API_KEY=your_key_here
+ANTHROPIC_API_KEY=your_key_here
+MODEL=openai:gpt-4o-mini
+```
+
+What the runner does:
+- Uses `process.py check` to find only pending batches
+- Reads the relevant generation prompt
+- Calls the selected LangChain chat model in bounded parallel waves
+- Validates the returned JSON schema before writing anything
+- Writes one output JSON file per batch
+- Generates one audio MP3 per card after each batch is written
+- Writes a relative `audio` path back into each word/sentence object
+- Stops early after a failed wave by default, to avoid wasting tokens
+- Updates the manifest only when all batch files for a stem are present
+
+What `main.py check` shows:
+- what will be processed this run
+- what will be skipped because output already exists
+- what is deferred because of `--max-items` or `--max-batches`
+- missing `sound_alikes` in existing word cards
+- missing `audio` in existing outputs
+
+How limits work:
+- `--batch-size` controls how many input lines go into each LLM call
+- `--max-items` limits the total number of input items processed in one run
+- `--max-batches` limits the total number of batch files processed in one run
+- `--dry-run` shows what would be processed without making API calls
+
+How append-only processing works:
+- Existing output batch files are treated as the source of truth for what has already been generated
+- If a CSV has no `#` / `##` metadata lines, display metadata is derived from the filename
+- New runs skip entries already present in output JSON and continue batch numbering from the highest existing batch number
+- Outputs are not wiped during normal runs
+
+What `process.py write` validates:
+- Valid JSON
+- Correct top-level schema for `words` vs `sentences`
+- Required fields and item counts
+- No `date_added`
+- No empty optional fields
+- Word `forms` entries whose spelling duplicates the base word are removed
+
+Output JSON is the source of truth for completed cards. `manifest.json` records
+CSV hashes, prompt hashes, timestamps, batch counts, and item counts as audit
+metadata. Prompt changes affect future pending generation; existing output is
+not rewritten unless an explicit repair or regeneration workflow is used.
 
 ---
 
@@ -188,7 +207,7 @@ Do NOT re-run the generation agent just to fix a single card unless the user ask
 
 ## Word card schema (key fields)
 
-Required: `hindi`, `romanisation`, `english`, `pos`, `anki_tags`, `syllables`, `collocations`, `related_words`
+Required: `hindi`, `romanisation`, `english`, `pos`, `anki_tags`, `syllables`, `related_words`, `example_sentence`
 
 Optional (omit entirely when not applicable — never use null):
 `gender`, `transitivity`, `forms`, `morphemes`, `usage_notes`, `delhi_note`, `sound_alikes`, `etymology_journey`, `origin_note`
@@ -206,5 +225,5 @@ Optional per word (omit when not applicable): `gender`, `number`, `note`
 
 Default: 10 items per batch. Configurable:
 ```bash
-uv run process.py check --batch-size 5
+python3 process.py check --batch-size 5
 ```

@@ -1,21 +1,21 @@
 ---
 /**
- * Sentences page — page header, filter panel, chapter-grouped sentence cards.
+ * Sentences page — page header, filter panel, grouped sentence cards.
  *
  * Responsible for: rendering the Sentences page with collapsible filter panel,
- * chapter-section dividers, and sentence cards with sel-circle selection buttons.
+ * source/topic dividers, and sentence cards with sel-circle selection buttons.
  *
- * Dependencies: SentenceCard.astro, types.ts (SentenceChapter).
+ * Dependencies: SentenceCard.astro, types.ts (SentenceGroup).
  */
-// Responsible for: Sentences page content — header, filter panel, chapter dividers, sentence cards
+// Responsible for: Sentences page content — header, filter panel, group dividers, sentence cards
 import SentenceCard from '../SentenceCard.astro';
-import type { SentenceChapter } from '../../utils/types';
+import type { SentenceGroup } from '../../utils/types';
 
 interface Props {
   allSentences: any[];
-  sentenceChapters: SentenceChapter[];
+  sentenceGroups: SentenceGroup[];
 }
-const { allSentences, sentenceChapters } = Astro.props;
+const { allSentences, sentenceGroups } = Astro.props;
 
 // Build flat index for sentence IDs matching the pattern in SentenceList.astro
 let globalIndex = 0;
@@ -70,11 +70,11 @@ let globalIndex = 0;
         />
         <button class="pw-filter-search-clear" data-search-clear aria-label="Clear search">✕</button>
       </div>
-      {sentenceChapters.length > 0 && (
+      {sentenceGroups.length > 0 && (
         <div class="pw-filter-group-row" id="ps-filter-chips">
-          <button class="pw-filter-chip is-active" data-chapter-chip="all">All</button>
-          {sentenceChapters.map(ch => (
-            <button class="pw-filter-chip" data-chapter-chip={ch.chapter}>{ch.chapter}</button>
+          <button class="pw-filter-chip is-active" data-group-chip="all">All</button>
+          {sentenceGroups.map(group => (
+            <button class="pw-filter-chip" data-group-chip={group.label}>{group.label}</button>
           ))}
         </div>
       )}
@@ -96,33 +96,33 @@ let globalIndex = 0;
         <!-- Drag-to-select hint -->
         <p class="drag-select-hint">Drag to select multiple</p>
 
-        <!-- Chapter groups -->
-        {sentenceChapters.map((chapter) => {
-          const chapterId = `cgw-s-${chapter.chapter.toLowerCase().replace(/\s+/g, '-')}`;
+        <!-- Source/topic groups -->
+        {sentenceGroups.map((group) => {
+          const groupId = `cgw-s-${group.label.toLowerCase().replace(/\s+/g, '-')}`;
           return (
             <>
               {/* Group divider header */}
-              <div class="card-group-wrapper" id={chapterId}>
+              <div class="card-group-wrapper" id={groupId}>
                 <div class="card-group-divider">
-                  <div class="card-group-header" data-group-toggle={chapterId}>
+                  <div class="card-group-header" data-group-toggle={groupId}>
                     <span
                       class="card-group-checkbox"
                       role="checkbox"
                       aria-checked="false"
-                      aria-label={`Select all in ${chapter.chapter}`}
-                      data-group-checkbox={chapterId}
+                      aria-label={`Select all in ${group.label}`}
+                      data-group-checkbox={groupId}
                     ></span>
-                    <span class="card-group-label">{chapter.chapter}</span>
+                    <span class="card-group-label">{group.label}</span>
                     <span class="card-group-line"></span>
                     <span class="card-group-count">
-                      {chapter.sentences.length} {chapter.sentences.length === 1 ? 'sentence' : 'sentences'}
-                      {chapter.batches?.length > 1 ? ` · ${chapter.batches.length} batches` : ''}
+                      {group.sentences.length} {group.sentences.length === 1 ? 'sentence' : 'sentences'}
+                      {group.batches?.length > 1 ? ` · ${group.batches.length} batches` : ''}
                     </span>
                     <button
                       class="quick-export-btn"
                       type="button"
                       data-quick-export="sentences"
-                      data-quick-export-title={chapter.chapter}
+                      data-quick-export-title={group.label}
                     >
                       Quick export
                     </button>
@@ -132,8 +132,8 @@ let globalIndex = 0;
               </div>
 
               {/* Sentence cards */}
-              <div class="card-list" data-group={chapterId}>
-                {chapter.sentences.map((sentence) => {
+              <div class="card-list" data-group={groupId}>
+                {group.sentences.map((sentence) => {
                   const idx = globalIndex++;
                   return (
                     <SentenceCard index={idx} {...sentence} audio={sentence.audio} audioBatch={sentence.audioBatch} selCircle={true} />

@@ -2,9 +2,8 @@
  * Anki Audio field builder — [sound:] syntax for word pronunciation.
  *
  * Responsible for: building the Anki Audio field value using AnkiConnect's
- * [sound:] tag syntax. Anki media files are stored flat (no subdirectories),
- * so the filename is namespaced with the audioBatch and word identifiers
- * to ensure uniqueness across all exported words.
+ * [sound:] tag syntax. Anki media files are stored flat, so the filename is
+ * derived from the canonical JSON audio path.
  *
  * Dependencies: anki/media.js.
  */
@@ -15,16 +14,12 @@ import { soundTag, wordMediaFilename } from '../media.js';
 /**
  * Builds the Anki Audio field value for a vocabulary word.
  *
- * Returns an empty string if the word has no audioBatch.
- * The filename uses a namespaced pattern to avoid collisions in Anki's flat media store.
+ * Returns an empty string if the word has no valid audio path.
  *
  * @param {object} word - Vocabulary word object.
- * @param {string} [word.audioBatch] - Batch ID (vocab filename without .json).
- * @param {string} [word.hindi] - Devanagari form.
- * @param {string} [word.romanisation] - Romanised transliteration.
+ * @param {string} [word.audio] - Project-relative audio path.
  * @returns {string} Anki sound tag or empty string.
  */
 export function buildAnkiAudio(word) {
-  if (!word.audioBatch || !word.audio) return '';
   return soundTag(wordMediaFilename(word));
 }

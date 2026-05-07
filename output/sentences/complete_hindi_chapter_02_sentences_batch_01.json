@@ -1,10 +1,11 @@
 {
-  "chapter": "Complete Hindi Chapter 02",
+  "title": "Complete Hindi",
+  "subtitle": "Chapter 02",
   "sentences": [
     {
       "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
       "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
-      "english": "Teacher ji, how many students are there here?",
+      "english": "Teacher ji, how many students are here?",
       "literal": "teacher ji, here how many students are",
       "register": "formal",
       "tokens": [

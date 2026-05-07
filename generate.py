@@ -44,17 +44,16 @@ You can also store these in a local `.env` file in the project root.
 
 import argparse
 import asyncio
-import json
 import logging
 import os
-import subprocess
 import sys
-import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
+from generation_io import attach_audio, get_pending_batches, write_batch_result
+from generation_types import BatchJob, BatchResult
+from llm_client import call_llm_with_retry, create_llm, load_prompt
 
 try:
     from rich.console import Console
@@ -87,243 +86,9 @@ load_dotenv(PROJECT_ROOT / ".env")
 DEFAULT_MODEL = os.environ.get("MODEL", "openai:gpt-5.4-mini")
 DEFAULT_CONCURRENCY = 15
 DEFAULT_BATCH_SIZE = 10
-MAX_RETRIES = 3
-RETRY_BASE_DELAY = 2.0  # seconds
 
 console = Console()
 log = logging.getLogger("generate")
-
-
-# ---------------------------------------------------------------------------
-# Data types
-# ---------------------------------------------------------------------------
-
-@dataclass
-class BatchJob:
-    """One unit of work: a single batch slice from one input CSV."""
-    pipeline_type: str      # "words" | "sentences"
-    stem: str               # input filename without extension
-    batch_num: int
-    total_batches: int
-    chapter: Optional[str]
-    csv: str                # CSV content to send to the LLM
-    count: int              # number of items in this batch
-
-    @property
-    def label(self) -> str:
-        return f"{self.stem} [{self.pipeline_type}] {self.batch_num}/{self.total_batches}"
-
-
-@dataclass
-class BatchResult:
-    job: BatchJob
-    success: bool
-    data: Optional[dict] = None
-    error: Optional[str] = None
-    input_tokens: int = 0
-    output_tokens: int = 0
-    cache_read_tokens: int = 0
-    cache_write_tokens: int = 0
-
-
-# ---------------------------------------------------------------------------
-# Model factory
-# ---------------------------------------------------------------------------
-
-def create_llm(model_string: str):
-    """
-    Build a LangChain chat model from a '<provider>:<model-id>' string.
-
-    Supported providers: anthropic, openai.
-    Raises ValueError for bad format or unknown provider.
-    Raises EnvironmentError if the required API key is missing.
-    """
-    if ":" not in model_string:
-        raise ValueError(
-            f"Invalid model format '{model_string}'. "
-            "Expected '<provider>:<model-id>', "
-            "e.g. 'openai:gpt-5.4-mini' or 'anthropic:claude-haiku-4-5-20251001'."
-        )
-
-    provider, model_id = model_string.split(":", 1)
-
-    if provider == "anthropic":
-        _require_env("ANTHROPIC_API_KEY", provider)
-        from langchain_anthropic import ChatAnthropic
-        return ChatAnthropic(model=model_id, max_tokens=8192)
-
-    elif provider == "openai":
-        _require_env("OPENAI_API_KEY", provider)
-        from langchain_openai import ChatOpenAI
-        return ChatOpenAI(model=model_id, max_tokens=8192)
-
-    else:
-        raise ValueError(
-            f"Unknown provider '{provider}'. Supported providers: anthropic, openai."
-        )
-
-
-def _require_env(key: str, provider: str) -> None:
-    if not os.environ.get(key):
-        raise EnvironmentError(
-            f"{key} is required for {provider} models. "
-            f"Set it with: export {key}=<your-api-key>"
-        )
-
-
-# ---------------------------------------------------------------------------
-# Prompt helpers
-# ---------------------------------------------------------------------------
-
-def load_prompt(pipeline_type: str) -> str:
-    """Load the generation prompt file for the given pipeline type."""
-    path = PROJECT_ROOT / f"generation_prompt_{pipeline_type}.txt"
-    if not path.exists():
-        raise FileNotFoundError(f"Prompt file not found: {path}")
-    return path.read_text(encoding="utf-8")
-
-
-def build_messages(llm, system_prompt: str, csv_content: str) -> list:
-    """
-    Build the message list for the LLM call.
-
-    For Anthropic models, attaches cache_control to the system prompt so the
-    large prompt is cached across all batches of the same type — significantly
-    reducing input token costs on repeated calls.
-    """
-    from langchain_core.messages import HumanMessage, SystemMessage
-
-    is_anthropic = "anthropic" in type(llm).__module__
-
-    if is_anthropic:
-        system_content = [
-            {
-                "type": "text",
-                "text": system_prompt,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ]
-        return [
-            SystemMessage(content=system_content),
-            HumanMessage(content=csv_content),
-        ]
-
-    return [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=csv_content),
-    ]
-
-
-# ---------------------------------------------------------------------------
-# LLM interaction
-# ---------------------------------------------------------------------------
-
-def extract_json(text: str) -> dict:
-    """
-    Parse JSON from an LLM response.
-
-    Strips markdown code fences (```json ... ``` or ``` ... ```) if the model
-    includes them despite being told not to.
-    Raises json.JSONDecodeError on parse failure.
-    """
-    text = text.strip()
-
-    if text.startswith("```"):
-        lines = text.splitlines()
-        inner = lines[1:]
-        if inner and inner[-1].strip() == "```":
-            inner = inner[:-1]
-        text = "\n".join(inner).strip()
-
-    return json.loads(text)
-
-
-def extract_usage(response) -> dict:
-    """Extract token usage counts from a LangChain AI message."""
-    result = {
-        "input_tokens": 0,
-        "output_tokens": 0,
-        "cache_read_tokens": 0,
-        "cache_write_tokens": 0,
-    }
-
-    meta = getattr(response, "usage_metadata", None)
-    if not meta:
-        return result
-
-    if isinstance(meta, dict):
-        result["input_tokens"] = meta.get("input_tokens", 0)
-        result["output_tokens"] = meta.get("output_tokens", 0)
-        details = meta.get("input_token_details", {})
-    else:
-        result["input_tokens"] = getattr(meta, "input_tokens", 0)
-        result["output_tokens"] = getattr(meta, "output_tokens", 0)
-        details = getattr(meta, "input_token_details", {}) or {}
-
-    if isinstance(details, dict):
-        result["cache_read_tokens"] = details.get("cache_read", 0)
-        result["cache_write_tokens"] = details.get("cache_creation", 0)
-
-    return result
-
-
-async def call_llm(llm, system_prompt: str, csv_content: str) -> tuple[dict, dict]:
-    """
-    Make a single LLM call and return (parsed_json, usage_dict).
-
-    Raises json.JSONDecodeError if the response is not valid JSON.
-    Raises any LangChain/API exception on network or provider errors.
-    """
-    messages = build_messages(llm, system_prompt, csv_content)
-    response = await llm.ainvoke(messages)
-    data = extract_json(response.content)
-    usage = extract_usage(response)
-    return data, usage
-
-
-async def call_llm_with_retry(
-    llm,
-    system_prompt: str,
-    csv_content: str,
-    label: str,
-) -> tuple[dict, dict]:
-    """
-    Retry the LLM call up to MAX_RETRIES times with exponential backoff.
-
-    Retries on JSON parse errors and transient API errors.
-    Raises on the final attempt if all retries are exhausted.
-    """
-    last_error: Exception | None = None
-
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            return await call_llm(llm, system_prompt, csv_content)
-
-        except json.JSONDecodeError as exc:
-            last_error = exc
-            if attempt < MAX_RETRIES:
-                delay = RETRY_BASE_DELAY ** (attempt - 1)
-                log.warning(
-                    "[%s] JSON parse error (attempt %d/%d), retrying in %.0fs: %s",
-                    label, attempt, MAX_RETRIES, delay, exc,
-                )
-                await asyncio.sleep(delay)
-
-        except Exception as exc:
-            last_error = exc
-            if attempt < MAX_RETRIES:
-                delay = RETRY_BASE_DELAY ** (attempt - 1)
-                log.warning(
-                    "[%s] API error (attempt %d/%d), retrying in %.0fs: %s: %s",
-                    label, attempt, MAX_RETRIES, delay, type(exc).__name__, exc,
-                )
-                await asyncio.sleep(delay)
-            else:
-                raise
-
-    raise ValueError(
-        f"[{label}] Failed after {MAX_RETRIES} attempts. Last error: {last_error}"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -358,115 +123,6 @@ async def process_batch(
         except Exception as exc:
             log.error("[%s] Unrecoverable error: %s", job.label, exc)
             return BatchResult(job=job, success=False, error=str(exc))
-
-
-def write_batch_result(result: BatchResult) -> Path | None:
-    """
-    Persist a successful batch result by calling `process.py write`.
-
-    Writes the JSON to a temp file, delegates validation and file placement
-    to process.py, then cleans up the temp file.
-    Returns the written batch path on success, or None on failure.
-    """
-    job = result.job
-
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".json",
-        prefix="hindi_batch_",
-        encoding="utf-8",
-        delete=False,
-    ) as f:
-        json.dump(result.data, f, ensure_ascii=False, indent=2)
-        tmp_path = Path(f.name)
-
-    try:
-        cmd = [
-            sys.executable,
-            str(PROJECT_ROOT / "process.py"),
-            "write",
-            job.pipeline_type,
-            job.stem,
-            str(job.batch_num),
-            str(job.total_batches),
-            str(job.count),
-            str(tmp_path),
-        ]
-        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-
-        if proc.returncode != 0:
-            log.error(
-                "[%s] process.py write failed (exit %d):\n%s",
-                job.label, proc.returncode, proc.stderr.strip(),
-            )
-            return None
-
-        log.debug("[%s] write output: %s", job.label, proc.stdout.strip())
-        return PROJECT_ROOT / "output" / job.pipeline_type / f"{job.stem}_batch_{job.batch_num:02d}.json"
-
-    finally:
-        tmp_path.unlink(missing_ok=True)
-
-
-def attach_audio(batch_path: Path) -> bool:
-    """Generate per-entry audio for a written batch and update JSON audio paths."""
-    cmd = [sys.executable, str(PROJECT_ROOT / "audio_generator.py"), str(batch_path)]
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    if proc.returncode != 0:
-        log.error(
-            "[%s] audio generation failed (exit %d):\n%s",
-            batch_path.name,
-            proc.returncode,
-            proc.stderr.strip() or proc.stdout.strip(),
-        )
-        return False
-    return True
-
-
-# ---------------------------------------------------------------------------
-# Manifest / check
-# ---------------------------------------------------------------------------
-
-def get_pending_batches(
-    pipeline_type: Optional[str],
-    batch_size: int,
-    force: bool,
-) -> list[BatchJob]:
-    """
-    Call `process.py check` and deserialise the result into BatchJob list.
-
-    Raises RuntimeError if process.py exits non-zero.
-    """
-    cmd = [sys.executable, str(PROJECT_ROOT / "process.py"), "check"]
-
-    if pipeline_type:
-        cmd += ["--type", pipeline_type]
-    if force:
-        cmd.append("--force")
-    if batch_size != DEFAULT_BATCH_SIZE:
-        cmd += ["--batch-size", str(batch_size)]
-
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-
-    if proc.returncode != 0:
-        raise RuntimeError(
-            f"process.py check failed (exit {proc.returncode}):\n"
-            f"{proc.stderr.strip()}"
-        )
-
-    raw: list[dict] = json.loads(proc.stdout)
-    return [
-        BatchJob(
-            pipeline_type=item["type"],
-            stem=item["stem"],
-            batch_num=item["batch_num"],
-            total_batches=item["total_batches"],
-            chapter=item.get("chapter"),
-            csv=item["csv"],
-            count=item["count"],
-        )
-        for item in raw
-    ]
 
 
 def limit_jobs(
@@ -520,7 +176,7 @@ def print_dry_run_table(jobs: list[BatchJob]) -> None:
     table.add_column("Stem")
     table.add_column("Batch", justify="right")
     table.add_column("Items", justify="right")
-    table.add_column("Chapter")
+    table.add_column("Source")
 
     for job in jobs:
         table.add_row(
@@ -528,7 +184,7 @@ def print_dry_run_table(jobs: list[BatchJob]) -> None:
             job.stem,
             f"{job.batch_num}/{job.total_batches}",
             str(job.count),
-            job.chapter or "—",
+            job.display_label or "—",
         )
 
     console.print(table)
@@ -616,7 +272,7 @@ async def run_pipeline(
     # ── 1. Discover pending work ─────────────────────────────────────────────
     console.print("\n[bold]Scanning for pending batches...[/bold]")
     try:
-        jobs = get_pending_batches(pipeline_type, batch_size, force)
+        jobs = get_pending_batches(pipeline_type, batch_size, force, DEFAULT_BATCH_SIZE)
     except RuntimeError as exc:
         console.print(f"[red]Error:[/red] {exc}")
         return 1

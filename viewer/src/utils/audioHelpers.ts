@@ -1,11 +1,11 @@
 /**
- * Pure helper functions for resolving audio file paths for words and sentences.
- *
- * Responsible for: resolving audio file paths for words and sentences from their JSON fields.
- *
- * No dependencies on other project modules. No DOM access, no side effects.
+ * Pure helper functions for resolving browser audio sources.
  */
-// Responsible for: resolving audio file paths for words and sentences from their JSON fields
+
+import {
+  resolveSentenceAudioAsset,
+  resolveWordAudioAsset,
+} from './audioAssets.js';
 
 interface WordAudioLike {
   audio?: string;
@@ -18,11 +18,6 @@ interface SentenceAudioLike {
   audio?: string;
   audioBatch?: string;
   english?: string;
-}
-
-function normaliseAudioSrc(audio?: string): string | undefined {
-  if (!audio) return undefined;
-  return audio.startsWith('/') ? audio : `/${audio}`;
 }
 
 /**
@@ -41,7 +36,7 @@ export function wordAudioSrc(audioBatch: string, hindi: string, romanisation: st
  * audio field when present.
  */
 export function resolveWordAudioSrc(word: WordAudioLike): string | undefined {
-  return normaliseAudioSrc(word.audio);
+  return resolveWordAudioAsset(word)?.browserSrc;
 }
 
 /**
@@ -60,5 +55,5 @@ export function sentenceAudioSrc(audioBatch: string, english: string): string {
  * audio field when present.
  */
 export function resolveSentenceAudioSrc(sentence: SentenceAudioLike): string | undefined {
-  return normaliseAudioSrc(sentence.audio);
+  return resolveSentenceAudioAsset(sentence)?.browserSrc;
 }

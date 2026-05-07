@@ -15,7 +15,7 @@ interface QaIssue {
   label: string;
   hindi: string;
   english: string;
-  chapter: string;
+  groupLabel: string;
   expected?: { hindi?: string; romanisation?: string };
   actual?: { hindi?: string; romanisation?: string };
 }
@@ -83,7 +83,7 @@ const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
                 <div>
                   <strong lang="hi">{issue.hindi}</strong>
                   <p>{issue.english}</p>
-                  <small>{issue.chapter} · {issue.label}</small>
+                  <small>{issue.groupLabel} · {issue.label}</small>
                   <button
                     class="qa-view-card-btn"
                     data-qa-jump-sentence={issue.sentenceIndex}

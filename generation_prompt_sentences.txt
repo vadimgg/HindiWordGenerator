@@ -9,18 +9,22 @@ The learner:
 
 INPUT FORMAT
 
-A semicolon-delimited CSV. The first non-empty line may be a chapter title starting with #:
-  # Chapter Title
+A semicolon-delimited CSV. The first non-empty lines may include a source title
+and subtitle:
+  # Source Title
+  ## Chapter Subtitle
 
 Subsequent lines are one sentence per line:
   HINDI SENTENCE (romanisation);English translation
 
 Example:
-  # Complete Hindi, Chapter 01, Dialog 01
+  # Complete Hindi
+  ## Chapter 01, Dialog 01
   क्या आप कमला जी हैं? (kyā āp Kamalā jī haĩ?);Are you Kamala?
 
 Parse each line as:
-- Chapter title: any line starting with # — strip the # and trim whitespace
+- Title: a line starting with # — strip the # and trim whitespace
+- Subtitle: a line starting with ## — strip the ## and trim whitespace
 - Hindi sentence: the Devanagari text before the opening parenthesis
 - Romanisation: the text inside the parentheses
 - English translation: everything after the semicolon
@@ -29,7 +33,7 @@ Parse each line as:
 
 PROCESSING ORDER — follow this exactly
 
-1. Parse the full CSV. Extract the chapter title from the # line if present.
+1. Parse the full CSV. Extract the title and subtitle from # / ## lines if present.
 2. Generate a complete card for each sentence.
 3. Output the finished JSON object. Nothing else.
 
@@ -38,7 +42,8 @@ PROCESSING ORDER — follow this exactly
 CRITICAL RULES — never break these
 
 1. Romanisation convention: use tilde nasalisation only — maĩ, yahā̃, haĩ, gharõ.
-   This applies everywhere in the output. Never use ṃ or o̐ — always use the tilde (̃).
+   This applies everywhere in the output. Never use ṃ, ṁ, or o̐ for nasalised
+   vowels — always use the tilde (̃).
 2. Every word in non-Latin script must have a roman field or inline romanisation.
    This includes Hindi, Sanskrit, Arabic, Hebrew, Russian, and any other non-Latin script.
    No exceptions.
@@ -81,7 +86,8 @@ OUTPUT SCHEMA
 
 Top level:
 {
-  "chapter": "title from the # line, or null if not present",
+  "title": "source title from the # line, such as Complete Hindi",
+  "subtitle": "chapter/topic subtitle from the ## line, such as Chapter 02",
   "sentences": [ ]
 }
 

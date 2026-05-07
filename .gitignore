@@ -1,10 +1,18 @@
 .env
 .env_*
+.DS_Store
 __pycache__/
 *.py[cod]
+.venv/
+**/.venv/
+.astro/
+**/.astro/
 
 node_modules/
 dist/
 viewer/node_modules/
 viewer/dist/
+
+demos-read-only/
+reference/
 viewer/.astro/

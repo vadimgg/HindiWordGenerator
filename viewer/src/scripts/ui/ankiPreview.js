@@ -124,7 +124,7 @@ function populateSentenceAnkiPreview() {
   notice.style.display = 'none';
   container.innerHTML = selectedSentences
     .map((s, i) => renderFlipCard(
-      sentenceToAnkiFields(s, s.chapter ?? ''),
+      sentenceToAnkiFields(s, s.groupLabel ?? ''),
       ANKI_SENTENCE_FRONT,
       ANKI_SENTENCE_BACK,
       i

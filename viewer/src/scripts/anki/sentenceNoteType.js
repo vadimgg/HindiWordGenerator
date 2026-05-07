@@ -14,7 +14,7 @@ export const ANKI_SENTENCE_NOTE_TYPE = 'Hindi Sentence';
 
 export const ANKI_SENTENCE_FIELDS = [
   'English', 'Hindi', 'Audio', 'Romanisation', 'Literal', 'Register',
-  'WordBreakdown', 'Chapter', 'Tags',
+  'WordBreakdown', 'Topic', 'Tags',
 ];
 
 export const ANKI_SENTENCE_CSS = [
@@ -41,8 +41,8 @@ export const ANKI_SENTENCE_CSS = [
   '.bd-meaning{font-size:.95rem;color:#e2e8f0;line-height:1.5;}',
   '.bd-note{font-size:.8rem;color:#64748b;font-style:italic;line-height:1.55;margin-top:.25rem;display:block;}',
   '.bd-badges{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem;}',
-  // Chapter meta — recessive footer
-  '.chapter-meta{font-family:"Barlow Condensed",sans-serif;font-size:.55rem;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#334155;text-align:center;margin-top:1.5rem;padding:.4rem;background:#080d18;border-radius:8px;}',
+  // Topic meta — recessive footer
+  '.topic-meta{font-family:"Barlow Condensed",sans-serif;font-size:.55rem;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#334155;text-align:center;margin-top:1.5rem;padding:.4rem;background:#080d18;border-radius:8px;}',
   // Mobile
   '@media(max-width:520px){',
   '.bd-word{font-size:.9rem;}',
@@ -88,8 +88,8 @@ export const ANKI_SENTENCE_BACK = `<div class="card-wrap">
   </div>
   {{/WordBreakdown}}
 
-  {{#Chapter}}
-  <p class="chapter-meta">{{Chapter}}</p>
-  {{/Chapter}}
+  {{#Topic}}
+  <p class="topic-meta">{{Topic}}</p>
+  {{/Topic}}
 
 </div>`;

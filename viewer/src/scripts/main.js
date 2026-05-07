@@ -41,6 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initAudio();              // delegated audio playback for .wc-audio-btn elements
   initDataHealth();         // Deliver data readiness counts
   initQA();                 // QA issue jump actions
-  initQuickExport();        // chapter/group-level quick exports to Anki
+  initQuickExport();        // source/group-level quick exports to Anki
   initTabs();               // last: fires initial tabchange event after all modules are ready
 });

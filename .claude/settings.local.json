@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(python3:*)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "Bash(~/.local/bin/uv run *)",
+      "Bash(command -v uv)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/vadim/.cargo/bin/**)",
+      "Bash(pip3 show *)"
     ]
   }
 }

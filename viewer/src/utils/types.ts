@@ -107,9 +107,12 @@ export interface Sentence {
   audio?: string;
   /** Sentence batch filename without extension, used to resolve audio paths. */
   audioBatch?: string;
+  /** Display label built from the batch title/subtitle. */
+  groupLabel?: string;
 }
 
-export interface SentenceChapter {
-  chapter: string;
+export interface SentenceGroup {
+  label: string;
   sentences: Sentence[];
+  batches?: string[];
 }

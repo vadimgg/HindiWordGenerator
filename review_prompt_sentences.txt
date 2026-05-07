@@ -30,9 +30,14 @@ Focus on these specific things, in priority order:
    - Flag notes that describe a word's usage incorrectly for Delhi context.
    - A note that says "formal" when the word is casually used in Delhi is misleading.
 
+4. romanisation_policy — Only flag nasalisation convention drift:
+   - The project uses tilde nasalisation: maĩ, yahā̃, haĩ, gharõ, laṛkiyā̃.
+   - Flag generated romanisation that uses ṃ, ṁ, or o̐ for nasalised vowels.
+   - Do not review general spelling/romanisation choices beyond this policy.
+
 Do NOT comment on:
 - JSON structure or schema compliance
-- Romanisation or spelling
+- General romanisation or spelling, except the nasalisation policy above
 - The literal field (it is intentionally unnatural — that is the point)
 - Fields that are simply absent unless the absence is itself the problem
 
@@ -42,7 +47,8 @@ INPUT
 
 A JSON object in this format:
 {
-  "chapter": "...",
+  "title": "...",
+  "subtitle": "...",
   "sentences": [ ... ]
 }
 
@@ -53,7 +59,8 @@ OUTPUT
 Output valid JSON only — no markdown fences, no commentary outside the JSON.
 
 {
-  "chapter": "chapter title or null",
+  "title": "source title",
+  "subtitle": "chapter or topic subtitle",
   "verdict": "approved | needs_changes",
   "cards": [
     {
@@ -61,7 +68,7 @@ Output valid JSON only — no markdown fences, no commentary outside the JSON.
       "verdict": "ok | flagged",
       "issues": [
         {
-          "field": "register | naturalness | word_note",
+          "field": "register | naturalness | word_note | romanisation_policy",
           "problem": "what is wrong or missing — be specific",
           "suggestion": "what it should say or what to change — be concrete"
         }

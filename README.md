@@ -32,9 +32,21 @@ The project is built for cautious, append-only data production:
 ```text
 HindiWordGenerator/
   main.py                         # Main CLI: check, run, audio
-  generate.py                     # LangChain generation runner
-  process.py                      # Planning, validation, writing, manifest updates
+  generate.py                     # Generation orchestration runner
+  process.py                      # CLI facade for check, write, mark-done
+  check_report.py                 # Rich check preview and data-health report
+  batch_planner.py                # Input parsing, metadata, dedupe, pending batches
+  pipeline_config.py              # Shared paths and pipeline constants
+  schema_validator.py             # Strict JSON schema validation
+  manifest_store.py               # Manifest hashing and persistence
+  generation_types.py             # Shared batch runtime dataclasses
+  llm_client.py                   # LangChain provider, prompt, retry, JSON parsing
+  generation_io.py                # process.py/audio_generator.py subprocess boundary
   audio_generator.py              # MP3 generation and audio path backfill
+  ARCHITECTURE.md                 # Runtime ownership and data flow
+  DATA_SURFACES.md                # Source/generated/projection cleanup rules
+  ROMANISATION.md                 # Learner-facing romanisation convention
+  tests/                          # Standard-library Python contract tests
   generation_prompt_words.txt     # Word generation system prompt
   generation_prompt_sentences.txt # Sentence generation system prompt
   review_prompt_words.txt         # Word QA review prompt
@@ -53,8 +65,9 @@ HindiWordGenerator/
 
 ## Input Format
 
-Words and sentences use the same simple CSV-like format. A chapter title is
-optional and starts with `#`. Each content line is:
+Words and sentences use the same simple CSV-like format. A source title starts
+with `#`, and an optional chapter/topic subtitle starts with `##`. Each content
+line is:
 
 ```text
 HINDI (romanisation);English
@@ -63,20 +76,25 @@ HINDI (romanisation);English
 Word example:
 
 ```text
-# Complete Hindi Chapter 01
+# Complete Hindi
+## Chapter 01
 घर (ghar);home / house
 लड़का (laṛkā);boy
 ```
 
+Romanisation policy: use tilde nasalisation in new generation and repairs
+(`maĩ`, `yahā̃`, `haĩ`, `gharõ`). See `ROMANISATION.md`.
+
 Sentence example:
 
 ```text
-# Complete Hindi Chapter 02
+# Complete Hindi
+## Chapter 02
 क्या आप कमला जी हैं? (kyā āp Kamalā jī haĩ?);Are you Kamala?
 ```
 
-If a file has no chapter line, the chapter is derived from the filename. For
-example, `complete_hindi_chapter_01_words.csv` becomes
+If a file has no title/subtitle lines, a display label is derived from the
+filename. For example, `complete_hindi_chapter_01_words.csv` becomes
 `Complete Hindi Chapter 01`.
 
 ## Output Format
@@ -97,7 +115,8 @@ Word batch shape:
 
 ```json
 {
-  "chapter": "Complete Hindi Chapter 01",
+  "title": "Complete Hindi",
+  "subtitle": "Chapter 01",
   "words": []
 }
 ```
@@ -106,7 +125,8 @@ Sentence batch shape:
 
 ```json
 {
-  "chapter": "Complete Hindi Chapter 02",
+  "title": "Complete Hindi",
+  "subtitle": "Chapter 02",
   "sentences": []
 }
 ```
@@ -256,14 +276,16 @@ concurrency of 15 and fail-fast behavior.
 
 During a run it:
 
-- scans pending work through `process.py`
+- scans pending work through `generation_io.py` and `process.py check`
 - applies `--max-items` and `--max-batches`
-- loads the relevant generation prompt
-- creates the selected LangChain chat model
+- loads the relevant generation prompt through `llm_client.py`
+- creates the selected LangChain chat model through `llm_client.py`
 - calls the model for each batch
-- parses the response as JSON
-- delegates validation and writing to `process.py write`
-- generates audio for each successfully written batch
+- parses the response as JSON through `llm_client.py`
+- delegates validation and writing through `generation_io.py` to
+  `process.py write`
+- generates audio for each successfully written batch through
+  `audio_generator.py`
 - prints token usage when provider metadata is available
 
 If a batch fails after retries, validation fails, writing fails, or audio
@@ -278,6 +300,23 @@ Generated JSON is validated before it is written. The validator checks:
 - correct top-level shape for `words` or `sentences`
 - required fields are present
 - required strings are non-empty
+- sentence `tokens` reconstruct Hindi and romanisation exactly
+- audio paths are project-relative MP3 files under `audio/`
+
+Local contract checks:
+
+```bash
+python3 scripts/check-python-contracts.py
+python3 -m unittest discover -s tests -p 'test_*.py'
+cd viewer && npm run check
+```
+
+The Python contract check covers:
+
+- planner behavior and metadata fallback
+- schema validation
+- unsafe audio rejection
+- small validator fix-ups
 - optional fields are omitted instead of empty or null
 - no `date_added` anywhere
 - no unexpected fields
@@ -412,5 +451,5 @@ uv run main.py run --no-fail-fast
   generated before the current sentence schema.
 - `--force` includes all CSV items in planning, but batch numbering still follows
   existing output state.
-- Filename typos are reflected in derived chapter names unless the CSV contains
-  an explicit `#` chapter title.
+- Filename typos are reflected in derived labels unless the CSV contains
+  explicit `#` title and `##` subtitle metadata.

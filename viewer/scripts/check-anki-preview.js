@@ -60,6 +60,8 @@ const sentence = {
 
 const sentenceFields = sentenceToAnkiFields(sentence, 'Complete Hindi Chapter 01');
 assert.deepEqual(Object.keys(sentenceFields), ANKI_SENTENCE_FIELDS, 'sentence field keys must match ANKI_SENTENCE_FIELDS');
+assert.equal(sentenceFields.Topic, 'Complete Hindi Chapter 01', 'sentence topic field must contain the group label');
+assert(!('Chapter' in sentenceFields), 'sentence fields must use Topic, not Chapter');
 assert.equal(sentenceFields.Audio, `[sound:${sentenceMediaFilename(sentence)}]`, 'sentence audio field must match shared media filename');
 assertRendered('sentence front preview', renderTemplate(ANKI_SENTENCE_FRONT, sentenceFields), ['Is this a window?', 'standard']);
 assertRendered('sentence back preview', renderTemplate(ANKI_SENTENCE_BACK, sentenceFields), [
