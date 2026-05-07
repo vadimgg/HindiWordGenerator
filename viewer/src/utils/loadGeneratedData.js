@@ -115,13 +115,27 @@ function buildSentenceGroups(sentenceBatchFiles) {
   return [...merged.values()];
 }
 
-function buildQaIssues(allSentences) {
-  return allSentences.flatMap((sentence, index) => {
+function buildQaIssues(allWords, allSentences) {
+  const wordIssues = allWords.flatMap((word, index) => {
+    if (word.audio) return [];
+    return [{
+      type: 'audio',
+      cardType: 'word',
+      wordIndex: index,
+      label: 'missing audio path',
+      hindi: word.hindi ?? '',
+      english: word.english ?? '',
+      groupLabel: word.groupLabel ?? '',
+    }];
+  });
+
+  const sentenceIssues = allSentences.flatMap((sentence, index) => {
     const issues = [];
     const tokenIssue = getSentenceTokenIssue(sentence);
     if (tokenIssue) {
       issues.push({
         type: 'tokens',
+        cardType: 'sentence',
         sentenceIndex: index,
         label: tokenIssue.reason,
         hindi: sentence.hindi ?? '',
@@ -134,6 +148,7 @@ function buildQaIssues(allSentences) {
     if (!sentence.audio) {
       issues.push({
         type: 'audio',
+        cardType: 'sentence',
         sentenceIndex: index,
         label: 'missing audio path',
         hindi: sentence.hindi ?? '',
@@ -143,6 +158,8 @@ function buildQaIssues(allSentences) {
     }
     return issues;
   });
+
+  return [...wordIssues, ...sentenceIssues];
 }
 
 export async function loadGeneratedData(projectRoot) {
@@ -206,6 +223,6 @@ export async function loadGeneratedData(projectRoot) {
     allSentences,
     sentenceGroups,
     dataHealth,
-    qaIssues: buildQaIssues(allSentences),
+    qaIssues: buildQaIssues(allWords, allSentences),
   };
 }

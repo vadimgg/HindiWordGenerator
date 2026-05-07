@@ -19,7 +19,6 @@ await writeFile(
         hindi: 'खिड़की',
         romanisation: 'khiṛkī',
         english: 'window, opening',
-        audio: 'audio/words/sample/01_khiṛkī.mp3',
         forms: [{ hindi: 'खिड़कियाँ', roman: 'khiṛkiyā̃' }],
       },
     ],
@@ -78,7 +77,10 @@ assert.equal(payload.sentenceGroups[0].label, 'Complete Hindi Chapter 01');
 assert.equal(payload.sentenceSearchIndex[0].group, 'Complete Hindi Chapter 01');
 assert.equal(payload.dataHealth.sentenceTokenReady, 1, 'only one sentence has exact tokens');
 assert.equal(payload.dataHealth.sentenceAudioReady, 1, 'only one sentence has audio');
-assert.equal(payload.qaIssues.length, 2, 'missing tokens and missing audio should both be reported');
+assert.equal(payload.dataHealth.wordAudioReady, 0, 'word without audio should count as missing audio');
+assert.equal(payload.qaIssues.length, 3, 'word audio, sentence tokens, and sentence audio should be reported');
+assert(payload.qaIssues.some(issue => issue.cardType === 'word' && issue.wordIndex === 0), 'word audio issue should include word jump index');
+assert(payload.qaIssues.some(issue => issue.cardType === 'sentence' && issue.sentenceIndex === 1), 'sentence issues should include sentence jump index');
 assert(payload.qaIssues.every(issue => issue.groupLabel === 'Complete Hindi Chapter 01'));
 
 console.log('Generated-data loader checks passed.');

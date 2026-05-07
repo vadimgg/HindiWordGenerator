@@ -19,7 +19,7 @@ Status values: `open`, `in-progress`, `done`.
 
 | Item | Priority | Status | Notes |
 |---|---|---|---|
-| Make QA a first-class pre-export workflow | P2 | open | Let the viewer guide the loop: inspect issues, jump to cards, approve or repair, then export. Keep reviewer agents read-only unless the user approves edits. |
+| Make QA a first-class pre-export workflow | P2 | in-progress | QA now covers word/sentence audio and token issues, filters by issue/card type, and jumps to affected cards. Remaining work: approve/repair workflow and export gating. |
 | Add optional audit sampling mode | P3 | open | Sample generated cards for reviewer-agent checks before a large export, useful when prompts or source inputs changed. |
 
 ## Generation Workflow

@@ -63,11 +63,45 @@
   list-style: none;
 }
 
+.qa-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+}
+
+.qa-filter-btn {
+  border: 1px solid rgba(71,85,105,0.45);
+  background: rgba(15,23,42,0.55);
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.qa-filter-btn:hover,
+.qa-filter-btn.is-active {
+  border-color: rgba(94,234,212,0.42);
+  background: rgba(94,234,212,0.08);
+  color: #5eead4;
+}
+
 .qa-issue-list > li {
   padding: 0.85rem;
   border-radius: 8px;
   background: rgba(8,13,24,0.42);
   border: 1px solid rgba(51,65,85,0.35);
+}
+
+.qa-issue-list > li.is-reviewed {
+  border-color: rgba(74,222,128,0.24);
+  background: rgba(20,83,45,0.1);
 }
 
 .qa-issue-main {
@@ -122,7 +156,15 @@
   color: #64748b;
 }
 
-.qa-view-card-btn {
+.qa-issue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.qa-view-card-btn,
+.qa-review-btn {
   margin-top: 0.45rem;
   padding: 0.25rem 0.55rem;
   border-radius: 6px;
@@ -140,6 +182,17 @@
 .qa-view-card-btn:hover {
   border-color: rgba(94,234,212,0.45);
   background: rgba(94,234,212,0.12);
+}
+
+.qa-review-btn {
+  border-color: rgba(74,222,128,0.22);
+  background: rgba(74,222,128,0.07);
+  color: #4ade80;
+}
+
+.qa-review-btn[aria-pressed="true"] {
+  border-color: rgba(74,222,128,0.36);
+  background: rgba(74,222,128,0.12);
 }
 
 .qa-jump-highlight {
@@ -183,10 +236,17 @@
   color: #cbd5e1;
 }
 
+.qa-issue-footnote {
+  margin: 0.85rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(51,65,85,0.28);
+  font-size: 12px;
+  color: #64748b;
+}
+
 @media (max-width: 720px) {
   .qa-summary-grid,
   .qa-diff-grid {
     grid-template-columns: 1fr;
   }
 }
-

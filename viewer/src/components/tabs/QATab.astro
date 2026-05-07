@@ -11,7 +11,9 @@
 
 interface QaIssue {
   type: 'audio' | 'tokens';
-  sentenceIndex: number;
+  cardType?: 'word' | 'sentence';
+  wordIndex?: number;
+  sentenceIndex?: number;
   label: string;
   hindi: string;
   english: string;
@@ -29,6 +31,8 @@ interface Props {
 const { qaIssues, totalSentences, totalWords } = Astro.props;
 const audioIssues = qaIssues.filter(issue => issue.type === 'audio');
 const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
+const wordIssues = qaIssues.filter(issue => issue.cardType === 'word');
+const sentenceIssues = qaIssues.filter(issue => issue.cardType !== 'word');
 ---
 
 <div id="page-qa" class="page">
@@ -52,7 +56,7 @@ const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
       <div class="data-health-stat">
         <span class="data-health-label">Audio Issues</span>
         <strong>{audioIssues.length}</strong>
-        <small>missing paths</small>
+        <small>{wordIssues.length} word · {audioIssues.length - wordIssues.length} sentence</small>
       </div>
       <div class="data-health-stat">
         <span class="data-health-label">Token Issues</span>
@@ -73,9 +77,28 @@ const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
           <span>Issues</span>
           <strong>{qaIssues.length} {qaIssues.length === 1 ? 'issue' : 'issues'}</strong>
         </div>
+        <div class="qa-filter-row" aria-label="QA issue filters">
+          <button class="qa-filter-btn is-active" type="button" data-qa-filter="all">All</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="audio">Audio</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="tokens">Tokens</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="word">Words</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="sentence">Sentences</button>
+        </div>
         <ul class="qa-issue-list">
-          {qaIssues.map(issue => (
-            <li>
+          {qaIssues.map(issue => {
+            const issueKey = [
+              issue.type,
+              issue.cardType ?? 'sentence',
+              issue.wordIndex ?? issue.sentenceIndex ?? '',
+              issue.label,
+              issue.hindi,
+            ].join('|');
+            return (
+            <li
+              data-qa-issue-type={issue.type}
+              data-qa-card-type={issue.cardType ?? 'sentence'}
+              data-qa-issue-key={issueKey}
+            >
               <div class="qa-issue-main">
                 <span class:list={['qa-issue-chip', issue.type === 'tokens' ? 'is-token' : 'is-audio']}>
                   {issue.type === 'tokens' ? 'Tokens' : 'Audio'}
@@ -84,13 +107,33 @@ const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
                   <strong lang="hi">{issue.hindi}</strong>
                   <p>{issue.english}</p>
                   <small>{issue.groupLabel} · {issue.label}</small>
-                  <button
-                    class="qa-view-card-btn"
-                    data-qa-jump-sentence={issue.sentenceIndex}
-                    type="button"
-                  >
-                    View card
-                  </button>
+                  {issue.cardType === 'word' ? (
+                    <div class="qa-issue-actions">
+                      <button
+                        class="qa-view-card-btn"
+                        data-qa-jump-word={issue.wordIndex}
+                        type="button"
+                      >
+                        View word
+                      </button>
+                      <button class="qa-review-btn" data-qa-review={issueKey} type="button">
+                        Mark reviewed
+                      </button>
+                    </div>
+                  ) : (
+                    <div class="qa-issue-actions">
+                      <button
+                        class="qa-view-card-btn"
+                        data-qa-jump-sentence={issue.sentenceIndex}
+                        type="button"
+                      >
+                        View sentence
+                      </button>
+                      <button class="qa-review-btn" data-qa-review={issueKey} type="button">
+                        Mark reviewed
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               {issue.expected && issue.actual && (
@@ -108,8 +151,11 @@ const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
                 </div>
               )}
             </li>
-          ))}
+          )})}
         </ul>
+        <p class="qa-issue-footnote">
+          {wordIssues.length} word {wordIssues.length === 1 ? 'issue' : 'issues'} · {sentenceIssues.length} sentence {sentenceIssues.length === 1 ? 'issue' : 'issues'}
+        </p>
       </section>
     )}
   </div>
