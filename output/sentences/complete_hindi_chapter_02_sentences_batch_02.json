@@ -16,20 +16,10 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "सस्ती",
           "roman": "sastī",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "नहीं",
@@ -38,25 +28,10 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 3
-        },
-        {
-          "hindi": ",",
-          "roman": ",",
-          "kind": "punct"
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "काफ़ी",
@@ -65,31 +40,10 @@
           "word_index": 4
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "महँगी",
           "roman": "mahãgī",
           "kind": "word",
           "word_index": 5
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
-          "hindi": "है",
-          "roman": "hai",
-          "kind": "word",
-          "word_index": 3
-        },
-        {
-          "hindi": "।",
-          "roman": ".",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -149,20 +103,10 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "ये",
           "roman": "ye",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "शब्दकोश",
@@ -171,20 +115,10 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "भी",
           "roman": "bhī",
           "kind": "word",
           "word_index": 3
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "महँगे",
@@ -193,20 +127,10 @@
           "word_index": 4
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "हैं",
           "roman": "haĩ",
           "kind": "word",
           "word_index": 5
-        },
-        {
-          "hindi": "?",
-          "roman": "?",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -267,36 +191,10 @@
           "word_index": 0
         },
         {
-          "hindi": ",",
-          "roman": ",",
-          "kind": "punct"
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "बिलकुल",
           "roman": "bilkul",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "kind": "word",
-          "word_index": 0
-        },
-        {
-          "hindi": "।",
-          "roman": ".",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -332,31 +230,16 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "सस्ते",
           "roman": "saste",
           "kind": "word",
           "word_index": 1
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "हैं",
           "roman": "haĩ",
           "kind": "word",
           "word_index": 2
-        },
-        {
-          "hindi": "।",
-          "roman": ".",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -399,20 +282,10 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "वह",
           "roman": "vah",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "मोटी",
@@ -421,20 +294,10 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "किताब",
           "roman": "kitāb",
           "kind": "word",
           "word_index": 3
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "क्या",
@@ -443,20 +306,10 @@
           "word_index": 4
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 5
-        },
-        {
-          "hindi": "?",
-          "roman": "?",
-          "kind": "punct"
         }
       ],
       "words": [

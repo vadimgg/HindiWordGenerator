@@ -633,7 +633,7 @@ readiness problems.
 Refactor shape:
 
 - Include word audio issues in generated QA data: done.
-- Keep sentence audio and exact-token issues: done.
+- Keep sentence audio and word-token issues: done.
 - Add QA filters for all/audio/tokens/words/sentences: done.
 - Add jump actions for both word and sentence cards: done.
 - Add local reviewed markers without modifying generated data: done.
@@ -693,7 +693,7 @@ Why it matters:
 The viewer now surfaces readiness issues, but command-line repair discovery
 should also exist. We need a safe read-only audit for legacy batches and input
 quality problems, plus direct backfill commands for batches missing audio paths
-or exact sentence tokens.
+or word-only sentence tokens.
 
 Refactor shape:
 
@@ -701,7 +701,7 @@ Refactor shape:
 - Add optional sentence input audit for phrase-like drills in sentence CSVs:
   done.
 - Add `repair.py audio` wrapper for targeted audio backfill: done.
-- Add validation-backed `repair.py tokens` for exact sentence token backfill:
+- Add validation-backed `repair.py tokens` for word-only sentence token backfill:
   done.
 - Keep audit read-only by default: done.
 - Cover audit detection in Python contract tests: done.
@@ -736,7 +736,7 @@ Validation:
 17. Persist Deliver deck choices. Done.
 18. Make QA a pre-export gate. Done.
 19. Document and check no-API agent generation. Done.
-20. Add repair audit, audio backfill, and exact-token backfill commands. Done.
+20. Add repair audit, audio backfill, and word-token backfill commands. Done.
 
 ## Open Decisions
 

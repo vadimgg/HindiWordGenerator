@@ -39,16 +39,28 @@ def _sentence_token_missing(entries: list[dict]) -> int:
     return sum(1 for entry in entries if not entry.get("tokens"))
 
 
-def _separator_token(hindi: str, roman: str) -> dict | None:
-    if not hindi and not roman:
-        return None
-    if not hindi or not roman:
-        return None
-    kind = "space" if hindi.isspace() and roman.isspace() else "punct"
-    return {"hindi": hindi, "roman": roman, "kind": kind}
+def _sentence_token_legacy(entries: list[dict]) -> int:
+    return sum(1 for entry in entries if entry.get("tokens") and _needs_token_repair(entry))
 
 
-def _build_exact_sentence_tokens(sentence: dict) -> list[dict] | None:
+def _needs_token_repair(sentence: dict) -> bool:
+    tokens = sentence.get("tokens")
+    words = sentence.get("words")
+    if not tokens:
+        return True
+    if not isinstance(tokens, list) or not isinstance(words, list):
+        return True
+    if len(tokens) != len(words):
+        return True
+    return any(
+        not isinstance(token, dict)
+        or token.get("kind") != "word"
+        or token.get("word_index") != index
+        for index, token in enumerate(tokens)
+    )
+
+
+def _build_word_sentence_tokens(sentence: dict) -> list[dict] | None:
     hindi_text = sentence.get("hindi")
     roman_text = sentence.get("romanisation")
     words = sentence.get("words")
@@ -74,15 +86,6 @@ def _build_exact_sentence_tokens(sentence: dict) -> list[dict] | None:
         if hindi_pos < 0 or roman_pos < 0:
             return None
 
-        separator = _separator_token(
-            hindi_text[hindi_cursor:hindi_pos],
-            roman_text[roman_cursor:roman_pos],
-        )
-        if separator:
-            tokens.append(separator)
-        elif hindi_pos != hindi_cursor or roman_pos != roman_cursor:
-            return None
-
         tokens.append({
             "hindi": hindi_word,
             "roman": roman_word,
@@ -92,22 +95,13 @@ def _build_exact_sentence_tokens(sentence: dict) -> list[dict] | None:
         hindi_cursor = hindi_pos + len(hindi_word)
         roman_cursor = roman_pos + len(roman_word)
 
-    separator = _separator_token(
-        hindi_text[hindi_cursor:],
-        roman_text[roman_cursor:],
-    )
-    if separator:
-        tokens.append(separator)
-    elif hindi_cursor != len(hindi_text) or roman_cursor != len(roman_text):
-        return None
-
     return tokens or None
 
 
 def _repair_sentence_tokens(sentence: dict, force: bool = False) -> bool:
-    if sentence.get("tokens") and not force:
+    if not force and not _needs_token_repair(sentence):
         return False
-    tokens = _build_exact_sentence_tokens(sentence)
+    tokens = _build_word_sentence_tokens(sentence)
     if not tokens:
         return False
     sentence["tokens"] = tokens
@@ -149,6 +143,9 @@ def _audit_output_file(path: Path) -> list[dict]:
         missing_tokens = _sentence_token_missing(entries)
         if missing_tokens:
             issues.append({"path": str(path), "kind": "missing-tokens", "detail": f"{missing_tokens} sentences missing tokens"})
+        legacy_tokens = _sentence_token_legacy(entries)
+        if legacy_tokens:
+            issues.append({"path": str(path), "kind": "legacy-tokens", "detail": f"{legacy_tokens} sentences have non-word tokens"})
 
     return issues
 
@@ -238,7 +235,7 @@ def cmd_tokens(args: argparse.Namespace) -> int:
 
         changed = False
         for index, sentence in enumerate(data["sentences"]):
-            if sentence.get("tokens") and not args.force:
+            if not args.force and not _needs_token_repair(sentence):
                 continue
             report["checked"] += 1
             if _repair_sentence_tokens(sentence, args.force):
@@ -282,11 +279,11 @@ def parse_args() -> argparse.Namespace:
     p_audio.add_argument("--type", choices=["words", "sentences"], default=None)
     p_audio.add_argument("--force", action="store_true", help="Regenerate audio even when all entries already have audio paths.")
 
-    p_tokens = sub.add_parser("tokens", help="Backfill exact sentence tokens when alignment is unambiguous.")
+    p_tokens = sub.add_parser("tokens", help="Backfill word-only sentence tokens when alignment is unambiguous.")
     p_tokens.add_argument("path", nargs="?")
     p_tokens.add_argument("--type", choices=["sentences"], default="sentences")
     p_tokens.add_argument("--write", action="store_true", help="Write repaired token arrays after validation.")
-    p_tokens.add_argument("--force", action="store_true", help="Rebuild existing token arrays when exact alignment is possible.")
+    p_tokens.add_argument("--force", action="store_true", help="Rebuild existing token arrays when word alignment is possible.")
 
     return parser.parse_args()
 

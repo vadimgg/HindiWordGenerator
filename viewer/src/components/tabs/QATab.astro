@@ -61,7 +61,7 @@ const sentenceIssues = qaIssues.filter(issue => issue.cardType !== 'word');
       <div class="data-health-stat">
         <span class="data-health-label">Token Issues</span>
         <strong>{tokenIssues.length}</strong>
-        <small>reconstruction</small>
+        <small>word alignment</small>
       </div>
     </section>
 
@@ -69,7 +69,7 @@ const sentenceIssues = qaIssues.filter(issue => issue.cardType !== 'word');
       <section class="qa-empty-state">
         <span class="qa-empty-mark">✓</span>
         <h2>No generated data issues detected</h2>
-        <p>Sentence tokens reconstruct exactly, and loaded cards have audio paths.</p>
+        <p>Sentence tokens align to word breakdowns, and loaded cards have audio paths.</p>
       </section>
     ) : (
       <section class="qa-issue-panel">

@@ -90,8 +90,8 @@ export interface SentenceWord {
 export interface SentenceToken {
   hindi: string;
   roman: string;
-  kind: 'word' | 'punct' | 'space';
-  word_index?: number;
+  kind: 'word';
+  word_index: number;
 }
 
 export interface Sentence {

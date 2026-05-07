@@ -1,9 +1,9 @@
 ---
 /**
- * Sentence card section: exact display tokens.
+ * Sentence card section: word tokens.
  *
- * Responsible for: rendering current-schema sentence tokens when present and
- * surfacing a compact compatibility hint for older words-only sentence batches.
+ * Responsible for: rendering current-schema word tokens when present and
+ * surfacing a compact compatibility hint for older sentence batches.
  */
 import type { SentenceToken, SentenceWord } from '../../../utils/types';
 
@@ -14,7 +14,7 @@ interface Props {
 
 const { tokens = [], words = [] } = Astro.props;
 const hasTokens = tokens.length > 0;
-const visibleTokens = tokens.filter((token) => token.kind === 'word');
+const visibleTokens = tokens;
 const wordByIndex = new Map(words.map((word, index) => [index, word]));
 ---
 
@@ -28,7 +28,7 @@ const wordByIndex = new Map(words.map((word, index) => [index, word]));
       class="font-title text-xs sm:text-sm font-medium tracking-wider uppercase
              text-slate-400 group-open/det:text-slate-200 transition-colors"
     >
-      Exact Tokens
+      Word Tokens
     </span>
     <span class="flex items-center gap-2">
       <span
@@ -85,8 +85,8 @@ const wordByIndex = new Map(words.map((word, index) => [index, word]));
     ) : (
       <div class="rounded-lg border border-amber-700/20 bg-amber-950/10 px-3 py-2.5">
         <p class="text-sm text-amber-200/80 leading-relaxed">
-          This sentence batch predates exact display tokens. Regenerate or migrate
-          it when token-level highlighting is needed.
+          This sentence batch predates word tokens. Regenerate or migrate it when
+          token-level highlighting is needed.
         </p>
       </div>
     )}

@@ -238,44 +238,28 @@ def _validate_sentences_batch(data: dict) -> None:
         _require_list(sentence["words"], f"{path}.words")
         _require(len(sentence["words"]) > 0, f"{path}.words must not be empty")
 
-        reconstructed_hindi: list[str] = []
-        reconstructed_roman: list[str] = []
-        used_word_indexes: set[int] = set()
-
         for token_index, token in enumerate(sentence["tokens"]):
             token_path = f"{path}.tokens[{token_index}]"
             _require_type(token, dict, token_path)
             _require(set(token.keys()).issubset(allowed_token_keys), f"{token_path} has unexpected keys")
-            _require({"hindi", "roman", "kind"}.issubset(token.keys()), f"{token_path} is missing required keys")
+            _require({"hindi", "roman", "kind", "word_index"}.issubset(token.keys()), f"{token_path} is missing required keys")
             _require_type(token["hindi"], str, f"{token_path}.hindi")
             _require_type(token["roman"], str, f"{token_path}.roman")
             _require(token["hindi"] != "", f"{token_path}.hindi must not be empty")
             _require(token["roman"] != "", f"{token_path}.roman must not be empty")
-            _require(token["kind"] in {"word", "punct", "space"}, f"{token_path}.kind must be 'word', 'punct', or 'space'")
-
-            reconstructed_hindi.append(token["hindi"])
-            reconstructed_roman.append(token["roman"])
-
-            if token["kind"] == "word":
-                _require("word_index" in token, f"{token_path}.word_index is required for word tokens")
-                _require_type(token["word_index"], int, f"{token_path}.word_index")
-                _require(0 <= token["word_index"] < len(sentence["words"]), f"{token_path}.word_index is out of range")
-                linked_word = sentence["words"][token["word_index"]]
-                _require(
-                    token["hindi"] == linked_word["hindi"],
-                    f"{token_path}.hindi must exactly match words[{token['word_index']}].hindi",
-                )
-                _require(
-                    token["roman"] == linked_word["roman"],
-                    f"{token_path}.roman must exactly match words[{token['word_index']}].roman",
-                )
-                used_word_indexes.add(token["word_index"])
-            elif token["kind"] == "space":
-                _require(token["hindi"].isspace(), f"{token_path}.hindi must contain only whitespace for space tokens")
-                _require(token["roman"].isspace(), f"{token_path}.roman must contain only whitespace for space tokens")
-                _require("word_index" not in token, f"{token_path}.word_index must be omitted for space tokens")
-            else:
-                _require("word_index" not in token, f"{token_path}.word_index must be omitted for punct tokens")
+            _require(token["kind"] == "word", f"{token_path}.kind must be 'word'")
+            _require_type(token["word_index"], int, f"{token_path}.word_index")
+            _require(token["word_index"] == token_index, f"{token_path}.word_index must match token position")
+            _require(token_index < len(sentence["words"]), f"{token_path}.word_index is out of range")
+            linked_word = sentence["words"][token_index]
+            _require(
+                token["hindi"] == linked_word["hindi"],
+                f"{token_path}.hindi must exactly match words[{token_index}].hindi",
+            )
+            _require(
+                token["roman"] == linked_word["roman"],
+                f"{token_path}.roman must exactly match words[{token_index}].roman",
+            )
 
         for word_index, word in enumerate(sentence["words"]):
             word_path = f"{path}.words[{word_index}]"
@@ -289,18 +273,7 @@ def _validate_sentences_batch(data: dict) -> None:
                 if key in word:
                     _require_non_empty_string(word[key], f"{word_path}.{key}")
 
-        _require(
-            used_word_indexes == set(range(len(sentence["words"]))),
-            f"{path}.tokens must reference every entry in words exactly at least once",
-        )
-        _require(
-            "".join(reconstructed_hindi) == sentence["hindi"],
-            f"{path}.tokens do not reconstruct sentence.hindi exactly",
-        )
-        _require(
-            "".join(reconstructed_roman) == sentence["romanisation"],
-            f"{path}.tokens do not reconstruct sentence.romanisation exactly",
-        )
+        _require(len(sentence["tokens"]) == len(sentence["words"]), f"{path}.tokens must contain one word token for each words entry")
 
 
 def _validate_batch(pipeline_type: str, data: dict) -> None:

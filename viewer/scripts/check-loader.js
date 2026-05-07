@@ -36,15 +36,17 @@ await writeFile(
         romanisation: 'kyā yah khiṛkī hai?',
         english: 'Is this a window?',
         audio: 'audio/sentences/sample/01_window.mp3',
+        words: [
+          { hindi: 'क्या', roman: 'kyā', meaning: 'question marker' },
+          { hindi: 'यह', roman: 'yah', meaning: 'this' },
+          { hindi: 'खिड़की', roman: 'khiṛkī', meaning: 'window' },
+          { hindi: 'है', roman: 'hai', meaning: 'is' },
+        ],
         tokens: [
-          { hindi: 'क्या', roman: 'kyā', kind: 'word' },
-          { hindi: ' ', roman: ' ', kind: 'space' },
-          { hindi: 'यह', roman: 'yah', kind: 'word' },
-          { hindi: ' ', roman: ' ', kind: 'space' },
-          { hindi: 'खिड़की', roman: 'khiṛkī', kind: 'word' },
-          { hindi: ' ', roman: ' ', kind: 'space' },
-          { hindi: 'है', roman: 'hai', kind: 'word' },
-          { hindi: '?', roman: '?', kind: 'punct' },
+          { hindi: 'क्या', roman: 'kyā', kind: 'word', word_index: 0 },
+          { hindi: 'यह', roman: 'yah', kind: 'word', word_index: 1 },
+          { hindi: 'खिड़की', roman: 'khiṛkī', kind: 'word', word_index: 2 },
+          { hindi: 'है', roman: 'hai', kind: 'word', word_index: 3 },
         ],
       },
       {
@@ -75,7 +77,7 @@ assert.equal(payload.hoverData[0].english, 'window', 'hover English should use f
 assert.equal(payload.allSentences.length, 2, 'sentences should flatten across groups');
 assert.equal(payload.sentenceGroups[0].label, 'Complete Hindi Chapter 01');
 assert.equal(payload.sentenceSearchIndex[0].group, 'Complete Hindi Chapter 01');
-assert.equal(payload.dataHealth.sentenceTokenReady, 1, 'only one sentence has exact tokens');
+assert.equal(payload.dataHealth.sentenceTokenReady, 1, 'only one sentence has word tokens');
 assert.equal(payload.dataHealth.sentenceAudioReady, 1, 'only one sentence has audio');
 assert.equal(payload.dataHealth.wordAudioReady, 0, 'word without audio should count as missing audio');
 assert.equal(payload.qaIssues.length, 3, 'word audio, sentence tokens, and sentence audio should be reported');

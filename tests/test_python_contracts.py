@@ -28,7 +28,6 @@ def minimal_sentence(audio: str | None = None) -> dict:
         "register": "standard",
         "tokens": [
             {"hindi": "क्या", "roman": "kyā", "kind": "word", "word_index": 0},
-            {"hindi": "?", "roman": "?", "kind": "punct"},
         ],
         "words": [{"hindi": "क्या", "roman": "kyā", "meaning": "what"}],
         "anki_tags": ["test", "contract", "sentence"],
@@ -164,6 +163,18 @@ class PythonContractTests(unittest.TestCase):
                 },
             )
 
+        legacy_token_sentence = minimal_sentence()
+        legacy_token_sentence["tokens"].append({"hindi": "?", "roman": "?", "kind": "punct", "word_index": 1})
+        with self.assertRaisesRegex(ValidationError, "kind must be 'word'"):
+            validate_and_fix(
+                "sentences",
+                {
+                    "title": "Complete Hindi",
+                    "subtitle": "Chapter 01",
+                    "sentences": [legacy_token_sentence],
+                },
+            )
+
         word_batch = validate_and_fix(
             "words",
             {
@@ -197,10 +208,27 @@ class PythonContractTests(unittest.TestCase):
             self.assertIn("missing-subtitle", issue_kinds)
             self.assertIn("missing-audio", issue_kinds)
 
+            legacy_token_sentence = minimal_sentence()
+            legacy_token_sentence["tokens"].append({"hindi": "?", "roman": "?", "kind": "punct", "word_index": 1})
+            legacy_path = root / "sentences_batch_02.json"
+            write(
+                legacy_path,
+                json.dumps(
+                    {
+                        "title": "Complete Hindi",
+                        "subtitle": "Chapter 01",
+                        "sentences": [legacy_token_sentence],
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+            legacy_issue_kinds = {issue["kind"] for issue in repair._audit_output_file(legacy_path)}
+            self.assertIn("legacy-tokens", legacy_issue_kinds)
+
             self.assertTrue(repair._looks_like_sentence_drill("बच्चे का कुत्ता (bacce kā kuttā);the child's dog"))
             self.assertFalse(repair._looks_like_sentence_drill("क्या वह बीमार है? (kyā vah bīmār hai?);Is she ill?"))
 
-    def test_repair_builds_exact_sentence_tokens_when_alignment_is_safe(self) -> None:
+    def test_repair_builds_word_sentence_tokens_when_alignment_is_safe(self) -> None:
         sentence = {
             "hindi": "क्या वह बीमार है?",
             "romanisation": "kyā vah bīmār hai?",
@@ -225,17 +253,13 @@ class PythonContractTests(unittest.TestCase):
                 "sentences": [sentence],
             },
         )
-        self.assertEqual("".join(token["hindi"] for token in sentence["tokens"]), sentence["hindi"])
-        self.assertEqual("".join(token["roman"] for token in sentence["tokens"]), sentence["romanisation"])
+        self.assertEqual("".join(token["hindi"] for token in sentence["tokens"]), "क्यावहबीमारहै")
+        self.assertEqual("".join(token["roman"] for token in sentence["tokens"]), "kyāvahbīmārhai")
         self.assertEqual([token["kind"] for token in sentence["tokens"]], [
             "word",
-            "space",
             "word",
-            "space",
             "word",
-            "space",
             "word",
-            "punct",
         ])
 
     def test_repair_refuses_sentence_tokens_when_words_do_not_align(self) -> None:
@@ -247,6 +271,16 @@ class PythonContractTests(unittest.TestCase):
 
         self.assertFalse(repair._repair_sentence_tokens(sentence))
         self.assertNotIn("tokens", sentence)
+
+    def test_repair_rebuilds_legacy_sentence_tokens_without_force(self) -> None:
+        sentence = minimal_sentence()
+        sentence["tokens"].append({"hindi": "?", "roman": "?", "kind": "punct", "word_index": 1})
+
+        self.assertTrue(repair._repair_sentence_tokens(sentence))
+        self.assertEqual(
+            sentence["tokens"],
+            [{"hindi": "क्या", "roman": "kyā", "kind": "word", "word_index": 0}],
+        )
 
 
 if __name__ == "__main__":

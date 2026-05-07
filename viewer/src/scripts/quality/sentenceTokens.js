@@ -1,51 +1,66 @@
 /**
  * Sentence token quality checks.
  *
- * Responsible for: validating whether sentence token arrays exactly reconstruct
- * the displayed Hindi and romanisation strings.
+ * Responsible for: validating whether sentence token arrays contain one clean
+ * word token for each learner-facing word breakdown entry.
  *
  * No DOM access and no dependencies on other project modules.
  */
-// Responsible for: shared sentence token reconstruction checks
-
-function reconstructedTokens(sentence) {
-  return {
-    hindi: sentence.tokens.map(token => token.hindi ?? '').join(''),
-    romanisation: sentence.tokens.map(token => token.roman ?? '').join(''),
-  };
-}
+// Responsible for: shared sentence word-token contract checks
 
 /**
- * Returns a structured token reconstruction issue, or null when tokens are exact.
+ * Returns a structured token issue, or null when tokens match words exactly.
  *
  * @param {object} sentence - Sentence card data.
  * @returns {{code:string, reason:string, expected?:object, actual?:object}|null}
  */
 export function getSentenceTokenIssue(sentence) {
   if (!Array.isArray(sentence?.tokens) || sentence.tokens.length === 0) {
-    return { code: 'missing-tokens', reason: 'missing exact tokens' };
+    return { code: 'missing-tokens', reason: 'missing word tokens' };
   }
 
-  const actual = reconstructedTokens(sentence);
-  const expected = {
-    hindi: sentence.hindi ?? '',
-    romanisation: sentence.romanisation ?? '',
-  };
-  const hindiMatches = actual.hindi === expected.hindi;
-  const romanMatches = actual.romanisation === expected.romanisation;
+  if (!Array.isArray(sentence?.words) || sentence.words.length === 0) {
+    return { code: 'missing-words', reason: 'missing word breakdown' };
+  }
 
-  if (hindiMatches && romanMatches) return null;
-  if (!hindiMatches && !romanMatches) {
-    return { code: 'token-mismatch', reason: 'Hindi and romanisation tokens mismatch', expected, actual };
+  if (sentence.tokens.length !== sentence.words.length) {
+    return {
+      code: 'token-count-mismatch',
+      reason: 'word token count does not match word breakdown',
+      expected: { count: sentence.words.length },
+      actual: { count: sentence.tokens.length },
+    };
   }
-  if (!hindiMatches) {
-    return { code: 'hindi-token-mismatch', reason: 'Hindi tokens mismatch', expected, actual };
+
+  for (let index = 0; index < sentence.tokens.length; index += 1) {
+    const token = sentence.tokens[index];
+    const word = sentence.words[index];
+    if (token.kind !== 'word') {
+      return { code: 'non-word-token', reason: 'tokens must contain words only', actual: token };
+    }
+    if (token.word_index !== index) {
+      return {
+        code: 'word-index-mismatch',
+        reason: 'word token index does not match token position',
+        expected: { word_index: index },
+        actual: { word_index: token.word_index },
+      };
+    }
+    if (token.hindi !== word.hindi || token.roman !== word.roman) {
+      return {
+        code: 'token-word-mismatch',
+        reason: 'word token does not match word breakdown',
+        expected: { hindi: word.hindi, roman: word.roman },
+        actual: { hindi: token.hindi, roman: token.roman },
+      };
+    }
   }
-  return { code: 'roman-token-mismatch', reason: 'romanisation tokens mismatch', expected, actual };
+
+  return null;
 }
 
 /**
- * Returns true when sentence.tokens exactly reconstructs both Hindi and romanisation.
+ * Returns true when sentence.tokens contains one clean word token per words entry.
  *
  * @param {object} sentence - Sentence card data.
  * @returns {boolean}
@@ -55,7 +70,7 @@ export function hasExactSentenceTokens(sentence) {
 }
 
 /**
- * Counts sentences whose tokens are absent or do not reconstruct the source strings.
+ * Counts sentences whose tokens are absent or do not match the word breakdown.
  *
  * @param {object[]} sentences - Sentence card data.
  * @returns {number}

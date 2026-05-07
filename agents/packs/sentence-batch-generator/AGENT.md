@@ -51,7 +51,7 @@ a script-planned slice, then pass that JSON back through validation/output.
 - Preserve append-only output behavior unless the user explicitly says current
   output may be replaced for testing.
 - Use the current sentence prompt exactly as written.
-- Produce current-schema sentence cards, including exact `tokens`.
+- Produce current-schema sentence cards, including word-only `tokens`.
 - Let `process.py` validation reject malformed JSON before output is written.
 - Produce cards that the viewer can show after refresh.
 
@@ -173,7 +173,7 @@ without validation.
 - `check` showed the intended pending slice before generation.
 - Generation completed or failed with a clear error.
 - Written batches passed project validation.
-- Sentence cards include exact `tokens` when generated under the current schema.
+- Sentence cards include word-only `tokens` when generated under the current schema.
 - Audio was generated when the normal pipeline requested it.
 - The viewer can display the new sentence cards after refresh.
 - The user knows which batch files changed.

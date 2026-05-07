@@ -16,20 +16,10 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "वह",
           "roman": "vah",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "भी",
@@ -38,31 +28,16 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "शब्दकोश",
           "roman": "śabdkoś",
           "kind": "word",
           "word_index": 3
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 4
-        },
-        {
-          "hindi": "?",
-          "roman": "?",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -116,36 +91,10 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "kind": "word",
-          "word_index": 0
-        },
-        {
-          "hindi": ",",
-          "roman": ",",
-          "kind": "punct"
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "वह",
           "roman": "vah",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "शब्दकोश",
@@ -154,58 +103,16 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "kind": "word",
-          "word_index": 0
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 3
-        },
-        {
-          "hindi": ",",
-          "roman": ",",
-          "kind": "punct"
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "रामायण",
           "roman": "rāmāyaṇ",
           "kind": "word",
           "word_index": 4
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
-          "hindi": "है",
-          "roman": "hai",
-          "kind": "word",
-          "word_index": 3
-        },
-        {
-          "hindi": "!",
-          "roman": "!",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -259,25 +166,10 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "राज",
           "roman": "Rāj",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": ",",
-          "roman": ",",
-          "kind": "punct"
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "क्या",
@@ -286,31 +178,16 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "हाल",
           "roman": "hāl",
           "kind": "word",
           "word_index": 3
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 4
-        },
-        {
-          "hindi": "?",
-          "roman": "?",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -365,31 +242,16 @@
           "word_index": 0
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "ठीक",
           "roman": "ṭhīk",
           "kind": "word",
           "word_index": 1
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 2
-        },
-        {
-          "hindi": "?",
-          "roman": "?",
-          "kind": "punct"
         }
       ],
       "words": [
@@ -430,25 +292,10 @@
           "word_index": 0
         },
         {
-          "hindi": ",",
-          "roman": ",",
-          "kind": "punct"
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "सब",
           "roman": "sab",
           "kind": "word",
           "word_index": 1
-        },
-        {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
         },
         {
           "hindi": "ठीक",
@@ -457,20 +304,10 @@
           "word_index": 2
         },
         {
-          "hindi": " ",
-          "roman": " ",
-          "kind": "space"
-        },
-        {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
           "word_index": 3
-        },
-        {
-          "hindi": "।",
-          "roman": ".",
-          "kind": "punct"
         }
       ],
       "words": [

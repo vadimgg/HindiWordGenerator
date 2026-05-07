@@ -23,7 +23,7 @@ The project is built for cautious, append-only data production:
 - Prompt-hash and CSV-hash tracking in `manifest.json`
 - Rich `check` preview before generation
 - Strict validation for required fields, optional fields, item counts, and
-  sentence token reconstruction
+  sentence word-token alignment
 - Per-card audio generation with `gTTS`
 - Manual QA prompts for Delhi-native review of generated batches
 
@@ -185,6 +185,7 @@ python3 repair.py audit --type sentences --fail-on-issues
 python3 repair.py audio --type sentences
 python3 repair.py tokens --type sentences
 python3 repair.py tokens --type sentences --write
+python3 repair.py tokens --type sentences --write --force
 ```
 
 Open the local viewer:
@@ -276,7 +277,7 @@ delete or rewrite old batches except when adding audio paths.
 - items skipped because they already exist in output
 - batches deferred by `--max-items` or `--max-batches`
 - existing word cards missing `sound_alikes`
-- existing sentence cards missing exact `tokens`
+- existing sentence cards missing word `tokens`
 - existing cards missing `audio`
 
 Examples:
@@ -318,7 +319,7 @@ Generated JSON is validated before it is written. The validator checks:
 - correct top-level shape for `words` or `sentences`
 - required fields are present
 - required strings are non-empty
-- sentence `tokens` reconstruct Hindi and romanisation exactly
+- sentence `tokens` contain words only and align to `words[]`
 - audio paths are project-relative MP3 files under `audio/`
 
 Local contract checks:
@@ -341,8 +342,8 @@ The Python contract check covers:
 - no unexpected fields
 - generated item count matches the planned batch size
 - word `forms` do not duplicate the base Devanagari spelling
-- sentence `tokens` reconstruct `hindi` and `romanisation` exactly
-- sentence word tokens link back to `words[]` with valid `word_index` values
+- sentence `tokens` contain one word token per `words[]` entry
+- sentence word tokens link back to `words[]` with valid positional `word_index` values
 
 Validation failure stops the write, so bad model output should not silently enter
 `output/`.
@@ -392,11 +393,12 @@ Required sentence fields:
 
 Sentence cards have two parallel teaching layers:
 
-- `tokens`: exact display tokens, including punctuation, used for UI mapping
+- `tokens`: word tokens only, with no spaces or punctuation, used for UI mapping
 - `words`: learner-friendly breakdown entries with meanings and notes
 
-Joining all `tokens[].hindi` values must exactly reproduce `hindi`. Joining all
-`tokens[].roman` values must exactly reproduce `romanisation`.
+Each `tokens[]` entry must be `kind: "word"` and match the same-position
+`words[]` entry. Full punctuation and spacing stay only in `hindi` and
+`romanisation`.
 
 ## Audio
 
@@ -468,9 +470,10 @@ uv run main.py run --no-fail-fast
   files are not automatically rewritten.
 - Existing sentence batches may be reported as missing `tokens` if they were
   generated before the current sentence schema.
-- `repair.py tokens` can backfill missing sentence `tokens` only when every
-  Hindi and romanised word aligns exactly to the existing `words` list; use
-  `--write` to persist repairs after schema validation.
+- `repair.py tokens` can backfill missing or legacy sentence `tokens` as
+  word-only tokens when every Hindi and romanised word aligns to the existing
+  `words` list; use `--write` to persist repairs after schema validation, and
+  `--force` to rebuild already-valid token arrays.
 - `--force` includes all CSV items in planning, but batch numbering still follows
   existing output state.
 - Filename typos are reflected in derived labels unless the CSV contains

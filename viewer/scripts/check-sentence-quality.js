@@ -9,13 +9,15 @@ import {
 const validSentence = {
   hindi: 'सब ठीक है?',
   romanisation: 'sab ṭhīk hai?',
+  words: [
+    { hindi: 'सब', roman: 'sab' },
+    { hindi: 'ठीक', roman: 'ṭhīk' },
+    { hindi: 'है', roman: 'hai' },
+  ],
   tokens: [
     { hindi: 'सब', roman: 'sab', kind: 'word', word_index: 0 },
-    { hindi: ' ', roman: ' ', kind: 'space' },
     { hindi: 'ठीक', roman: 'ṭhīk', kind: 'word', word_index: 1 },
-    { hindi: ' ', roman: ' ', kind: 'space' },
     { hindi: 'है', roman: 'hai', kind: 'word', word_index: 2 },
-    { hindi: '?', roman: '?', kind: 'punct' },
   ],
 };
 
@@ -27,16 +29,30 @@ const missingTokenSentence = {
 
 const mismatchedRomanSentence = {
   ...validSentence,
-  romanisation: 'sab thik hai?',
+  tokens: [
+    { hindi: 'सब', roman: 'sab', kind: 'word', word_index: 0 },
+    { hindi: 'ठीक', roman: 'thik', kind: 'word', word_index: 1 },
+    { hindi: 'है', roman: 'hai', kind: 'word', word_index: 2 },
+  ],
 };
 
-assert.equal(hasExactSentenceTokens(validSentence), true, 'valid sentence should reconstruct exactly');
+const punctuationTokenSentence = {
+  ...validSentence,
+  tokens: [
+    ...validSentence.tokens,
+    { hindi: '?', roman: '?', kind: 'punct' },
+  ],
+};
+
+assert.equal(hasExactSentenceTokens(validSentence), true, 'valid sentence should have word-only tokens');
 assert.equal(hasExactSentenceTokens(missingTokenSentence), false, 'missing token array should fail');
-assert.equal(hasExactSentenceTokens(mismatchedRomanSentence), false, 'romanisation mismatch should fail');
+assert.equal(hasExactSentenceTokens(mismatchedRomanSentence), false, 'token/word mismatch should fail');
+assert.equal(hasExactSentenceTokens(punctuationTokenSentence), false, 'punctuation token should fail');
 assert.equal(getSentenceTokenIssue(validSentence), null, 'valid sentence should not return an issue');
 assert.equal(getSentenceTokenIssue(missingTokenSentence).code, 'missing-tokens');
-assert.equal(getSentenceTokenIssue(mismatchedRomanSentence).code, 'roman-token-mismatch');
-assert.equal(getSentenceTokenIssue(mismatchedRomanSentence).reason, 'romanisation tokens mismatch');
-assert.equal(countSentenceTokenIssues([validSentence, missingTokenSentence, mismatchedRomanSentence]), 2);
+assert.equal(getSentenceTokenIssue(mismatchedRomanSentence).code, 'token-word-mismatch');
+assert.equal(getSentenceTokenIssue(mismatchedRomanSentence).reason, 'word token does not match word breakdown');
+assert.equal(getSentenceTokenIssue(punctuationTokenSentence).code, 'token-count-mismatch');
+assert.equal(countSentenceTokenIssues([validSentence, missingTokenSentence, mismatchedRomanSentence, punctuationTokenSentence]), 3);
 
 console.log('Sentence token quality checks passed.');
