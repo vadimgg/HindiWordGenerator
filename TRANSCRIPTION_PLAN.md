@@ -11,7 +11,10 @@ timestamps that can power the viewer.
 - Produce timestamped transcript segments.
 - Prefer word-level timestamps when the backend supports them well enough.
 - Compare the transcript against a reference text when one is available.
-- Export reviewed sentences into the existing sentence input format:
+- Export transcription results as their own standalone artifacts, separate from
+  the sentence-generation pipeline.
+- Optionally promote selected reviewed transcript segments into the existing
+  sentence input format later:
 
 ```text
 # Complete Hindi
@@ -23,6 +26,7 @@ timestamps that can power the viewer.
 
 - Do not generate enriched flashcards directly from raw audio.
 - Do not overwrite existing `input/sentences/` files automatically.
+- Do not make transcription a requirement for sentence generation.
 - Do not require OpenAI, Anthropic, or any remote API.
 - Do not promise perfect word timestamps; treat them as review aids.
 
@@ -70,10 +74,12 @@ Add these folders when implementation starts:
 | `media/input/` | Optional local audio/video source files | Human-curated source |
 | `transcripts/raw/` | Raw backend transcript output | Generated, reviewable |
 | `transcripts/reviewed/` | Corrected transcript or accepted reference alignment | Human-approved generated data |
-| `transcripts/exports/` | Sentence input CSV drafts | Generated draft, not source until approved |
+| `transcripts/exports/` | Standalone transcript exports, such as JSON, SRT, VTT, and TXT | Generated, separate from card generation |
+| `transcripts/promoted/` | Optional sentence input CSV drafts made from reviewed transcript segments | Generated draft, not source until approved |
 
 The current `input/sentences/` folder should remain the source of truth for
-generation. A transcript export should become source only after explicit review.
+sentence generation. A transcript export should not become sentence input unless
+the user explicitly promotes it after review.
 
 ## Proposed CLI
 
@@ -81,7 +87,8 @@ generation. A transcript export should become source only after explicit review.
 uv run main.py transcribe check media/input/chapter_02.mp3
 uv run main.py transcribe run media/input/chapter_02.mp3 --backend whisper-cpp --model large-v3-turbo
 uv run main.py transcribe align transcripts/raw/chapter_02.json --reference references/chapter_02.txt
-uv run main.py transcribe export transcripts/reviewed/chapter_02.json --title "Complete Hindi" --subtitle "Chapter 02"
+uv run main.py transcribe export transcripts/reviewed/chapter_02.json --format vtt
+uv run main.py transcribe promote transcripts/reviewed/chapter_02.json --title "Complete Hindi" --subtitle "Chapter 02"
 ```
 
 Command behavior:
@@ -91,7 +98,9 @@ Command behavior:
 - `run` writes raw transcript JSON and never edits sentence inputs.
 - `align` compares raw transcript text to a reference transcript and writes a
   review file with proposed corrections.
-- `export` writes a draft CSV-like sentence input file in `transcripts/exports/`.
+- `export` writes standalone transcript formats in `transcripts/exports/`.
+- `promote` writes optional draft sentence input files in `transcripts/promoted/`
+  and never writes directly into `input/sentences/`.
 
 ## Raw Transcript Shape
 
@@ -139,7 +148,8 @@ After the CLI writes transcript JSON, add a viewer tab or mode for:
 - click-to-seek segment timestamps
 - word timestamp highlighting when available
 - reference mismatch review
-- export selected reviewed segments into sentence input drafts
+- standalone transcript export controls
+- optional promotion controls for selected reviewed segments
 
 This should stay separate from the current generated-card viewer at first. Once
 the transcript review flow is stable, it can share card primitives and audio
@@ -162,22 +172,31 @@ controls with the existing UI.
 - Produce review JSON with accepted, corrected, and needs-review segments.
 - Add tests with small Hindi fixtures.
 
-### Phase 3: Sentence Input Export
+### Phase 3: Standalone Transcript Export
 
-- Export reviewed transcript segments to draft sentence input files.
-- Keep exports outside `input/sentences/` until approved.
-- Add validation that every exported line has Hindi text and a placeholder or
+- Export reviewed transcript segments to standalone transcript formats.
+- Start with project JSON, plain text, and either SRT or WebVTT.
+- Keep these exports independent from generated cards and Anki export.
+
+### Phase 4: Optional Sentence Promotion
+
+- Promote selected reviewed transcript segments to draft sentence input files.
+- Write drafts under `transcripts/promoted/`, not `input/sentences/`.
+- Add validation that every promoted line has Hindi text and a placeholder or
   supplied English translation.
 
-### Phase 4: Viewer Review UI
+### Phase 5: Viewer Review UI
 
 - Add a transcript review surface.
 - Support playback, seek, segment selection, and mismatch flags.
 - Show word timestamps when present.
+- Export reviewed transcript results separately from card data.
+- Offer sentence promotion as an optional action, not the default path.
 
-### Phase 5: Optional Enrichment Bridge
+### Phase 6: Optional Enrichment Bridge
 
-- Let approved transcript exports feed the existing sentence batch workflow.
+- Let approved promoted transcript drafts feed the existing sentence batch
+  workflow.
 - Keep enrichment, audio generation, Anki export, and QA using the existing
   generated-card pipeline.
 
