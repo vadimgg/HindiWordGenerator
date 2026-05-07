@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 import batch_planner
+import repair
 from schema_validator import ValidationError, validate_and_fix
 
 
@@ -175,6 +176,29 @@ class PythonContractTests(unittest.TestCase):
             word_batch["words"][0]["forms"],
             [{"label": "plural", "hindi": "घरें", "roman": "gharẽ"}],
         )
+
+    def test_repair_audit_detects_legacy_gaps_and_phrase_drills(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            batch_path = root / "sentences_batch_01.json"
+            write(
+                batch_path,
+                json.dumps(
+                    {
+                        "chapter": "Old Chapter",
+                        "sentences": [minimal_sentence()],
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+            issue_kinds = {issue["kind"] for issue in repair._audit_output_file(batch_path)}
+            self.assertIn("legacy-metadata", issue_kinds)
+            self.assertIn("missing-title", issue_kinds)
+            self.assertIn("missing-subtitle", issue_kinds)
+            self.assertIn("missing-audio", issue_kinds)
+
+            self.assertTrue(repair._looks_like_sentence_drill("बच्चे का कुत्ता (bacce kā kuttā);the child's dog"))
+            self.assertFalse(repair._looks_like_sentence_drill("क्या वह बीमार है? (kyā vah bīmār hai?);Is she ill?"))
 
 
 if __name__ == "__main__":

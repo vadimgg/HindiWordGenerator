@@ -34,6 +34,7 @@ HindiWordGenerator/
   main.py                         # Main CLI: check, run, audio
   generate.py                     # Generation orchestration runner
   process.py                      # CLI facade for check, write, mark-done
+  repair.py                       # Audit and repair/backfill helper commands
   check_report.py                 # Rich check preview and data-health report
   batch_planner.py                # Input parsing, metadata, dedupe, pending batches
   pipeline_config.py              # Shared paths and pipeline constants
@@ -173,6 +174,14 @@ Backfill audio for existing output:
 uv run main.py audio
 uv run main.py audio --type words
 uv run main.py audio output/words/some_batch.json
+```
+
+Audit repair candidates without writing files:
+
+```bash
+python3 repair.py audit --inputs
+python3 repair.py audit --type sentences --fail-on-issues
+python3 repair.py audio --type sentences
 ```
 
 Open the local viewer:
