@@ -17,6 +17,8 @@ as generated output.
 | `generation_prompt_sentences.txt` | Sentence generation contract | Human edits |
 | `review_prompt_words.txt` | Word review contract | Human edits |
 | `review_prompt_sentences.txt` | Sentence review contract | Human edits |
+| `media/input/` | Optional local audio/video transcription sources | Human edits |
+| `transcripts/reference/` | Optional plain-text reference transcripts | Human edits |
 | `agents/` | Local agent pack and standards source | Human edits, approved agent-pack migrations |
 | `README.md`, `ARCHITECTURE.md`, `DATA_SURFACES.md`, `BACKLOG.md` | Project docs | Human edits |
 
@@ -43,6 +45,8 @@ Safe cleanup rules:
   is the completed-card authority.
 - If deleting `audio/`, keep output JSON in mind: cards may still point to audio
   paths until `main.py audio` backfills the files.
+- Keep `media/input/` and `transcripts/reference/` unless the original media or
+  reference transcript is intentionally being removed.
 - Transcript exports are not sentence inputs. Transcript-derived cards may live
   in `output/sentences/` after enrichment and validation, with `transcript_ref`
   pointing back to the reviewed transcript segment.
@@ -78,6 +82,10 @@ runtime sources of truth for the active app.
 | `main.py check` | No writes |
 | `main.py run` | `output/`, `audio/`, `manifest.json` through delegated tools |
 | `main.py audio` | `audio/`, existing `output/` audio fields |
+| future `main.py transcribe run` | `transcripts/raw/` |
+| future `main.py transcribe align` | `transcripts/reviewed/` |
+| future `main.py transcribe export` | `transcripts/exports/` |
+| future `main.py transcribe enrich` | `output/sentences/`, `audio/sentences/`, `manifest.json` through validated sentence-card writers |
 | `process.py write` | One validated output batch and possibly `manifest.json` |
 | `audio_generator.py` | Audio files and `audio` fields in one batch JSON |
 | `viewer/scripts/sync-audio.js` | `viewer/public/audio` symlink/projection |

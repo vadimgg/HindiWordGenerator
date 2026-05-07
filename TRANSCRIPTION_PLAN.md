@@ -73,6 +73,7 @@ Add these folders when implementation starts:
 | Path | Purpose | Authority |
 |---|---|---|
 | `media/input/` | Optional local audio/video source files | Human-curated source |
+| `transcripts/reference/` | Optional plain-text reference transcripts | Human-curated source |
 | `transcripts/raw/` | Raw backend transcript output | Generated, reviewable |
 | `transcripts/reviewed/` | Corrected transcript or accepted reference alignment | Human-approved generated data |
 | `transcripts/exports/` | Standalone transcript exports, such as JSON, SRT, VTT, and TXT | Generated, separate from card generation |
@@ -87,21 +88,26 @@ JSON and written to `output/sentences/` after validation.
 ```bash
 uv run main.py transcribe check media/input/chapter_02.mp3
 uv run main.py transcribe run media/input/chapter_02.mp3 --backend whisper-cpp --model large-v3-turbo
-uv run main.py transcribe align transcripts/raw/chapter_02.json --reference references/chapter_02.txt
+uv run main.py transcribe align transcripts/raw/chapter_02.json --reference transcripts/reference/chapter_02.txt
 uv run main.py transcribe export transcripts/reviewed/chapter_02.json --format vtt
 uv run main.py transcribe enrich transcripts/reviewed/chapter_02.json --title "Complete Hindi" --subtitle "Chapter 02"
+uv run main.py transcribe enrich transcripts/reviewed/chapter_02.json --segment-id seg_0001
 ```
 
 Command behavior:
 
-- `check` reports backend availability, media duration, output paths, and model
-  choice without writing.
+- `check` reports `ffmpeg` availability, backend availability, media duration,
+  output paths, and model choice without writing.
 - `run` writes raw transcript JSON and never edits sentence inputs.
 - `align` compares raw transcript text to a reference transcript and writes a
   review file with proposed corrections.
 - `export` writes standalone transcript formats in `transcripts/exports/`.
 - `enrich` sends selected transcript segments through the sentence-card
   enrichment workflow and writes validated batches to `output/sentences/`.
+
+`enrich` should default to reviewed transcript segments whose `status` is
+`accepted`. CLI selection should also support `--all`, `--status accepted`,
+`--status needs_review`, and one or more `--segment-id` values.
 
 ## Raw Transcript Shape
 
@@ -126,6 +132,41 @@ Use a project-owned JSON shape even if the backend output differs:
   ]
 }
 ```
+
+## Reviewed Transcript Shape
+
+Alignment and manual review should produce the same project-owned transcript
+shape, with review status added to each segment:
+
+```json
+{
+  "source": "media/input/chapter_02.mp3",
+  "reference": "transcripts/reference/chapter_02.txt",
+  "segments": [
+    {
+      "id": "seg_0001",
+      "start": 0.0,
+      "end": 2.4,
+      "text": "क्या आप कमला जी हैं?",
+      "status": "accepted",
+      "words": [
+        { "start": 0.0, "end": 0.3, "text": "क्या" }
+      ]
+    }
+  ]
+}
+```
+
+Allowed segment statuses:
+
+- `accepted`: ready for standalone export and transcript-linked enrichment.
+- `needs_review`: visible in review tools, excluded from enrichment by default.
+- `rejected`: retained for traceability, excluded from export/enrichment by
+  default.
+
+Raw transcripts can omit `status`; reviewed transcripts should include it. If an
+`enrich` command receives segments without status, it should require `--all` or
+explicit `--segment-id` selection.
 
 ## Transcript-Linked Sentence Cards
 
@@ -164,6 +205,26 @@ The enrichment agent may receive Hindi-only transcript segments. It is
 responsible for filling romanisation, English, literal meaning, tokens, and word
 breakdown just like it does for other generated sentence cards.
 
+Transcript enrichment input is intentionally different from the CSV sentence
+input format. CSV inputs include `HINDI (romanisation);English`; transcript
+segments may include only Hindi text plus a segment ID. The transcript enrichment
+prompt should branch explicitly for this case instead of constructing fake
+romanisation or placeholder English.
+
+`transcript_ref` validation should check only local shape and path safety during
+normal schema validation:
+
+- `path` is a non-empty project-relative path under `transcripts/`.
+- `path` points to a `.json` file.
+- `path` has no URL scheme, absolute path, or `..` segment.
+- `segment_id` is a non-empty string.
+- `transcript_ref` has no timing fields.
+
+Do not require the transcript file to exist during normal card validation.
+Resolution checks, such as confirming the file exists and `segment_id` is
+present, should live in a separate audit command so ordinary schema validation
+does not depend on filesystem state.
+
 ## Reference Text Correction
 
 When a reference transcript exists, the workflow should:
@@ -177,6 +238,11 @@ When a reference transcript exists, the workflow should:
 
 The reference text should be treated as a correction aid, not as automatic truth,
 because lesson books and audio often differ slightly.
+
+Reference transcripts live under `transcripts/reference/` for v1. The initial
+format is plain UTF-8 Hindi text, preferably one sentence or utterance per line,
+with no timestamps required. Richer reference formats can be added later if the
+plain-text workflow proves too limiting.
 
 ## Viewer Integration
 
@@ -200,7 +266,8 @@ because they live in the same `output/sentences/` collection.
 
 - Add a small `transcription/` Python module.
 - Define a backend protocol and normalized transcript schema.
-- Add backend availability checks.
+- Add `ffmpeg`, backend, model, source media, and planned output availability
+  checks.
 - Run one short Hindi audio sample through one local backend.
 - Save raw JSON under `transcripts/raw/`.
 
@@ -222,6 +289,8 @@ because they live in the same `output/sentences/` collection.
 - Enrich selected reviewed transcript segments directly into normal sentence
   cards.
 - Add optional `transcript_ref` validation to the sentence-card schema.
+- Select `accepted` reviewed segments by default; support explicit CLI segment
+  selection before the viewer exists.
 - Write transcript-derived batches under `output/sentences/`.
 - Ensure existing viewer and Anki export paths tolerate or ignore
   `transcript_ref`.
@@ -234,16 +303,10 @@ because they live in the same `output/sentences/` collection.
 - Export reviewed transcript results separately from card data.
 - Offer transcript-linked sentence-card generation as an optional action.
 
-### Phase 6: Optional Source Draft Export
-
-- If needed later, add a separate command to export reviewed transcript segments
-  into CSV-like drafts.
-- Keep this optional; transcript-derived cards do not require this path.
-
 ## Open Questions
 
 - Which backend should become the first supported local runtime?
-- Should transcript reference files live under `media/reference/` or
-  `transcripts/reference/`?
 - How strict should automatic reference correction be before requiring manual
   review?
+- Would CSV-like source draft export help collaboration later, or should it stay
+  out of scope unless someone needs it?
