@@ -247,6 +247,12 @@ You can smoke-check a local Ollama model without writing output:
 uv run scripts/check-ollama-provider.py --model ollama:translategemma:12b
 ```
 
+For an Ollama-only staged experiment with shorter prompts, use:
+
+```bash
+uv run scripts/check-ollama-staged-sentence.py --model ollama:translategemma:12b
+```
+
 Local Ollama calls can be quiet and slow with the full generation prompt. Start
 with `--batch-size 1 --max-batches 1 --concurrency 1`; the runner logs when each
 batch is sent to the model and when the model returns.
