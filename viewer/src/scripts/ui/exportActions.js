@@ -4,10 +4,13 @@
 
 import { overrideDeck, sendSentencesToAnki, sendToAnki } from '../anki/exportService.js';
 import { downloadAnkiTxt } from '../anki/txtFallback.js';
+import { getSentenceTokenIssue } from '../quality/sentenceTokens.js';
+import { resolveSentenceAudioSrc, resolveWordAudioSrc } from '../../utils/audioHelpers.ts';
 import { getDeckName, getSentenceDeckName } from './deckControls.js';
 import { getSelectedDeliverItems } from './deliverSelectionPreview.js';
 
 const plural = n => (n !== 1 ? 's' : '');
+let pendingIssueOverride = '';
 
 function showFeedback(message, isError) {
   const el = document.getElementById('export-feedback');
@@ -33,6 +36,33 @@ function buildSentenceMessage(added, skipped, deckName) {
   return `Sentences: ${added} card${plural(added)} added to "${deckName}".`;
 }
 
+function selectionSignature(words, sentences, deckName, sentDeckName, isOverride) {
+  return JSON.stringify({
+    words: words.map(word => [word.hindi, word.romanisation, word.english]),
+    sentences: sentences.map(sentence => [sentence.hindi, sentence.romanisation, sentence.english]),
+    deckName,
+    sentDeckName,
+    isOverride,
+  });
+}
+
+function selectedIssueSummary(words, sentences) {
+  const wordAudio = words.filter(word => !resolveWordAudioSrc(word)).length;
+  const sentenceAudio = sentences.filter(sentence => !resolveSentenceAudioSrc(sentence)).length;
+  const sentenceTokens = sentences.filter(sentence => getSentenceTokenIssue(sentence)).length;
+  const total = wordAudio + sentenceAudio + sentenceTokens;
+  return { total, wordAudio, sentenceAudio, sentenceTokens };
+}
+
+function buildIssueWarning(summary) {
+  const parts = [
+    summary.wordAudio ? `${summary.wordAudio} word audio` : '',
+    summary.sentenceAudio ? `${summary.sentenceAudio} sentence audio` : '',
+    summary.sentenceTokens ? `${summary.sentenceTokens} sentence token` : '',
+  ].filter(Boolean);
+  return `Review recommended: selected cards have ${parts.join(', ')} issue${plural(summary.total)}. Click Send to Anki again to export anyway.`;
+}
+
 export async function handleExportClick(onComplete) {
   const { words, sentences } = getSelectedDeliverItems();
   const deckName = getDeckName();
@@ -41,6 +71,14 @@ export async function handleExportClick(onComplete) {
 
   if (!words.length && !sentences.length) {
     showFeedback('No words or sentences selected.', true);
+    return;
+  }
+
+  const signature = selectionSignature(words, sentences, deckName, sentDeckName, isOverride);
+  const issueSummary = selectedIssueSummary(words, sentences);
+  if (issueSummary.total > 0 && pendingIssueOverride !== signature) {
+    pendingIssueOverride = signature;
+    showFeedback(buildIssueWarning(issueSummary), true);
     return;
   }
 
@@ -70,6 +108,7 @@ export async function handleExportClick(onComplete) {
     }
 
     showFeedback(messages.join(' '), false);
+    pendingIssueOverride = '';
   } catch (err) {
     showFeedback(`Error: ${err.message}`, true);
   } finally {

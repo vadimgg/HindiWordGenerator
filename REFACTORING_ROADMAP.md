@@ -609,6 +609,45 @@ Validation:
 - Done: `npm run check:deck-controls`.
 - Done: `node --check src/scripts/ui/deckControls.js`.
 
+### 19. Make QA a pre-export gate
+
+Affected files:
+
+- `viewer/src/utils/loadGeneratedData.js`
+- `viewer/src/components/tabs/QATab.astro`
+- `viewer/src/scripts/ui/qa.js`
+- `viewer/src/scripts/ui/exportActions.js`
+- `viewer/src/styles/partials/qa.css`
+- `viewer/scripts/check-loader.js`
+- `viewer/scripts/check-export-gate.js`
+- `viewer/package.json`
+- `BACKLOG.md`
+
+Why it matters:
+
+QA should be part of the export path, not just a passive report. The viewer
+should surface issues, let the user inspect affected cards, track what has been
+reviewed locally, and warn before exporting selected cards with unresolved
+readiness problems.
+
+Refactor shape:
+
+- Include word audio issues in generated QA data: done.
+- Keep sentence audio and exact-token issues: done.
+- Add QA filters for all/audio/tokens/words/sentences: done.
+- Add jump actions for both word and sentence cards: done.
+- Add local reviewed markers without modifying generated data: done.
+- Add Deliver export gating with a two-click override for selected issues: done.
+- Add an export gate check to the normal viewer suite: done.
+
+Validation:
+
+- Done: `npm run check`.
+- Done: `npm run check:loader`.
+- Done: `npm run check:export-gate`.
+- Done: `node --check src/scripts/ui/qa.js`.
+- Done: `node --check src/scripts/ui/exportActions.js`.
+
 ## Recommended Sequence
 
 1. Fix Deliver `innerHTML` row rendering.
@@ -629,6 +668,7 @@ Validation:
 15. Add optional AnkiConnect live smoke command. Done.
 16. Add Deliver deck presets. Done.
 17. Persist Deliver deck choices. Done.
+18. Make QA a pre-export gate. Done.
 
 ## Open Decisions
 
