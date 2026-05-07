@@ -28,7 +28,7 @@ They may be cleaned or regenerated only when the user approves the scope.
 | Path | Produced by | Notes |
 |---|---|---|
 | `output/words/` | `main.py run`, `process.py write`, approved manual corrections | Source of truth for completed generated cards and dedupe |
-| `output/sentences/` | `main.py run`, `process.py write`, approved manual corrections | Source of truth for completed generated cards and dedupe |
+| `output/sentences/` | `main.py run`, future transcript enrichment, `process.py write`, approved manual corrections | Source of truth for completed generated sentence cards and dedupe |
 | `audio/words/` | `audio_generator.py`, `main.py audio` | MP3 files referenced by generated word JSON |
 | `audio/sentences/` | `audio_generator.py`, `main.py audio` | MP3 files referenced by generated sentence JSON |
 | `transcripts/reviewed/` | future `main.py transcribe align`, manual review | Reviewed transcript data; separate from sentence generation |
@@ -43,8 +43,9 @@ Safe cleanup rules:
   is the completed-card authority.
 - If deleting `audio/`, keep output JSON in mind: cards may still point to audio
   paths until `main.py audio` backfills the files.
-- Transcript exports are not sentence inputs. Move reviewed/promoted transcript
-  drafts into `input/sentences/` only after explicit approval.
+- Transcript exports are not sentence inputs. Transcript-derived cards may live
+  in `output/sentences/` after enrichment and validation, with `transcript_ref`
+  pointing back to the reviewed transcript segment.
 - Do not edit `manifest.json` as a substitute for fixing output JSON.
 
 ## Projections And Build Artifacts
@@ -55,7 +56,6 @@ These are rebuildable projections of source or generated data.
 |---|---|---|
 | `viewer/public/audio` | `viewer/scripts/sync-audio.js` | Symlink/projection to project `audio/`; safe to recreate |
 | `transcripts/raw/` | future `main.py transcribe run` | Raw backend output; safe to recreate from original media |
-| `transcripts/promoted/` | future `main.py transcribe promote` | Draft sentence inputs; review before copying into `input/sentences/` |
 | `viewer/dist/` | `npm run build` | Safe to delete/rebuild |
 | `viewer/.astro/` | Astro tooling | Safe to delete/rebuild |
 | `viewer/node_modules/` | npm install | Safe to delete/reinstall, but can be slow |

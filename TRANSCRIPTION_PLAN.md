@@ -1,8 +1,8 @@
 # Transcription Plan
 
 This document plans local Hindi audio transcription before implementation. The
-goal is to turn lesson audio or video audio into reviewable sentence data, with
-timestamps that can power the viewer.
+goal is to turn lesson audio or video audio into reviewable transcript data and,
+when useful, generate normal sentence cards that link back to the transcript.
 
 ## Goals
 
@@ -13,20 +13,21 @@ timestamps that can power the viewer.
 - Compare the transcript against a reference text when one is available.
 - Export transcription results as their own standalone artifacts, separate from
   the sentence-generation pipeline.
-- Optionally promote selected reviewed transcript segments into the existing
-  sentence input format later:
-
-```text
-# Complete Hindi
-## Chapter 02
-क्या आप कमला जी हैं? (kyā āp Kamalā jī haĩ?);Are you Kamala?
-```
+- Generate normal sentence-card output from selected transcript segments, with
+  the enrichment agent filling romanisation, English, literal meaning, tokens,
+  and word breakdown.
+- Keep transcript-derived cards in `output/sentences/` with the rest of the
+  sentence cards.
+- Link transcript-derived cards back to the transcript with a minimal
+  `transcript_ref`.
 
 ## Non-Goals For The First Pass
 
 - Do not generate enriched flashcards directly from raw audio.
 - Do not overwrite existing `input/sentences/` files automatically.
 - Do not make transcription a requirement for sentence generation.
+- Do not require transcript-derived cards to pass through the CSV sentence input
+  workflow.
 - Do not require OpenAI, Anthropic, or any remote API.
 - Do not promise perfect word timestamps; treat them as review aids.
 
@@ -75,11 +76,11 @@ Add these folders when implementation starts:
 | `transcripts/raw/` | Raw backend transcript output | Generated, reviewable |
 | `transcripts/reviewed/` | Corrected transcript or accepted reference alignment | Human-approved generated data |
 | `transcripts/exports/` | Standalone transcript exports, such as JSON, SRT, VTT, and TXT | Generated, separate from card generation |
-| `transcripts/promoted/` | Optional sentence input CSV drafts made from reviewed transcript segments | Generated draft, not source until approved |
 
 The current `input/sentences/` folder should remain the source of truth for
-sentence generation. A transcript export should not become sentence input unless
-the user explicitly promotes it after review.
+CSV-based sentence generation. Transcript-derived sentence cards do not need to
+be converted into CSV rows first; they can be generated as normal sentence-card
+JSON and written to `output/sentences/` after validation.
 
 ## Proposed CLI
 
@@ -88,7 +89,7 @@ uv run main.py transcribe check media/input/chapter_02.mp3
 uv run main.py transcribe run media/input/chapter_02.mp3 --backend whisper-cpp --model large-v3-turbo
 uv run main.py transcribe align transcripts/raw/chapter_02.json --reference references/chapter_02.txt
 uv run main.py transcribe export transcripts/reviewed/chapter_02.json --format vtt
-uv run main.py transcribe promote transcripts/reviewed/chapter_02.json --title "Complete Hindi" --subtitle "Chapter 02"
+uv run main.py transcribe enrich transcripts/reviewed/chapter_02.json --title "Complete Hindi" --subtitle "Chapter 02"
 ```
 
 Command behavior:
@@ -99,8 +100,8 @@ Command behavior:
 - `align` compares raw transcript text to a reference transcript and writes a
   review file with proposed corrections.
 - `export` writes standalone transcript formats in `transcripts/exports/`.
-- `promote` writes optional draft sentence input files in `transcripts/promoted/`
-  and never writes directly into `input/sentences/`.
+- `enrich` sends selected transcript segments through the sentence-card
+  enrichment workflow and writes validated batches to `output/sentences/`.
 
 ## Raw Transcript Shape
 
@@ -114,6 +115,7 @@ Use a project-owned JSON shape even if the backend output differs:
   "language": "hi",
   "segments": [
     {
+      "id": "seg_0001",
       "start": 0.0,
       "end": 2.4,
       "text": "क्या आप कमला जी हैं?",
@@ -124,6 +126,43 @@ Use a project-owned JSON shape even if the backend output differs:
   ]
 }
 ```
+
+## Transcript-Linked Sentence Cards
+
+Transcript-derived sentence cards should use the same output collection as
+normal sentence cards:
+
+```text
+output/sentences/
+```
+
+They should also use the normal sentence-card schema, with one optional
+provenance field:
+
+```json
+{
+  "hindi": "क्या आप कमला जी हैं?",
+  "romanisation": "kyā āp Kamalā jī haĩ?",
+  "english": "Are you Kamala?",
+  "literal": "what you Kamala ji are",
+  "register": "formal",
+  "tokens": [],
+  "words": [],
+  "anki_tags": ["transcript", "complete-hindi", "chapter-02"],
+  "transcript_ref": {
+    "path": "transcripts/reviewed/chapter_02.json",
+    "segment_id": "seg_0001"
+  }
+}
+```
+
+`transcript_ref` intentionally stores only the transcript path and stable segment
+ID. Timings stay in the transcript file, so cards do not go stale if alignment
+or segment timing changes.
+
+The enrichment agent may receive Hindi-only transcript segments. It is
+responsible for filling romanisation, English, literal meaning, tokens, and word
+breakdown just like it does for other generated sentence cards.
 
 ## Reference Text Correction
 
@@ -149,11 +188,11 @@ After the CLI writes transcript JSON, add a viewer tab or mode for:
 - word timestamp highlighting when available
 - reference mismatch review
 - standalone transcript export controls
-- optional promotion controls for selected reviewed segments
+- transcript-linked sentence-card generation controls
 
-This should stay separate from the current generated-card viewer at first. Once
-the transcript review flow is stable, it can share card primitives and audio
-controls with the existing UI.
+The transcript review surface can stay separate at first, but generated
+transcript-linked cards should appear in the existing sentence-card surfaces
+because they live in the same `output/sentences/` collection.
 
 ## Implementation Phases
 
@@ -178,12 +217,14 @@ controls with the existing UI.
 - Start with project JSON, plain text, and either SRT or WebVTT.
 - Keep these exports independent from generated cards and Anki export.
 
-### Phase 4: Optional Sentence Promotion
+### Phase 4: Transcript-Linked Sentence Enrichment
 
-- Promote selected reviewed transcript segments to draft sentence input files.
-- Write drafts under `transcripts/promoted/`, not `input/sentences/`.
-- Add validation that every promoted line has Hindi text and a placeholder or
-  supplied English translation.
+- Enrich selected reviewed transcript segments directly into normal sentence
+  cards.
+- Add optional `transcript_ref` validation to the sentence-card schema.
+- Write transcript-derived batches under `output/sentences/`.
+- Ensure existing viewer and Anki export paths tolerate or ignore
+  `transcript_ref`.
 
 ### Phase 5: Viewer Review UI
 
@@ -191,21 +232,18 @@ controls with the existing UI.
 - Support playback, seek, segment selection, and mismatch flags.
 - Show word timestamps when present.
 - Export reviewed transcript results separately from card data.
-- Offer sentence promotion as an optional action, not the default path.
+- Offer transcript-linked sentence-card generation as an optional action.
 
-### Phase 6: Optional Enrichment Bridge
+### Phase 6: Optional Source Draft Export
 
-- Let approved promoted transcript drafts feed the existing sentence batch
-  workflow.
-- Keep enrichment, audio generation, Anki export, and QA using the existing
-  generated-card pipeline.
+- If needed later, add a separate command to export reviewed transcript segments
+  into CSV-like drafts.
+- Keep this optional; transcript-derived cards do not require this path.
 
 ## Open Questions
 
 - Which backend should become the first supported local runtime?
 - Should transcript reference files live under `media/reference/` or
   `transcripts/reference/`?
-- Do we need English translations during transcript export, or should transcript
-  exports produce Hindi-only drafts for later enrichment?
 - How strict should automatic reference correction be before requiring manual
   review?
