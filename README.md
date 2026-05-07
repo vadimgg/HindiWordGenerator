@@ -47,6 +47,7 @@ HindiWordGenerator/
   ARCHITECTURE.md                 # Runtime ownership and data flow
   DATA_SURFACES.md                # Source/generated/projection cleanup rules
   NO_API_AGENT_WORKFLOW.md        # Script-assisted agent generation workflow
+  TRANSCRIPTION_PLAN.md           # Planned local Whisper transcription workflow
   ROMANISATION.md                 # Learner-facing romanisation convention
   tests/                          # Standard-library Python contract tests
   generation_prompt_words.txt     # Word generation system prompt
