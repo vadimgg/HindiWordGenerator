@@ -200,6 +200,54 @@ class PythonContractTests(unittest.TestCase):
             self.assertTrue(repair._looks_like_sentence_drill("बच्चे का कुत्ता (bacce kā kuttā);the child's dog"))
             self.assertFalse(repair._looks_like_sentence_drill("क्या वह बीमार है? (kyā vah bīmār hai?);Is she ill?"))
 
+    def test_repair_builds_exact_sentence_tokens_when_alignment_is_safe(self) -> None:
+        sentence = {
+            "hindi": "क्या वह बीमार है?",
+            "romanisation": "kyā vah bīmār hai?",
+            "english": "Is she ill?",
+            "literal": "what she ill is",
+            "register": "standard",
+            "words": [
+                {"hindi": "क्या", "roman": "kyā", "meaning": "question marker"},
+                {"hindi": "वह", "roman": "vah", "meaning": "she"},
+                {"hindi": "बीमार", "roman": "bīmār", "meaning": "ill"},
+                {"hindi": "है", "roman": "hai", "meaning": "is"},
+            ],
+            "anki_tags": ["test", "contract", "sentence"],
+        }
+
+        self.assertTrue(repair._repair_sentence_tokens(sentence))
+        validate_and_fix(
+            "sentences",
+            {
+                "title": "Complete Hindi",
+                "subtitle": "Chapter 01",
+                "sentences": [sentence],
+            },
+        )
+        self.assertEqual("".join(token["hindi"] for token in sentence["tokens"]), sentence["hindi"])
+        self.assertEqual("".join(token["roman"] for token in sentence["tokens"]), sentence["romanisation"])
+        self.assertEqual([token["kind"] for token in sentence["tokens"]], [
+            "word",
+            "space",
+            "word",
+            "space",
+            "word",
+            "space",
+            "word",
+            "punct",
+        ])
+
+    def test_repair_refuses_sentence_tokens_when_words_do_not_align(self) -> None:
+        sentence = {
+            "hindi": "क्या वह बीमार है?",
+            "romanisation": "kyā vah bīmār hai?",
+            "words": [{"hindi": "कौन", "roman": "kaun", "meaning": "who"}],
+        }
+
+        self.assertFalse(repair._repair_sentence_tokens(sentence))
+        self.assertNotIn("tokens", sentence)
+
 
 if __name__ == "__main__":
     unittest.main()

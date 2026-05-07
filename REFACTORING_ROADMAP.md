@@ -679,7 +679,7 @@ Validation:
 - Done: `python3 scripts/check-agent-workflows.py`.
 - Done: `python3 scripts/check-python-contracts.py`.
 
-### 21. Add repair audit and audio backfill commands
+### 21. Add repair audit and backfill commands
 
 Affected files:
 
@@ -692,8 +692,8 @@ Why it matters:
 
 The viewer now surfaces readiness issues, but command-line repair discovery
 should also exist. We need a safe read-only audit for legacy batches and input
-quality problems, plus a direct audio backfill command for batches missing
-audio paths.
+quality problems, plus direct backfill commands for batches missing audio paths
+or exact sentence tokens.
 
 Refactor shape:
 
@@ -701,13 +701,18 @@ Refactor shape:
 - Add optional sentence input audit for phrase-like drills in sentence CSVs:
   done.
 - Add `repair.py audio` wrapper for targeted audio backfill: done.
+- Add validation-backed `repair.py tokens` for exact sentence token backfill:
+  done.
 - Keep audit read-only by default: done.
 - Cover audit detection in Python contract tests: done.
+- Cover safe token repair and unrepairable alignment in Python contract tests:
+  done.
 
 Validation:
 
 - Done: `python3 scripts/check-python-contracts.py`.
 - Done: `python3 repair.py audit --type sentences --inputs`.
+- Done: `python3 repair.py tokens --type sentences`.
 
 ## Recommended Sequence
 
@@ -731,7 +736,7 @@ Validation:
 17. Persist Deliver deck choices. Done.
 18. Make QA a pre-export gate. Done.
 19. Document and check no-API agent generation. Done.
-20. Add repair audit and audio backfill commands. Done.
+20. Add repair audit, audio backfill, and exact-token backfill commands. Done.
 
 ## Open Decisions
 

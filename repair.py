@@ -10,6 +10,7 @@ from pathlib import Path
 
 from batch_planner import parse_csv_metadata
 from pipeline_config import PIPELINES, PROJECT_ROOT
+from schema_validator import ValidationError, validate_and_fix
 
 SENTENCE_MARKS = ("?", "؟", "।", "!", ".")
 COMMON_FINITE_FORMS = {
@@ -36,6 +37,81 @@ def _audio_missing(entries: list[dict]) -> int:
 
 def _sentence_token_missing(entries: list[dict]) -> int:
     return sum(1 for entry in entries if not entry.get("tokens"))
+
+
+def _separator_token(hindi: str, roman: str) -> dict | None:
+    if not hindi and not roman:
+        return None
+    if not hindi or not roman:
+        return None
+    kind = "space" if hindi.isspace() and roman.isspace() else "punct"
+    return {"hindi": hindi, "roman": roman, "kind": kind}
+
+
+def _build_exact_sentence_tokens(sentence: dict) -> list[dict] | None:
+    hindi_text = sentence.get("hindi")
+    roman_text = sentence.get("romanisation")
+    words = sentence.get("words")
+    if not isinstance(hindi_text, str) or not isinstance(roman_text, str) or not isinstance(words, list):
+        return None
+
+    tokens: list[dict] = []
+    hindi_cursor = 0
+    roman_cursor = 0
+
+    for word_index, word in enumerate(words):
+        if not isinstance(word, dict):
+            return None
+        hindi_word = word.get("hindi")
+        roman_word = word.get("roman")
+        if not isinstance(hindi_word, str) or not isinstance(roman_word, str):
+            return None
+        if not hindi_word or not roman_word:
+            return None
+
+        hindi_pos = hindi_text.find(hindi_word, hindi_cursor)
+        roman_pos = roman_text.find(roman_word, roman_cursor)
+        if hindi_pos < 0 or roman_pos < 0:
+            return None
+
+        separator = _separator_token(
+            hindi_text[hindi_cursor:hindi_pos],
+            roman_text[roman_cursor:roman_pos],
+        )
+        if separator:
+            tokens.append(separator)
+        elif hindi_pos != hindi_cursor or roman_pos != roman_cursor:
+            return None
+
+        tokens.append({
+            "hindi": hindi_word,
+            "roman": roman_word,
+            "kind": "word",
+            "word_index": word_index,
+        })
+        hindi_cursor = hindi_pos + len(hindi_word)
+        roman_cursor = roman_pos + len(roman_word)
+
+    separator = _separator_token(
+        hindi_text[hindi_cursor:],
+        roman_text[roman_cursor:],
+    )
+    if separator:
+        tokens.append(separator)
+    elif hindi_cursor != len(hindi_text) or roman_cursor != len(roman_text):
+        return None
+
+    return tokens or None
+
+
+def _repair_sentence_tokens(sentence: dict, force: bool = False) -> bool:
+    if sentence.get("tokens") and not force:
+        return False
+    tokens = _build_exact_sentence_tokens(sentence)
+    if not tokens:
+        return False
+    sentence["tokens"] = tokens
+    return True
 
 
 def _audit_output_file(path: Path) -> list[dict]:
@@ -141,6 +217,57 @@ def cmd_audio(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_tokens(args: argparse.Namespace) -> int:
+    candidates = [Path(args.path)] if args.path else output_paths("sentences")
+    report = {
+        "checked": 0,
+        "repairable": 0,
+        "updated": 0,
+        "unrepairable": [],
+        "write": args.write,
+    }
+
+    for path in candidates:
+        data = _load_json(path)
+        if not isinstance(data, dict) or not isinstance(data.get("sentences"), list):
+            report["unrepairable"].append({
+                "path": str(path),
+                "detail": "not a sentence batch",
+            })
+            continue
+
+        changed = False
+        for index, sentence in enumerate(data["sentences"]):
+            if sentence.get("tokens") and not args.force:
+                continue
+            report["checked"] += 1
+            if _repair_sentence_tokens(sentence, args.force):
+                report["repairable"] += 1
+                changed = True
+            else:
+                report["unrepairable"].append({
+                    "path": str(path),
+                    "index": index,
+                    "hindi": sentence.get("hindi"),
+                    "detail": "could not align hindi/romanisation to words in order",
+                })
+
+        if changed and args.write:
+            try:
+                validate_and_fix("sentences", data)
+            except ValidationError as exc:
+                report["unrepairable"].append({
+                    "path": str(path),
+                    "detail": f"validation failed after token repair: {exc}",
+                })
+                continue
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            report["updated"] += 1
+
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 1 if report["unrepairable"] else 0
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -155,6 +282,12 @@ def parse_args() -> argparse.Namespace:
     p_audio.add_argument("--type", choices=["words", "sentences"], default=None)
     p_audio.add_argument("--force", action="store_true", help="Regenerate audio even when all entries already have audio paths.")
 
+    p_tokens = sub.add_parser("tokens", help="Backfill exact sentence tokens when alignment is unambiguous.")
+    p_tokens.add_argument("path", nargs="?")
+    p_tokens.add_argument("--type", choices=["sentences"], default="sentences")
+    p_tokens.add_argument("--write", action="store_true", help="Write repaired token arrays after validation.")
+    p_tokens.add_argument("--force", action="store_true", help="Rebuild existing token arrays when exact alignment is possible.")
+
     return parser.parse_args()
 
 
@@ -164,6 +297,8 @@ def main() -> None:
         raise SystemExit(cmd_audit(args))
     if args.command == "audio":
         raise SystemExit(cmd_audio(args))
+    if args.command == "tokens":
+        raise SystemExit(cmd_tokens(args))
 
 
 if __name__ == "__main__":

@@ -182,6 +182,8 @@ Audit repair candidates without writing files:
 python3 repair.py audit --inputs
 python3 repair.py audit --type sentences --fail-on-issues
 python3 repair.py audio --type sentences
+python3 repair.py tokens --type sentences
+python3 repair.py tokens --type sentences --write
 ```
 
 Open the local viewer:
@@ -465,6 +467,9 @@ uv run main.py run --no-fail-fast
   files are not automatically rewritten.
 - Existing sentence batches may be reported as missing `tokens` if they were
   generated before the current sentence schema.
+- `repair.py tokens` can backfill missing sentence `tokens` only when every
+  Hindi and romanised word aligns exactly to the existing `words` list; use
+  `--write` to persist repairs after schema validation.
 - `--force` includes all CSV items in planning, but batch numbering still follows
   existing output state.
 - Filename typos are reflected in derived labels unless the CSV contains

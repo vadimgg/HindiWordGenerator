@@ -27,5 +27,5 @@ Status values: `open`, `in-progress`, `done`.
 | Item | Priority | Status | Notes |
 |---|---|---|---|
 | Document and test the no-API-key agent workflow | P2 | done | Documented in `NO_API_AGENT_WORKFLOW.md`; `scripts/check-agent-workflows.py` checks generator agents keep the script-assisted check/write workflow visible. |
-| Add repair/backfill commands for legacy batches | P2 | in-progress | Added `repair.py audit` for legacy metadata, missing audio/tokens, and phrase-like sentence input drills; added `repair.py audio` for targeted audio backfill. Remaining: exact-token repair/backfill. |
+| Add repair/backfill commands for legacy batches | P2 | done | Added `repair.py audit` for legacy metadata, missing audio/tokens, and phrase-like sentence input drills; added `repair.py audio` for targeted audio backfill; added validation-backed `repair.py tokens` for exact sentence token backfill. |
 | Clarify source vs generated data cleanup | P3 | done | Documented in `DATA_SURFACES.md`: source of truth, generated learner-facing data, projections/build artifacts, read-only reference material, allowed writers, and safe cleanup rules. |
