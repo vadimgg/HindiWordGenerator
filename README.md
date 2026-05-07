@@ -11,6 +11,7 @@ The project is built for cautious, append-only data production:
 - skip cards that already exist in output JSON
 - continue batch numbering instead of overwriting old batches
 - validate strict schemas before writing generated data
+- refuse to overwrite existing output batch files
 - stop early after failed generation, validation, or audio work
 - switch between OpenAI, Anthropic, and local Ollama chat models
 
@@ -246,6 +247,10 @@ You can smoke-check a local Ollama model without writing output:
 uv run scripts/check-ollama-provider.py --model ollama:translategemma:12b
 ```
 
+Local Ollama calls can be quiet and slow with the full generation prompt. Start
+with `--batch-size 1 --max-batches 1 --concurrency 1`; the runner logs when each
+batch is sent to the model and when the model returns.
+
 ## Normal Workflow
 
 1. Add or edit CSV files in `input/words/` or `input/sentences/`.
@@ -274,7 +279,8 @@ For words and sentences, identity is based on:
 - `english`
 
 New batches continue from the highest existing batch number. Normal runs do not
-delete or rewrite old batches except when adding audio paths.
+delete or rewrite old batches except when adding audio paths. The validated
+writer refuses to overwrite an existing output batch file.
 
 `manifest.json` still records metadata for completed stems:
 

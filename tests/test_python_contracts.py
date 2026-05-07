@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -142,6 +143,37 @@ class PythonContractTests(unittest.TestCase):
                     )
             finally:
                 batch_planner.PIPELINES["sentences"] = old_pipeline
+
+    def test_process_write_refuses_to_overwrite_existing_batch(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output_dir = root / "output" / "sentences"
+            batch_path = output_dir / "sample_sentences_batch_01.json"
+            candidate_path = root / "candidate.json"
+            batch = {
+                "title": "Complete Hindi",
+                "subtitle": "Chapter 01",
+                "sentences": [minimal_sentence()],
+            }
+            write(batch_path, json.dumps(batch, ensure_ascii=False))
+            write(candidate_path, json.dumps(batch, ensure_ascii=False))
+
+            code = (
+                "from pathlib import Path\n"
+                "import process\n"
+                f"process.PIPELINES['sentences']['output'] = Path({str(output_dir)!r})\n"
+                f"process.cmd_write('sentences', 'sample_sentences', 1, 1, 1, {str(candidate_path)!r})\n"
+            )
+            proc = subprocess.run(
+                [sys.executable, "-c", code],
+                cwd=PROJECT_ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("refusing to overwrite", proc.stderr)
 
     def test_schema_validation_rejects_unsafe_audio_and_fixes_word_forms(self) -> None:
         validate_and_fix(

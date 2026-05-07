@@ -111,6 +111,13 @@ def cmd_write(
         sys.exit(1)
 
     out_path = batch_file_path(pipeline_type, stem, batch_num)
+    if out_path.exists():
+        print(
+            f"Error: refusing to overwrite existing output batch: {out_path}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     out_path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
     print(f"Written: {out_path}")
 

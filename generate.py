@@ -111,9 +111,11 @@ async def process_batch(
     """
     async with semaphore:
         try:
+            console.log(f"[cyan]→[/cyan] Generating {job.label} ({job.count} item(s))")
             data, usage = await call_llm_with_retry(
                 llm, system_prompt, job.csv, job.label
             )
+            console.log(f"[cyan]←[/cyan] Model returned {job.label}")
             return BatchResult(
                 job=job,
                 success=True,
