@@ -45,6 +45,7 @@ HindiWordGenerator/
   audio_generator.py              # MP3 generation and audio path backfill
   ARCHITECTURE.md                 # Runtime ownership and data flow
   DATA_SURFACES.md                # Source/generated/projection cleanup rules
+  NO_API_AGENT_WORKFLOW.md        # Script-assisted agent generation workflow
   ROMANISATION.md                 # Learner-facing romanisation convention
   tests/                          # Standard-library Python contract tests
   generation_prompt_words.txt     # Word generation system prompt
@@ -227,6 +228,11 @@ Supported providers are `openai` and `anthropic`.
 6. Use `uv run main.py audio` to backfill audio if needed.
 7. Use the review prompts or reviewer agents for QA before importing downstream.
 
+For agent-assisted generation without provider credentials, see
+`NO_API_AGENT_WORKFLOW.md`. In that mode agents use `process.py check` for the
+planned slice and `process.py write` for validation/output rather than calling
+`main.py run`.
+
 ## Planning And Append-Only Behavior
 
 Existing output JSON is the source of truth for completed cards. The planner
@@ -307,6 +313,7 @@ Local contract checks:
 
 ```bash
 python3 scripts/check-python-contracts.py
+python3 scripts/check-agent-workflows.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 cd viewer && npm run check
 ```

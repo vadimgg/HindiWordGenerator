@@ -648,6 +648,37 @@ Validation:
 - Done: `node --check src/scripts/ui/qa.js`.
 - Done: `node --check src/scripts/ui/exportActions.js`.
 
+### 20. Document and check no-API agent generation
+
+Affected files:
+
+- `NO_API_AGENT_WORKFLOW.md`
+- `scripts/check-agent-workflows.py`
+- `README.md`
+- `BACKLOG.md`
+
+Why it matters:
+
+The project supports API-backed generation, but the local agent workflow should
+also be clear when provider credentials are unavailable. Agents should use
+project scripts for planning and writing, not manually split inputs or bypass
+schema validation.
+
+Refactor shape:
+
+- Add one project-level no-API workflow document: done.
+- Document `process.py check` as the planner and `process.py write` as the only
+  writer: done.
+- Document guardrails around `main.py run`, `--force`, direct output writes, and
+  source CSV edits: done.
+- Add a static check that keeps the workflow visible in both word and sentence
+  generator agents: done.
+
+Validation:
+
+- Done: `python3 scripts/check-agent-workflows.py`.
+- Done: `python3 scripts/check-python-contracts.py`.
+
 ## Recommended Sequence
 
 1. Fix Deliver `innerHTML` row rendering.
@@ -669,6 +700,7 @@ Validation:
 16. Add Deliver deck presets. Done.
 17. Persist Deliver deck choices. Done.
 18. Make QA a pre-export gate. Done.
+19. Document and check no-API agent generation. Done.
 
 ## Open Decisions
 
