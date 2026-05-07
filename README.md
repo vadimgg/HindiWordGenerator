@@ -12,7 +12,7 @@ The project is built for cautious, append-only data production:
 - continue batch numbering instead of overwriting old batches
 - validate strict schemas before writing generated data
 - stop early after failed generation, validation, or audio work
-- switch between OpenAI and Anthropic chat models
+- switch between OpenAI, Anthropic, and local Ollama chat models
 
 ## Features
 
@@ -213,6 +213,7 @@ You can override it per run:
 ```bash
 uv run main.py run --model openai:gpt-5.4-mini
 uv run main.py run --model anthropic:claude-sonnet-4-6
+uv run main.py run --model ollama:translategemma:12b
 ```
 
 You can also store local configuration in `.env`:
@@ -220,6 +221,7 @@ You can also store local configuration in `.env`:
 ```bash
 OPENAI_API_KEY=your_openai_key
 ANTHROPIC_API_KEY=your_anthropic_key
+OLLAMA_BASE_URL=http://localhost:11434
 MODEL=openai:gpt-5.4-mini
 ```
 
@@ -229,7 +231,20 @@ Model strings use this format:
 provider:model-id
 ```
 
-Supported providers are `openai` and `anthropic`.
+Supported providers are `openai`, `anthropic`, and `ollama`. Ollama uses the
+local OpenAI-compatible endpoint and does not require an API key. Start the
+model first, for example:
+
+```bash
+ollama run translategemma:12b
+uv run main.py run --model ollama:translategemma:12b --type sentences --batch-size 1 --max-batches 1 --concurrency 1
+```
+
+You can smoke-check a local Ollama model without writing output:
+
+```bash
+uv run scripts/check-ollama-provider.py --model ollama:translategemma:12b
+```
 
 ## Normal Workflow
 

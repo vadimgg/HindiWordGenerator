@@ -19,13 +19,14 @@ def create_llm(model_string: str):
     """
     Build a LangChain chat model from a '<provider>:<model-id>' string.
 
-    Supported providers: anthropic, openai.
+    Supported providers: anthropic, openai, ollama.
     """
     if ":" not in model_string:
         raise ValueError(
             f"Invalid model format '{model_string}'. "
             "Expected '<provider>:<model-id>', "
-            "e.g. 'openai:gpt-5.4-mini' or 'anthropic:claude-haiku-4-5-20251001'."
+            "e.g. 'openai:gpt-5.4-mini', 'anthropic:claude-haiku-4-5-20251001', "
+            "or 'ollama:translategemma:12b'."
         )
 
     provider, model_id = model_string.split(":", 1)
@@ -42,7 +43,24 @@ def create_llm(model_string: str):
 
         return ChatOpenAI(model=model_id, max_tokens=8192)
 
-    raise ValueError(f"Unknown provider '{provider}'. Supported providers: anthropic, openai.")
+    if provider == "ollama":
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            model=model_id,
+            base_url=_ollama_base_url(),
+            api_key=os.environ.get("OLLAMA_API_KEY", "ollama"),
+            max_tokens=8192,
+        )
+
+    raise ValueError(f"Unknown provider '{provider}'. Supported providers: anthropic, openai, ollama.")
+
+
+def _ollama_base_url() -> str:
+    base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    if base_url.endswith("/v1"):
+        return base_url
+    return f"{base_url}/v1"
 
 
 def _require_env(key: str, provider: str) -> None:

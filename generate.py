@@ -11,6 +11,7 @@ Usage:
     uv run generate.py --type sentences
     uv run generate.py --model openai:gpt-5.4-mini
     uv run generate.py --model anthropic:claude-sonnet-4-6
+    uv run generate.py --model ollama:translategemma:12b
     uv run generate.py --force
     uv run generate.py --dry-run
     uv run generate.py --batch-size 5 --concurrency 10
@@ -22,11 +23,13 @@ Model format:  <provider>:<model-id>
   openai:gpt-5-mini
   anthropic:claude-sonnet-4-6
   anthropic:claude-haiku-4-5-20251001
+  ollama:translategemma:12b
 
 Environment variables:
   MODEL              Default model string (overridden by --model)
   ANTHROPIC_API_KEY  Required for anthropic provider
   OPENAI_API_KEY     Required for openai provider
+  OLLAMA_BASE_URL    Optional Ollama server URL (default: http://localhost:11434)
 
 You can also store these in a local `.env` file in the project root.
 """
