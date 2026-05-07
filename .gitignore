@@ -16,3 +16,6 @@ viewer/dist/
 demos-read-only/
 reference/
 viewer/.astro/
+
+comparisons/
+output_original/

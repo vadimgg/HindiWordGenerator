@@ -253,6 +253,13 @@ For an Ollama-only staged experiment with shorter prompts, use:
 uv run scripts/check-ollama-staged-sentence.py --model ollama:translategemma:12b
 ```
 
+To compare staged Ollama output against backed-up sentence batches without
+touching `output/sentences/`, use:
+
+```bash
+uv run scripts/compare-ollama-staged-sentences.py --model ollama:translategemma:12b --type sentences --source-dir output_original/sentences --batch-size 1 --max-batches 1 --concurrency 1
+```
+
 Local Ollama calls can be quiet and slow with the full generation prompt. Start
 with `--batch-size 1 --max-batches 1 --concurrency 1`; the runner logs when each
 batch is sent to the model and when the model returns.
