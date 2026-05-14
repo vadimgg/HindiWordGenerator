@@ -1,6 +1,7 @@
 mod cli;
 mod doctor;
 mod project;
+mod source_ids;
 
 use std::process::ExitCode;
 
@@ -22,6 +23,40 @@ fn main() -> ExitCode {
                         ExitCode::SUCCESS
                     } else {
                         ExitCode::from(1)
+                    }
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Ok(cli::Command::SourceIdsHelp) => {
+            println!("{}", cli::source_ids_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::SourceIdsCheck) => match source_ids::check_from_current_dir() {
+            Ok(report) => {
+                println!("{}", report.render_check());
+                if report.is_complete() {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::from(1)
+                }
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
+        Ok(cli::Command::SourceIdsMigrate { dry_run }) => {
+            match source_ids::migrate_from_current_dir(dry_run) {
+                Ok(report) => {
+                    println!("{}", report.render_migration());
+                    if report.has_errors() {
+                        ExitCode::from(1)
+                    } else {
+                        ExitCode::SUCCESS
                     }
                 }
                 Err(error) => {

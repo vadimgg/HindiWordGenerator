@@ -2,7 +2,7 @@
 id: WP03
 title: Wire CLI migrate active YAML and update docs
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP02"]
 acceptance_refs: ["AC01", "AC02", "AC03", "AC04", "AC05", "AC06", "AC07", "AC08", "AC09", "AC10", "AC11", "AC12", "AC13"]
 extra_skills: []

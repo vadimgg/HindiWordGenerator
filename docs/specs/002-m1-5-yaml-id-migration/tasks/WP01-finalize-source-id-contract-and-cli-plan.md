@@ -2,7 +2,7 @@
 id: WP01
 title: Finalize source ID contract and CLI plan
 agent_type: rust-reviewer
-status: planned
+status: done
 dependencies: []
 acceptance_refs: ["AC01", "AC02", "AC03", "AC04", "AC05", "AC06", "AC07", "AC08", "AC09", "AC10", "AC11", "AC12", "AC13"]
 extra_skills: []
