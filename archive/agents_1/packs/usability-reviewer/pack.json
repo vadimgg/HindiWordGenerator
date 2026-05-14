@@ -1,0 +1,22 @@
+{
+  "id": "usability-reviewer",
+  "version": "0.1.0",
+  "schema_version": 1,
+  "entry": "AGENT.md",
+  "standards": [
+    "../../standards/command-design/README.md",
+    "../../standards/commenting/README.md"
+  ],
+  "skills": {
+    "available": [
+      "../../skills/picture-first-docs/SKILL.md"
+    ],
+    "load_policy": "selected_only"
+  },
+  "examples": [],
+  "context_policy": {
+    "standards": "route_first",
+    "skills": "selected_only",
+    "examples": "load_when_relevant"
+  }
+}

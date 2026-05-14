@@ -1,0 +1,1086 @@
+{
+  "experiment_id": "codex_agent_all_adapters_batch01_5sent",
+  "model": "codex_agent_no_context",
+  "results": [
+    {
+      "test_name": "hindi_gloss_guided_translation",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+        "register": "formal"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into a gloss-guided English translation.\n\nReturn raw JSON only:\n{\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ],\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- First create word_by_word internally, then use it to produce final English.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or another title.\n- Keep final English natural, but do not drop or add meaning compared with word_by_word.\n- Do not add commentary, reasoning text, or alternatives.\n",
+      "input_payload": {
+        "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "अध्यापक",
+            "roman": "adhyāpak",
+            "english": "teacher"
+          },
+          {
+            "hindi": "जी",
+            "roman": "jī",
+            "english": "ji"
+          },
+          {
+            "hindi": "यहाँ",
+            "roman": "yahā̃",
+            "english": "here"
+          },
+          {
+            "hindi": "कितने",
+            "roman": "kitne",
+            "english": "how many"
+          },
+          {
+            "hindi": "विद्यार्थी",
+            "roman": "vidyārthī",
+            "english": "students"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haĩ",
+            "english": "are"
+          }
+        ],
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      }
+    },
+    {
+      "test_name": "hindi_gloss_guided_translation",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into a gloss-guided English translation.\n\nReturn raw JSON only:\n{\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ],\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- First create word_by_word internally, then use it to produce final English.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or another title.\n- Keep final English natural, but do not drop or add meaning compared with word_by_word.\n- Do not add commentary, reasoning text, or alternatives.\n",
+      "input_payload": {
+        "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "अभी",
+            "roman": "abhī",
+            "english": "at the moment"
+          },
+          {
+            "hindi": "चौदह",
+            "roman": "caudah",
+            "english": "fourteen"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haĩ",
+            "english": "are"
+          },
+          {
+            "hindi": "नौ",
+            "roman": "nau",
+            "english": "nine"
+          },
+          {
+            "hindi": "लड़कियाँ",
+            "roman": "laṛkiyā̃",
+            "english": "girls"
+          },
+          {
+            "hindi": "और",
+            "roman": "aur",
+            "english": "and"
+          },
+          {
+            "hindi": "पाँच",
+            "roman": "pā̃c",
+            "english": "five"
+          },
+          {
+            "hindi": "लड़के",
+            "roman": "laṛke",
+            "english": "boys"
+          }
+        ],
+        "english": "At the moment there are 14 - nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ - nau laṛkiyā̃ aur pā̃c laṛke."
+      }
+    },
+    {
+      "test_name": "hindi_gloss_guided_translation",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into a gloss-guided English translation.\n\nReturn raw JSON only:\n{\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ],\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- First create word_by_word internally, then use it to produce final English.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or another title.\n- Keep final English natural, but do not drop or add meaning compared with word_by_word.\n- Do not add commentary, reasoning text, or alternatives.\n",
+      "input_payload": {
+        "hindi": "यह किताब कैसी है?"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "english": "this"
+          },
+          {
+            "hindi": "किताब",
+            "roman": "kitāb",
+            "english": "book"
+          },
+          {
+            "hindi": "कैसी",
+            "roman": "kaisī",
+            "english": "what kind/how"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ],
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_gloss_guided_translation",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into a gloss-guided English translation.\n\nReturn raw JSON only:\n{\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ],\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- First create word_by_word internally, then use it to produce final English.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or another title.\n- Keep final English natural, but do not drop or add meaning compared with word_by_word.\n- Do not add commentary, reasoning text, or alternatives.\n",
+      "input_payload": {
+        "hindi": "क्या यह अच्छी है?"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "क्या",
+            "roman": "kyā",
+            "english": "question marker"
+          },
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "english": "this/it"
+          },
+          {
+            "hindi": "अच्छी",
+            "roman": "acchī",
+            "english": "good"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ],
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_gloss_guided_translation",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into a gloss-guided English translation.\n\nReturn raw JSON only:\n{\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ],\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- First create word_by_word internally, then use it to produce final English.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or another title.\n- Keep final English natural, but do not drop or add meaning compared with word_by_word.\n- Do not add commentary, reasoning text, or alternatives.\n",
+      "input_payload": {
+        "hindi": "हाँ, बुरी नहीं है।"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "हाँ",
+            "roman": "hā̃",
+            "english": "yes"
+          },
+          {
+            "hindi": "बुरी",
+            "roman": "burī",
+            "english": "bad"
+          },
+          {
+            "hindi": "नहीं",
+            "roman": "nahī̃",
+            "english": "not"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ],
+        "english": "Yes, it is not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      }
+    },
+    {
+      "test_name": "hindi_simple_translation_romanisation",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+        "register": "formal"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Translate the Hindi sentence faithfully.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Use readable romanisation with diacritics when you are confident.\n- Do not include word-by-word notes or commentary.\n",
+      "input_payload": {
+        "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?"
+      },
+      "result": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      }
+    },
+    {
+      "test_name": "hindi_simple_translation_romanisation",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Translate the Hindi sentence faithfully.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Use readable romanisation with diacritics when you are confident.\n- Do not include word-by-word notes or commentary.\n",
+      "input_payload": {
+        "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।"
+      },
+      "result": {
+        "english": "At the moment there are 14 - nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ - nau laṛkiyā̃ aur pā̃c laṛke."
+      }
+    },
+    {
+      "test_name": "hindi_simple_translation_romanisation",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Translate the Hindi sentence faithfully.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Use readable romanisation with diacritics when you are confident.\n- Do not include word-by-word notes or commentary.\n",
+      "input_payload": {
+        "hindi": "यह किताब कैसी है?"
+      },
+      "result": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_simple_translation_romanisation",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Translate the Hindi sentence faithfully.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Use readable romanisation with diacritics when you are confident.\n- Do not include word-by-word notes or commentary.\n",
+      "input_payload": {
+        "hindi": "क्या यह अच्छी है?"
+      },
+      "result": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_simple_translation_romanisation",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Translate the Hindi sentence faithfully.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Use readable romanisation with diacritics when you are confident.\n- Do not include word-by-word notes or commentary.\n",
+      "input_payload": {
+        "hindi": "हाँ, बुरी नहीं है।"
+      },
+      "result": {
+        "english": "Yes, it is not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      }
+    },
+    {
+      "test_name": "hindi_strict_translation_romanisation",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+        "register": "formal"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into faithful English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Prefer fidelity over fluent paraphrase.\n- Preserve all names exactly as romanised in the final romanisation.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or a title.\n- Preserve numbers exactly; use digits in English when the meaning is numeric.\n- Preserve whether the sentence is a question, statement, greeting, or answer.\n- Do not infer missing nouns from context.\n- Do not add commentary, alternatives, or word-by-word notes.\n",
+      "input_payload": {
+        "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?"
+      },
+      "result": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      }
+    },
+    {
+      "test_name": "hindi_strict_translation_romanisation",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into faithful English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Prefer fidelity over fluent paraphrase.\n- Preserve all names exactly as romanised in the final romanisation.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or a title.\n- Preserve numbers exactly; use digits in English when the meaning is numeric.\n- Preserve whether the sentence is a question, statement, greeting, or answer.\n- Do not infer missing nouns from context.\n- Do not add commentary, alternatives, or word-by-word notes.\n",
+      "input_payload": {
+        "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।"
+      },
+      "result": {
+        "english": "At the moment there are 14 - nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ - nau laṛkiyā̃ aur pā̃c laṛke."
+      }
+    },
+    {
+      "test_name": "hindi_strict_translation_romanisation",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into faithful English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Prefer fidelity over fluent paraphrase.\n- Preserve all names exactly as romanised in the final romanisation.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or a title.\n- Preserve numbers exactly; use digits in English when the meaning is numeric.\n- Preserve whether the sentence is a question, statement, greeting, or answer.\n- Do not infer missing nouns from context.\n- Do not add commentary, alternatives, or word-by-word notes.\n",
+      "input_payload": {
+        "hindi": "यह किताब कैसी है?"
+      },
+      "result": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_strict_translation_romanisation",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into faithful English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Prefer fidelity over fluent paraphrase.\n- Preserve all names exactly as romanised in the final romanisation.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or a title.\n- Preserve numbers exactly; use digits in English when the meaning is numeric.\n- Preserve whether the sentence is a question, statement, greeting, or answer.\n- Do not infer missing nouns from context.\n- Do not add commentary, alternatives, or word-by-word notes.\n",
+      "input_payload": {
+        "hindi": "क्या यह अच्छी है?"
+      },
+      "result": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_strict_translation_romanisation",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into faithful English and romanisation.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Prefer fidelity over fluent paraphrase.\n- Preserve all names exactly as romanised in the final romanisation.\n- Preserve \"ji\" as \"ji\"; do not replace it with \"sir\", \"madam\", or a title.\n- Preserve numbers exactly; use digits in English when the meaning is numeric.\n- Preserve whether the sentence is a question, statement, greeting, or answer.\n- Do not infer missing nouns from context.\n- Do not add commentary, alternatives, or word-by-word notes.\n",
+      "input_payload": {
+        "hindi": "हाँ, बुरी नहीं है।"
+      },
+      "result": {
+        "english": "Yes, it is not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      }
+    },
+    {
+      "test_name": "hindi_word_breakdown_translation",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+        "register": "formal"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English, romanisation, and word-by-word meaning.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- The final English must be faithful to the word meanings.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "अध्यापक",
+            "roman": "adhyāpak",
+            "english": "teacher"
+          },
+          {
+            "hindi": "जी",
+            "roman": "jī",
+            "english": "ji"
+          },
+          {
+            "hindi": "यहाँ",
+            "roman": "yahā̃",
+            "english": "here"
+          },
+          {
+            "hindi": "कितने",
+            "roman": "kitne",
+            "english": "how many"
+          },
+          {
+            "hindi": "विद्यार्थी",
+            "roman": "vidyārthī",
+            "english": "students"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haĩ",
+            "english": "are"
+          }
+        ],
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      }
+    },
+    {
+      "test_name": "hindi_word_breakdown_translation",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English, romanisation, and word-by-word meaning.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- The final English must be faithful to the word meanings.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "अभी",
+            "roman": "abhī",
+            "english": "at the moment"
+          },
+          {
+            "hindi": "चौदह",
+            "roman": "caudah",
+            "english": "fourteen"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haĩ",
+            "english": "are"
+          },
+          {
+            "hindi": "नौ",
+            "roman": "nau",
+            "english": "nine"
+          },
+          {
+            "hindi": "लड़कियाँ",
+            "roman": "laṛkiyā̃",
+            "english": "girls"
+          },
+          {
+            "hindi": "और",
+            "roman": "aur",
+            "english": "and"
+          },
+          {
+            "hindi": "पाँच",
+            "roman": "pā̃c",
+            "english": "five"
+          },
+          {
+            "hindi": "लड़के",
+            "roman": "laṛke",
+            "english": "boys"
+          }
+        ],
+        "english": "At the moment there are 14 - nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ - nau laṛkiyā̃ aur pā̃c laṛke."
+      }
+    },
+    {
+      "test_name": "hindi_word_breakdown_translation",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English, romanisation, and word-by-word meaning.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- The final English must be faithful to the word meanings.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "यह किताब कैसी है?"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "english": "this"
+          },
+          {
+            "hindi": "किताब",
+            "roman": "kitāb",
+            "english": "book"
+          },
+          {
+            "hindi": "कैसी",
+            "roman": "kaisī",
+            "english": "what kind/how"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ],
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_word_breakdown_translation",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English, romanisation, and word-by-word meaning.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- The final English must be faithful to the word meanings.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "क्या यह अच्छी है?"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "क्या",
+            "roman": "kyā",
+            "english": "question marker"
+          },
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "english": "this/it"
+          },
+          {
+            "hindi": "अच्छी",
+            "roman": "acchī",
+            "english": "good"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ],
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      }
+    },
+    {
+      "test_name": "hindi_word_breakdown_translation",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai.",
+        "register": "standard"
+      },
+      "full_prompt": "Convert exactly one Hindi sentence into English, romanisation, and word-by-word meaning.\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- The final English must be faithful to the word meanings.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "हाँ, बुरी नहीं है।"
+      },
+      "result": {
+        "word_by_word": [
+          {
+            "hindi": "हाँ",
+            "roman": "hā̃",
+            "english": "yes"
+          },
+          {
+            "hindi": "बुरी",
+            "roman": "burī",
+            "english": "bad"
+          },
+          {
+            "hindi": "नहीं",
+            "roman": "nahī̃",
+            "english": "not"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ],
+        "english": "Yes, it is not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      }
+    },
+    {
+      "test_name": "register_detection",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+        "register": "formal"
+      },
+      "full_prompt": "Identify the register of exactly one Hindi sentence.\n\nReturn raw JSON only:\n{\n  \"register\":\"formal|neutral|informal\",\n  \"reason\":\"...\"\n}\n\nRules:\n- Use \"formal\" for respectful/polite address, including markers like जी or आप when they shape tone.\n- Use \"informal\" for casual/friendly speech, greetings, or familiar address.\n- Use \"neutral\" for plain textbook/descriptive sentences without clear respect or intimacy.\n- Keep reason to one short sentence.\n- Do not translate the sentence.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      },
+      "result": {
+        "register": "formal",
+        "reason": "The respectful marker जी gives the sentence a polite formal tone."
+      }
+    },
+    {
+      "test_name": "register_detection",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
+        "register": "standard"
+      },
+      "full_prompt": "Identify the register of exactly one Hindi sentence.\n\nReturn raw JSON only:\n{\n  \"register\":\"formal|neutral|informal\",\n  \"reason\":\"...\"\n}\n\nRules:\n- Use \"formal\" for respectful/polite address, including markers like जी or आप when they shape tone.\n- Use \"informal\" for casual/friendly speech, greetings, or familiar address.\n- Use \"neutral\" for plain textbook/descriptive sentences without clear respect or intimacy.\n- Keep reason to one short sentence.\n- Do not translate the sentence.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke."
+      },
+      "result": {
+        "register": "neutral",
+        "reason": "It is a plain descriptive sentence without respectful or intimate markers."
+      }
+    },
+    {
+      "test_name": "register_detection",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Identify the register of exactly one Hindi sentence.\n\nReturn raw JSON only:\n{\n  \"register\":\"formal|neutral|informal\",\n  \"reason\":\"...\"\n}\n\nRules:\n- Use \"formal\" for respectful/polite address, including markers like जी or आप when they shape tone.\n- Use \"informal\" for casual/friendly speech, greetings, or familiar address.\n- Use \"neutral\" for plain textbook/descriptive sentences without clear respect or intimacy.\n- Keep reason to one short sentence.\n- Do not translate the sentence.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "यह किताब कैसी है?",
+        "romanisation": "yah kitāb kaisī hai?"
+      },
+      "result": {
+        "register": "neutral",
+        "reason": "It is a plain question without markers of respect or familiarity."
+      }
+    },
+    {
+      "test_name": "register_detection",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?",
+        "register": "standard"
+      },
+      "full_prompt": "Identify the register of exactly one Hindi sentence.\n\nReturn raw JSON only:\n{\n  \"register\":\"formal|neutral|informal\",\n  \"reason\":\"...\"\n}\n\nRules:\n- Use \"formal\" for respectful/polite address, including markers like जी or आप when they shape tone.\n- Use \"informal\" for casual/friendly speech, greetings, or familiar address.\n- Use \"neutral\" for plain textbook/descriptive sentences without clear respect or intimacy.\n- Keep reason to one short sentence.\n- Do not translate the sentence.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "क्या यह अच्छी है?",
+        "romanisation": "kyā yah acchī hai?"
+      },
+      "result": {
+        "register": "neutral",
+        "reason": "It is a simple yes-no question with no special social tone."
+      }
+    },
+    {
+      "test_name": "register_detection",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai.",
+        "register": "standard"
+      },
+      "full_prompt": "Identify the register of exactly one Hindi sentence.\n\nReturn raw JSON only:\n{\n  \"register\":\"formal|neutral|informal\",\n  \"reason\":\"...\"\n}\n\nRules:\n- Use \"formal\" for respectful/polite address, including markers like जी or आप when they shape tone.\n- Use \"informal\" for casual/friendly speech, greetings, or familiar address.\n- Use \"neutral\" for plain textbook/descriptive sentences without clear respect or intimacy.\n- Keep reason to one short sentence.\n- Do not translate the sentence.\n- Do not add commentary or alternatives.\n",
+      "input_payload": {
+        "hindi": "हाँ, बुरी नहीं है।",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      },
+      "result": {
+        "register": "neutral",
+        "reason": "It is a plain answer without formal or informal address."
+      }
+    },
+    {
+      "test_name": "source_row_simple_translation_romanisation",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean English and romanisation.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Do not add commentary, alternatives, or word-by-word notes.",
+      "input_payload": {
+        "source_row": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?"
+      },
+      "result": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      }
+    },
+    {
+      "test_name": "source_row_simple_translation_romanisation",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke."
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean English and romanisation.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Do not add commentary, alternatives, or word-by-word notes.",
+      "input_payload": {
+        "source_row": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys."
+      },
+      "result": {
+        "english": "Right now there are fourteen: nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ - nau laṛkiyā̃ aur pā̃c laṛke."
+      }
+    },
+    {
+      "test_name": "source_row_simple_translation_romanisation",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?"
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean English and romanisation.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Do not add commentary, alternatives, or word-by-word notes.",
+      "input_payload": {
+        "source_row": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?"
+      },
+      "result": {
+        "english": "What is this book like?",
+        "romanisation": "yah kitāb kaisī hai?"
+      }
+    },
+    {
+      "test_name": "source_row_simple_translation_romanisation",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean English and romanisation.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Do not add commentary, alternatives, or word-by-word notes.",
+      "input_payload": {
+        "source_row": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?"
+      },
+      "result": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      }
+    },
+    {
+      "test_name": "source_row_simple_translation_romanisation",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean English and romanisation.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\"\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" when it appears in Hindi.\n- Do not add commentary, alternatives, or word-by-word notes.",
+      "input_payload": {
+        "source_row": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad."
+      },
+      "result": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      }
+    },
+    {
+      "test_name": "source_row_word_breakdown_translation",
+      "source_index": 0,
+      "input_sentence": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
+      "input_line": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?",
+      "reference": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean card translation pieces.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- Do not add commentary or alternatives.",
+      "input_payload": {
+        "source_row": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं? (adhyāpak jī, yahā̃ kitne vidyārthī haĩ?);Teacher ji, how many students are here?"
+      },
+      "result": {
+        "english": "Teacher ji, how many students are here?",
+        "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
+        "word_by_word": [
+          {
+            "hindi": "अध्यापक",
+            "roman": "adhyāpak",
+            "english": "teacher"
+          },
+          {
+            "hindi": "जी",
+            "roman": "jī",
+            "english": "ji"
+          },
+          {
+            "hindi": "यहाँ",
+            "roman": "yahā̃",
+            "english": "here"
+          },
+          {
+            "hindi": "कितने",
+            "roman": "kitne",
+            "english": "how many"
+          },
+          {
+            "hindi": "विद्यार्थी",
+            "roman": "vidyārthī",
+            "english": "students"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haĩ",
+            "english": "are"
+          }
+        ]
+      }
+    },
+    {
+      "test_name": "source_row_word_breakdown_translation",
+      "source_index": 1,
+      "input_sentence": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
+      "input_line": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys.",
+      "reference": {
+        "english": "At the moment there are 14 – nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke."
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean card translation pieces.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- Do not add commentary or alternatives.",
+      "input_payload": {
+        "source_row": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के। (abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.);At the moment there are 14 – nine girls and five boys."
+      },
+      "result": {
+        "english": "Right now there are fourteen: nine girls and five boys.",
+        "romanisation": "abhī caudah haĩ - nau laṛkiyā̃ aur pā̃c laṛke.",
+        "word_by_word": [
+          {
+            "hindi": "अभी",
+            "roman": "abhī",
+            "english": "right now"
+          },
+          {
+            "hindi": "चौदह",
+            "roman": "caudah",
+            "english": "fourteen"
+          },
+          {
+            "hindi": "हैं",
+            "roman": "haĩ",
+            "english": "are"
+          },
+          {
+            "hindi": "नौ",
+            "roman": "nau",
+            "english": "nine"
+          },
+          {
+            "hindi": "लड़कियाँ",
+            "roman": "laṛkiyā̃",
+            "english": "girls"
+          },
+          {
+            "hindi": "और",
+            "roman": "aur",
+            "english": "and"
+          },
+          {
+            "hindi": "पाँच",
+            "roman": "pā̃c",
+            "english": "five"
+          },
+          {
+            "hindi": "लड़के",
+            "roman": "laṛke",
+            "english": "boys"
+          }
+        ]
+      }
+    },
+    {
+      "test_name": "source_row_word_breakdown_translation",
+      "source_index": 2,
+      "input_sentence": "यह किताब कैसी है?",
+      "input_line": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?",
+      "reference": {
+        "english": "What kind of book is this?",
+        "romanisation": "yah kitāb kaisī hai?"
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean card translation pieces.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- Do not add commentary or alternatives.",
+      "input_payload": {
+        "source_row": "यह किताब कैसी है? (yah kitāb kaisī hai?);What kind of book is this?"
+      },
+      "result": {
+        "english": "What is this book like?",
+        "romanisation": "yah kitāb kaisī hai?",
+        "word_by_word": [
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "english": "this"
+          },
+          {
+            "hindi": "किताब",
+            "roman": "kitāb",
+            "english": "book"
+          },
+          {
+            "hindi": "कैसी",
+            "roman": "kaisī",
+            "english": "what kind"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ]
+      }
+    },
+    {
+      "test_name": "source_row_word_breakdown_translation",
+      "source_index": 3,
+      "input_sentence": "क्या यह अच्छी है?",
+      "input_line": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?",
+      "reference": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?"
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean card translation pieces.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- Do not add commentary or alternatives.",
+      "input_payload": {
+        "source_row": "क्या यह अच्छी है? (kyā yah acchī hai?);Is it good?"
+      },
+      "result": {
+        "english": "Is it good?",
+        "romanisation": "kyā yah acchī hai?",
+        "word_by_word": [
+          {
+            "hindi": "क्या",
+            "roman": "kyā",
+            "english": "question marker"
+          },
+          {
+            "hindi": "यह",
+            "roman": "yah",
+            "english": "it"
+          },
+          {
+            "hindi": "अच्छी",
+            "roman": "acchī",
+            "english": "good"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ]
+      }
+    },
+    {
+      "test_name": "source_row_word_breakdown_translation",
+      "source_index": 4,
+      "input_sentence": "हाँ, बुरी नहीं है।",
+      "input_line": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad.",
+      "reference": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai."
+      },
+      "full_prompt": "Read exactly one sentence source row and return clean card translation pieces.\n\nThe source row shape is:\nHindi sentence (romanisation);English reference\n\nReturn raw JSON only:\n{\n  \"english\":\"...\",\n  \"romanisation\":\"...\",\n  \"word_by_word\":[\n    {\"hindi\":\"...\", \"roman\":\"...\", \"english\":\"...\"}\n  ]\n}\n\nRules:\n- Use the Hindi as the source of truth.\n- Use the supplied romanisation and English only as reference context.\n- Include only actual words in word_by_word; omit punctuation and spaces.\n- Translate every word into English in word_by_word; do not put romanisation in the english field.\n- Preserve names, numbers, question shape, and tone.\n- Preserve \"ji\" as \"ji\" in English when it appears in Hindi.\n- Do not add commentary or alternatives.",
+      "input_payload": {
+        "source_row": "हाँ, बुरी नहीं है। (hā̃, burī nahī̃ hai.);Yes, it's not bad."
+      },
+      "result": {
+        "english": "Yes, it's not bad.",
+        "romanisation": "hā̃, burī nahī̃ hai.",
+        "word_by_word": [
+          {
+            "hindi": "हाँ",
+            "roman": "hā̃",
+            "english": "yes"
+          },
+          {
+            "hindi": "बुरी",
+            "roman": "burī",
+            "english": "bad"
+          },
+          {
+            "hindi": "नहीं",
+            "roman": "nahī̃",
+            "english": "not"
+          },
+          {
+            "hindi": "है",
+            "roman": "hai",
+            "english": "is"
+          }
+        ]
+      }
+    }
+  ]
+}

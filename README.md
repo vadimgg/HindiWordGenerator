@@ -1,514 +1,87 @@
 # Hindi Word Generator
 
-Hindi Word Generator turns small Hindi CSV lessons into enriched JSON flashcard
-batches for a separate study/export app. It handles words and sentences,
-validates generated data before writing it, and can create one Hindi MP3 per
-card.
+Hindi Word Generator is a local-first project for turning Hindi learning
+material into rich flashcard data: sentence cards, word breakdowns, audio,
+viewer previews, and Anki exports.
 
-The project is built for cautious, append-only data production:
+The previous Python implementation has been archived under `archive/python/`.
+The next implementation target is a small Rust CLI that starts with sentence
+generation from YAML source files.
 
-- inspect planned work before spending tokens
-- skip cards that already exist in output JSON
-- continue batch numbering instead of overwriting old batches
-- validate strict schemas before writing generated data
-- refuse to overwrite existing output batch files
-- stop early after failed generation, validation, or audio work
-- switch between OpenAI, Anthropic, and local Ollama chat models
+## Current Status
 
-## Features
+- Active source input is YAML under `input/`.
+- Accepted learner-facing output is JSON under `output/`.
+- Audio lives under `audio/` and is referenced by accepted JSON.
+- The Astro viewer previews generated cards and supports export workflows.
+- The Rust CLI does not exist yet.
+- Python remains available as the behavior reference while Rust reaches parity.
 
-- Word-card generation from `input/words/*.csv`
-- Sentence-card generation from `input/sentences/*.csv`
-- Batch JSON output under `output/words/` and `output/sentences/`
-- Append-only planning based on existing output files
-- Prompt-hash and CSV-hash tracking in `manifest.json`
-- Rich `check` preview before generation
-- Strict validation for required fields, optional fields, item counts, and
-  sentence word-token alignment
-- Per-card audio generation with `gTTS`
-- Manual QA prompts for Delhi-native review of generated batches
+## Planned Rust Happy Path
 
-## Project Layout
+The first useful workflow should stay short:
+
+```bash
+hindi doctor
+hindi sentences plan --max-batches 1
+hindi sentences generate --max-batches 1
+hindi sentences audio
+hindi viewer
+```
+
+The CLI should check whether the expected Ollama model is installed and
+reachable. If it is not ready, it should print the exact `ollama run ...`
+command instead of trying to manage Ollama itself.
+
+## Current Reference Commands
+
+Use the archived Python command when you need the project to work today:
+
+```bash
+uv run archive/python/runtime/main.py check --type sentences --max-batches 1
+uv run archive/python/runtime/main.py run --type sentences --max-batches 1
+uv run archive/python/runtime/main.py audio --type sentences
+uv run python archive/python/scripts/check-python-contracts.py
+```
+
+## Project Shape
 
 ```text
 HindiWordGenerator/
-  main.py                         # Main CLI: check, run, audio
-  generate.py                     # Generation orchestration runner
-  process.py                      # CLI facade for check, write, mark-done
-  repair.py                       # Audit and repair/backfill helper commands
-  check_report.py                 # Rich check preview and data-health report
-  batch_planner.py                # Input parsing, metadata, dedupe, pending batches
-  pipeline_config.py              # Shared paths and pipeline constants
-  schema_validator.py             # Strict JSON schema validation
-  manifest_store.py               # Manifest hashing and persistence
-  generation_types.py             # Shared batch runtime dataclasses
-  llm_client.py                   # LangChain provider, prompt, retry, JSON parsing
-  generation_io.py                # process.py/audio_generator.py subprocess boundary
-  audio_generator.py              # MP3 generation and audio path backfill
-  ARCHITECTURE.md                 # Runtime ownership and data flow
-  DATA_SURFACES.md                # Source/generated/projection cleanup rules
-  NO_API_AGENT_WORKFLOW.md        # Script-assisted agent generation workflow
-  TRANSCRIPTION_PLAN.md           # Planned local Whisper transcription workflow
-  ROMANISATION.md                 # Learner-facing romanisation convention
-  tests/                          # Standard-library Python contract tests
-  generation_prompt_words.txt     # Word generation system prompt
-  generation_prompt_sentences.txt # Sentence generation system prompt
-  review_prompt_words.txt         # Word QA review prompt
-  review_prompt_sentences.txt     # Sentence QA review prompt
-  manifest.json                   # Processed file metadata
+  agents/                         # Active local agent packs and standards
+  archive/                        # Previous Python runtime, scripts, tests, docs
+  docs/                           # Active design, roadmap, romanisation policy
   input/
-    words/                        # Source word CSVs
-    sentences/                    # Source sentence CSVs
+    sentences/                    # Source sentence YAML
+    words/                        # Source word YAML
   output/
-    words/                        # Generated word JSON batches
-    sentences/                    # Generated sentence JSON batches
+    sentences/                    # Accepted generated sentence cards
+    words/                        # Accepted generated word cards
   audio/
-    words/                        # Generated word MP3s
-    sentences/                    # Generated sentence MP3s
+    sentences/                    # Sentence MP3s
+    words/                        # Word MP3s
+  viewer/                         # Astro preview/export interface
 ```
 
-## Input Format
-
-Words and sentences use the same simple CSV-like format. A source title starts
-with `#`, and an optional chapter/topic subtitle starts with `##`. Each content
-line is:
-
-```text
-HINDI (romanisation);English
-```
-
-Word example:
-
-```text
-# Complete Hindi
-## Chapter 01
-घर (ghar);home / house
-लड़का (laṛkā);boy
-```
-
-Romanisation policy: use tilde nasalisation in new generation and repairs
-(`maĩ`, `yahā̃`, `haĩ`, `gharõ`). See `ROMANISATION.md`.
-
-Sentence example:
-
-```text
-# Complete Hindi
-## Chapter 02
-क्या आप कमला जी हैं? (kyā āp Kamalā jī haĩ?);Are you Kamala?
-```
-
-If a file has no title/subtitle lines, a display label is derived from the
-filename. For example, `complete_hindi_chapter_01_words.csv` becomes
-`Complete Hindi Chapter 01`.
-
-## Output Format
-
-Each input CSV produces one JSON file per batch:
-
-```text
-input/words/complete_hindi_chapter_01_words.csv
-  -> output/words/complete_hindi_chapter_01_words_batch_01.json
-  -> output/words/complete_hindi_chapter_01_words_batch_02.json
-
-input/sentences/complete_hindi_chapter_02_sentences.csv
-  -> output/sentences/complete_hindi_chapter_02_sentences_batch_01.json
-  -> output/sentences/complete_hindi_chapter_02_sentences_batch_02.json
-```
-
-Word batch shape:
-
-```json
-{
-  "title": "Complete Hindi",
-  "subtitle": "Chapter 01",
-  "words": []
-}
-```
-
-Sentence batch shape:
-
-```json
-{
-  "title": "Complete Hindi",
-  "subtitle": "Chapter 02",
-  "sentences": []
-}
-```
-
-After audio generation, each word or sentence object receives a relative audio
-path such as:
-
-```json
-"audio": "audio/words/complete_hindi_chapter_01_words_batch_01/01_acchā.mp3"
-```
-
-## Quick Start
-
-Use `uv run ...` so the inline script dependencies are available.
-
-Preview all pending work:
-
-```bash
-uv run main.py check
-```
-
-Preview a small word run:
-
-```bash
-uv run main.py check --type words --batch-size 5 --max-items 10
-```
-
-Generate the same slice:
-
-```bash
-uv run main.py run --type words --batch-size 5 --max-items 10
-```
-
-Generate one sentence batch:
-
-```bash
-uv run main.py run --type sentences --max-batches 1
-```
-
-Backfill audio for existing output:
-
-```bash
-uv run main.py audio
-uv run main.py audio --type words
-uv run main.py audio output/words/some_batch.json
-```
-
-Audit repair candidates without writing files:
-
-```bash
-python3 repair.py audit --inputs
-python3 repair.py audit --type sentences --fail-on-issues
-python3 repair.py audio --type sentences
-python3 repair.py tokens --type sentences
-python3 repair.py tokens --type sentences --write
-python3 repair.py tokens --type sentences --write --force
-```
-
-Open the local viewer:
-
-```bash
-cd viewer
-npm install
-npm run dev
-```
-
-The viewer reads live JSON from `output/words/` and `output/sentences/`, and
-serves MP3s from `audio/`. Refresh the browser after generation to pick up new
-batches or newly written audio paths.
-
-## Model Configuration
-
-The default model is read from `MODEL` and falls back to:
-
-```text
-openai:gpt-5.4-mini
-```
-
-You can override it per run:
-
-```bash
-uv run main.py run --model openai:gpt-5.4-mini
-uv run main.py run --model anthropic:claude-sonnet-4-6
-uv run main.py run --model ollama:translategemma:12b
-```
-
-You can also store local configuration in `.env`:
-
-```bash
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
-OLLAMA_BASE_URL=http://localhost:11434
-MODEL=openai:gpt-5.4-mini
-```
-
-Model strings use this format:
-
-```text
-provider:model-id
-```
-
-Supported providers are `openai`, `anthropic`, and `ollama`. Ollama uses the
-local OpenAI-compatible endpoint and does not require an API key. Start the
-model first, for example:
-
-```bash
-ollama run translategemma:12b
-uv run main.py run --model ollama:translategemma:12b --type sentences --batch-size 1 --max-batches 1 --concurrency 1
-```
-
-You can smoke-check a local Ollama model without writing output:
-
-```bash
-uv run scripts/check-ollama-provider.py --model ollama:translategemma:12b
-```
-
-For an Ollama-only staged experiment with shorter prompts, use:
-
-```bash
-uv run scripts/check-ollama-staged-sentence.py --model ollama:translategemma:12b
-```
-
-To compare staged Ollama output against backed-up sentence batches without
-touching `output/sentences/`, use:
-
-```bash
-uv run scripts/compare-ollama-staged-sentences.py --model ollama:translategemma:12b --type sentences --source-dir output_original/sentences --batch-size 1 --max-batches 1 --concurrency 1
-```
-
-Local Ollama calls can be quiet and slow with the full generation prompt. Start
-with `--batch-size 1 --max-batches 1 --concurrency 1`; the runner logs when each
-batch is sent to the model and when the model returns.
-
-## Normal Workflow
-
-1. Add or edit CSV files in `input/words/` or `input/sentences/`.
-2. Run `uv run main.py check` to inspect planned, skipped, and deferred work.
-3. Start with a small bounded run using `--max-items` or `--max-batches`.
-4. Inspect the generated JSON in `output/...`.
-5. If quality looks good, run the remaining pending batches.
-6. Use `uv run main.py audio` to backfill audio if needed.
-7. Use the review prompts or reviewer agents for QA before importing downstream.
-
-For agent-assisted generation without provider credentials, see
-`NO_API_AGENT_WORKFLOW.md`. In that mode agents use `process.py check` for the
-planned slice and `process.py write` for validation/output rather than calling
-`main.py run`.
-
-## Planning And Append-Only Behavior
-
-Existing output JSON is the source of truth for completed cards. The planner
-loads existing batches for a stem, extracts each card identity, and skips matching
-CSV lines unless `--force` is used.
-
-For words and sentences, identity is based on:
-
-- `hindi`
-- `romanisation` or `roman`
-- `english`
-
-New batches continue from the highest existing batch number. Normal runs do not
-delete or rewrite old batches except when adding audio paths. The validated
-writer refuses to overwrite an existing output batch file.
-
-`manifest.json` still records metadata for completed stems:
-
-- CSV content hash
-- generation prompt hash
-- processed timestamp
-- batch count
-- item count
-
-## What `check` Shows
-
-`main.py check` is the safest command to run before generation. It reports:
-
-- batches that will be generated now
-- items skipped because they already exist in output
-- batches deferred by `--max-items` or `--max-batches`
-- existing word cards missing `sound_alikes`
-- existing sentence cards missing word `tokens`
-- existing cards missing `audio`
-
-Examples:
-
-```bash
-uv run main.py check --type words
-uv run main.py check --type sentences --max-batches 2
-uv run main.py check --batch-size 5 --max-items 50
-```
-
-## Generation Behavior
-
-`generate.py` runs batches in bounded parallel waves. By default, it uses a
-concurrency of 15 and fail-fast behavior.
-
-During a run it:
-
-- scans pending work through `generation_io.py` and `process.py check`
-- applies `--max-items` and `--max-batches`
-- loads the relevant generation prompt through `llm_client.py`
-- creates the selected LangChain chat model through `llm_client.py`
-- calls the model for each batch
-- parses the response as JSON through `llm_client.py`
-- delegates validation and writing through `generation_io.py` to
-  `process.py write`
-- generates audio for each successfully written batch through
-  `audio_generator.py`
-- prints token usage when provider metadata is available
-
-If a batch fails after retries, validation fails, writing fails, or audio
-generation fails, the current wave finishes and later waves are skipped unless
-`--no-fail-fast` is set.
-
-## Validation
-
-Generated JSON is validated before it is written. The validator checks:
-
-- valid JSON object
-- correct top-level shape for `words` or `sentences`
-- required fields are present
-- required strings are non-empty
-- sentence `tokens` contain words only and align to `words[]`
-- audio paths are project-relative MP3 files under `audio/`
-
-Local contract checks:
-
-```bash
-python3 scripts/check-python-contracts.py
-python3 scripts/check-agent-workflows.py
-python3 -m unittest discover -s tests -p 'test_*.py'
-cd viewer && npm run check
-```
-
-The Python contract check covers:
-
-- planner behavior and metadata fallback
-- schema validation
-- unsafe audio rejection
-- small validator fix-ups
-- optional fields are omitted instead of empty or null
-- no `date_added` anywhere
-- no unexpected fields
-- generated item count matches the planned batch size
-- word `forms` do not duplicate the base Devanagari spelling
-- sentence `tokens` contain one word token per `words[]` entry
-- sentence word tokens link back to `words[]` with valid positional `word_index` values
-
-Validation failure stops the write, so bad model output should not silently enter
-`output/`.
-
-## Word Cards
-
-Required word fields:
-
-- `hindi`
-- `romanisation`
-- `english`
-- `pos`
-- `anki_tags`
-- `syllables`
-- `related_words`
-- `example_sentence`
-
-Optional fields should be omitted when not useful:
-
-- `gender`
-- `transitivity`
-- `forms`
-- `morphemes`
-- `usage_notes`
-- `delhi_note`
-- `sound_alikes`
-- `etymology_journey`
-- `origin_note`
-- `audio`
-
-Word prompts are tuned for practical daily fluency, Delhi usage notes, simple
-English explanations, and optional mnemonic `sound_alikes` from English, Russian,
-or Hebrew.
-
-## Sentence Cards
-
-Required sentence fields:
-
-- `hindi`
-- `romanisation`
-- `english`
-- `literal`
-- `register`
-- `tokens`
-- `words`
-- `anki_tags`
-
-Sentence cards have two parallel teaching layers:
-
-- `tokens`: word tokens only, with no spaces or punctuation, used for UI mapping
-- `words`: learner-friendly breakdown entries with meanings and notes
-
-Each `tokens[]` entry must be `kind: "word"` and match the same-position
-`words[]` entry. Full punctuation and spacing stay only in `hindi` and
-`romanisation`.
-
-## Audio
-
-Audio is generated with `gTTS` using the Hindi text from each card. Files are
-written under:
-
-```text
-audio/words/<batch-stem>/
-audio/sentences/<batch-stem>/
-```
-
-The batch JSON is then rewritten with relative `audio` paths. Because this uses
-`gTTS`, audio generation depends on external network and service availability.
-
-## Viewer
-
-The integrated Astro viewer lives in `viewer/`. It is a local study/debug UI for
-generated batches:
-
-- Words tab for generated word cards
-- Sentences tab for generated sentence cards
-- Audio play buttons when a card has an `audio` field
-- Search and selection UI from the older `hindiweb` prototype
-
-The viewer intentionally reads the generator's live output directories instead
-of keeping a copied `vocab/` folder. This avoids drift: run generation, refresh
-the browser, and the new cards appear.
-
-## Manual QA Review
-
-The repo includes reviewer prompts:
-
-- `review_prompt_words.txt`
-- `review_prompt_sentences.txt`
-
-Recommended review flow:
-
-1. Choose the output batch files to review.
-2. Use the matching review prompt for the batch type.
-3. Review each batch as raw JSON.
-4. Apply fixes based on the kind of issue.
-
-For broad repeated issues, update the generation prompt and regenerate. For a
-single bad card, edit the output JSON directly. Missing `delhi_note` values can
-usually be added directly without re-running generation.
-
-## Useful Options
-
-```bash
-uv run main.py check --type words
-uv run main.py check --type sentences
-uv run main.py check --batch-size 5
-uv run main.py check --max-items 50
-uv run main.py check --max-batches 2
-
-uv run main.py run --type words --batch-size 5 --max-items 50
-uv run main.py run --type sentences --max-batches 1
-uv run main.py run --force
-uv run main.py run --dry-run
-uv run main.py run --concurrency 5
-uv run main.py run --no-fail-fast
-```
-
-## Notes And Gotchas
-
-- Run scripts with `uv run ...`, not plain `python3`.
-- Normal generation is append-only; old outputs are skipped, not upgraded.
-- If prompts change, new pending work uses the new prompt, but existing output
-  files are not automatically rewritten.
-- Existing sentence batches may be reported as missing `tokens` if they were
-  generated before the current sentence schema.
-- `repair.py tokens` can backfill missing or legacy sentence `tokens` as
-  word-only tokens when every Hindi and romanised word aligns to the existing
-  `words` list; use `--write` to persist repairs after schema validation, and
-  `--force` to rebuild already-valid token arrays.
-- `--force` includes all CSV items in planning, but batch numbering still follows
-  existing output state.
-- Filename typos are reflected in derived labels unless the CSV contains
-  explicit `#` title and `##` subtitle metadata.
+## Source Format
+
+Source YAML and the output JSON schema are defined in
+[docs/DESIGN.md](docs/DESIGN.md) (Source Input and Output Contract sections).
+DESIGN.md is canonical; this README is intentionally a pointer to keep one
+copy of the contract.
+
+Whenever Hindi is shown in docs, CLI output, or reports, romanisation should be
+shown directly underneath it.
+
+## Active Docs
+
+- [docs/DESIGN.md](docs/DESIGN.md) - architecture, data surfaces, model policy,
+  source identity, output contract, and command shape.
+- [docs/ROADMAP.md](docs/ROADMAP.md) - milestone checklist and current status.
+- [docs/ROMANISATION.md](docs/ROMANISATION.md) - learner-facing romanisation
+  policy.
+- [docs/specs/001-m1-rust-cli-skeleton/README.md](docs/specs/001-m1-rust-cli-skeleton/README.md) -
+  first Rust implementation spec for `hindi doctor`.
+
+Older detailed planning drafts live under `archive/docs/rust-planning/` and are
+reference material only.

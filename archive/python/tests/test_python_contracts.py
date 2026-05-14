@@ -1,0 +1,335 @@
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+PYTHON_ARCHIVE_ROOT = Path(__file__).resolve().parents[1]
+RUNTIME_ROOT = PYTHON_ARCHIVE_ROOT / "runtime"
+sys.path.insert(0, str(RUNTIME_ROOT))
+
+import batch_planner
+import repair
+from schema_validator import ValidationError, validate_and_fix
+
+
+def write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def minimal_sentence(audio: str | None = None) -> dict:
+    sentence = {
+        "hindi": "क्या?",
+        "romanisation": "kyā?",
+        "english": "What?",
+        "literal": "what",
+        "register": "standard",
+        "tokens": [
+            {"hindi": "क्या", "roman": "kyā", "kind": "word", "word_index": 0},
+        ],
+        "words": [{"hindi": "क्या", "roman": "kyā", "meaning": "what"}],
+        "anki_tags": ["test", "contract", "sentence"],
+    }
+    if audio is not None:
+        sentence["audio"] = audio
+    return sentence
+
+
+def minimal_word() -> dict:
+    return {
+        "hindi": "घर",
+        "romanisation": "ghar",
+        "english": "house",
+        "pos": "noun",
+        "anki_tags": ["test", "contract"],
+        "syllables": "ghar",
+        "related_words": [{"hindi": "कमरा", "roman": "kamrā", "english": "room"}],
+        "example_sentence": {
+            "hindi": "यह घर है।",
+            "roman": "yah ghar hai.",
+            "english": "This is a house.",
+            "breakdown": [
+                {"hindi": "यह", "roman": "yah", "meaning": "this"},
+                {"hindi": "घर", "roman": "ghar", "meaning": "house"},
+                {"hindi": "है", "roman": "hai", "meaning": "is"},
+            ],
+        },
+        "forms": [
+            {"label": "base", "hindi": "घर", "roman": "ghar"},
+            {"label": "plural", "hindi": "घरें", "roman": "gharẽ"},
+        ],
+    }
+
+
+class PythonContractTests(unittest.TestCase):
+    def test_metadata_parsing_uses_yaml_fields_and_filename_fallback(self) -> None:
+        with TemporaryDirectory() as tmp:
+            source_path = Path(tmp) / "complete_hindi_chapter_09_sentences.yaml"
+            write(
+                source_path,
+                'title: "Complete Hindi"\n'
+                'subtitle: "Chapter 09"\n'
+                "items:\n"
+                '  - hindi: "क्या?"\n'
+                '    romanisation: "kyā?"\n'
+                '    english: "What?"\n',
+            )
+            metadata, items = batch_planner.parse_yaml_metadata(source_path)
+
+            self.assertEqual(metadata.title, "Complete Hindi")
+            self.assertEqual(metadata.subtitle, "Chapter 09")
+            self.assertEqual(metadata.display_label, "Complete Hindi Chapter 09")
+            self.assertEqual(items, [{"hindi": "क्या?", "romanisation": "kyā?", "english": "What?"}])
+            self.assertIn("title: \"Complete Hindi\"", batch_planner.build_batch_yaml_from_metadata(metadata, items))
+
+            fallback_path = Path(tmp) / "complete_hindi_chapter_10_sentences.yaml"
+            write(
+                fallback_path,
+                "items:\n"
+                '  - hindi: "कौन?"\n'
+                '    romanisation: "kaun?"\n'
+                '    english: "Who?"\n',
+            )
+            fallback, fallback_items = batch_planner.parse_yaml_metadata(fallback_path)
+
+            self.assertEqual(fallback.display_label, "Complete Hindi Chapter 10")
+            self.assertEqual(fallback.title, "Complete Hindi")
+            self.assertEqual(fallback.subtitle, "Chapter 10")
+            self.assertEqual(fallback_items, [{"hindi": "कौन?", "romanisation": "kaun?", "english": "Who?"}])
+
+    def test_pending_planning_skips_existing_items_and_rejects_gaps(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prompt = root / "generation_prompt_sentences.txt"
+            input_dir = root / "input" / "sentences"
+            output_dir = root / "output" / "sentences"
+            write(prompt, "prompt")
+            write(
+                input_dir / "sample_sentences.yaml",
+                'title: "Complete Hindi"\n'
+                'subtitle: "Chapter 01"\n'
+                "items:\n"
+                '  - hindi: "क्या?"\n'
+                '    romanisation: "kyā?"\n'
+                '    english: "What?"\n'
+                '  - hindi: "कौन?"\n'
+                '    romanisation: "kaun?"\n'
+                '    english: "Who?"\n'
+                '  - hindi: "कहाँ?"\n'
+                '    romanisation: "kahā̃?"\n'
+                '    english: "Where?"\n',
+            )
+            write(
+                output_dir / "sample_sentences_batch_01.json",
+                json.dumps(
+                    {
+                        "title": "Complete Hindi",
+                        "subtitle": "Chapter 01",
+                        "sentences": [minimal_sentence()],
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+
+            old_pipeline = batch_planner.PIPELINES["sentences"]
+            batch_planner.PIPELINES["sentences"] = {
+                "prompt": prompt,
+                "input": input_dir,
+                "output": output_dir,
+            }
+            try:
+                pending = batch_planner.pending_batches_for(
+                    "sentences", batch_size=2, force=False
+                )
+                self.assertEqual(len(pending), 1)
+                self.assertEqual(pending[0]["batch_num"], 2)
+                self.assertEqual(pending[0]["total_batches"], 2)
+                self.assertEqual(pending[0]["count"], 2)
+                self.assertEqual(pending[0]["title"], "Complete Hindi")
+                self.assertEqual(pending[0]["subtitle"], "Chapter 01")
+
+                write(output_dir / "sample_sentences_batch_03.json", "{}")
+                with self.assertRaisesRegex(ValueError, "not contiguous"):
+                    batch_planner.load_existing_output_state(
+                        "sentences", "sample_sentences"
+                    )
+            finally:
+                batch_planner.PIPELINES["sentences"] = old_pipeline
+
+    def test_process_write_refuses_to_overwrite_existing_batch(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output_dir = root / "output" / "sentences"
+            batch_path = output_dir / "sample_sentences_batch_01.json"
+            candidate_path = root / "candidate.json"
+            batch = {
+                "title": "Complete Hindi",
+                "subtitle": "Chapter 01",
+                "sentences": [minimal_sentence()],
+            }
+            write(batch_path, json.dumps(batch, ensure_ascii=False))
+            write(candidate_path, json.dumps(batch, ensure_ascii=False))
+
+            code = (
+                "from pathlib import Path\n"
+                "import process\n"
+                f"process.PIPELINES['sentences']['output'] = Path({str(output_dir)!r})\n"
+                f"process.cmd_write('sentences', 'sample_sentences', 1, 1, 1, {str(candidate_path)!r})\n"
+            )
+            proc = subprocess.run(
+                [sys.executable, "-c", code],
+                cwd=RUNTIME_ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("refusing to overwrite", proc.stderr)
+
+    def test_schema_validation_rejects_unsafe_audio_and_fixes_word_forms(self) -> None:
+        validate_and_fix(
+            "sentences",
+            {
+                "title": "Complete Hindi",
+                "subtitle": "Chapter 01",
+                "sentences": [minimal_sentence("audio/sentences/sample/01_kyā.mp3")],
+            },
+        )
+
+        with self.assertRaisesRegex(ValidationError, "must start with audio/"):
+            validate_and_fix(
+                "sentences",
+                {
+                    "title": "Complete Hindi",
+                    "subtitle": "Chapter 01",
+                    "sentences": [minimal_sentence("../bad.mp3")],
+                },
+            )
+
+        legacy_token_sentence = minimal_sentence()
+        legacy_token_sentence["tokens"].append({"hindi": "?", "roman": "?", "kind": "punct", "word_index": 1})
+        with self.assertRaisesRegex(ValidationError, "kind must be 'word'"):
+            validate_and_fix(
+                "sentences",
+                {
+                    "title": "Complete Hindi",
+                    "subtitle": "Chapter 01",
+                    "sentences": [legacy_token_sentence],
+                },
+            )
+
+        word_batch = validate_and_fix(
+            "words",
+            {
+                "title": "Complete Hindi",
+                "subtitle": "Chapter 01",
+                "words": [minimal_word()],
+            },
+        )
+        self.assertEqual(
+            word_batch["words"][0]["forms"],
+            [{"label": "plural", "hindi": "घरें", "roman": "gharẽ"}],
+        )
+
+    def test_repair_audit_detects_legacy_gaps_and_phrase_drills(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            batch_path = root / "sentences_batch_01.json"
+            write(
+                batch_path,
+                json.dumps(
+                    {
+                        "chapter": "Old Chapter",
+                        "sentences": [minimal_sentence()],
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+            issue_kinds = {issue["kind"] for issue in repair._audit_output_file(batch_path)}
+            self.assertIn("legacy-metadata", issue_kinds)
+            self.assertIn("missing-title", issue_kinds)
+            self.assertIn("missing-subtitle", issue_kinds)
+            self.assertIn("missing-audio", issue_kinds)
+
+            legacy_token_sentence = minimal_sentence()
+            legacy_token_sentence["tokens"].append({"hindi": "?", "roman": "?", "kind": "punct", "word_index": 1})
+            legacy_path = root / "sentences_batch_02.json"
+            write(
+                legacy_path,
+                json.dumps(
+                    {
+                        "title": "Complete Hindi",
+                        "subtitle": "Chapter 01",
+                        "sentences": [legacy_token_sentence],
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+            legacy_issue_kinds = {issue["kind"] for issue in repair._audit_output_file(legacy_path)}
+            self.assertIn("legacy-tokens", legacy_issue_kinds)
+
+            self.assertTrue(repair._looks_like_sentence_drill({"hindi": "बच्चे का कुत्ता"}))
+            self.assertFalse(repair._looks_like_sentence_drill({"hindi": "क्या वह बीमार है?"}))
+
+    def test_repair_builds_word_sentence_tokens_when_alignment_is_safe(self) -> None:
+        sentence = {
+            "hindi": "क्या वह बीमार है?",
+            "romanisation": "kyā vah bīmār hai?",
+            "english": "Is she ill?",
+            "literal": "what she ill is",
+            "register": "standard",
+            "words": [
+                {"hindi": "क्या", "roman": "kyā", "meaning": "question marker"},
+                {"hindi": "वह", "roman": "vah", "meaning": "she"},
+                {"hindi": "बीमार", "roman": "bīmār", "meaning": "ill"},
+                {"hindi": "है", "roman": "hai", "meaning": "is"},
+            ],
+            "anki_tags": ["test", "contract", "sentence"],
+        }
+
+        self.assertTrue(repair._repair_sentence_tokens(sentence))
+        validate_and_fix(
+            "sentences",
+            {
+                "title": "Complete Hindi",
+                "subtitle": "Chapter 01",
+                "sentences": [sentence],
+            },
+        )
+        self.assertEqual("".join(token["hindi"] for token in sentence["tokens"]), "क्यावहबीमारहै")
+        self.assertEqual("".join(token["roman"] for token in sentence["tokens"]), "kyāvahbīmārhai")
+        self.assertEqual([token["kind"] for token in sentence["tokens"]], [
+            "word",
+            "word",
+            "word",
+            "word",
+        ])
+
+    def test_repair_refuses_sentence_tokens_when_words_do_not_align(self) -> None:
+        sentence = {
+            "hindi": "क्या वह बीमार है?",
+            "romanisation": "kyā vah bīmār hai?",
+            "words": [{"hindi": "कौन", "roman": "kaun", "meaning": "who"}],
+        }
+
+        self.assertFalse(repair._repair_sentence_tokens(sentence))
+        self.assertNotIn("tokens", sentence)
+
+    def test_repair_rebuilds_legacy_sentence_tokens_without_force(self) -> None:
+        sentence = minimal_sentence()
+        sentence["tokens"].append({"hindi": "?", "roman": "?", "kind": "punct", "word_index": 1})
+
+        self.assertTrue(repair._repair_sentence_tokens(sentence))
+        self.assertEqual(
+            sentence["tokens"],
+            [{"hindi": "क्या", "roman": "kyā", "kind": "word", "word_index": 0}],
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

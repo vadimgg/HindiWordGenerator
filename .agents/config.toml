@@ -1,0 +1,22 @@
+source = "common_agents"
+
+[targets.codex]
+output = "AGENTS.md"
+packs = [
+    "agent-skill-reviewer",
+    "astro-viewer",
+    "brief-manager",
+    "cli-ux-reviewer",
+    "doc-writer",
+    "ios-designer",
+    "hindi-language-teacher-reviewer",
+    "plan-reviewer",
+    "hindi-prompt-tuner",
+    "project-manager",
+    "reader-experience-reviewer",
+    "rust-engineer",
+    "rust-reviewer",
+    "swift-engineer",
+    "swift-reviewer",
+    "usability-reviewer",
+]

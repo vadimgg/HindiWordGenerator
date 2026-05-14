@@ -1,0 +1,6 @@
+{
+  "brief_version": "0.2.0-trial",
+  "project": "HindiWordGenerator",
+  "claude_md_path": "CLAUDE.md",
+  "docs_path": "docs"
+}

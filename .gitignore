@@ -10,6 +10,7 @@ __pycache__/
 
 node_modules/
 dist/
+target/
 viewer/node_modules/
 viewer/dist/
 
@@ -17,5 +18,8 @@ demos-read-only/
 reference/
 viewer/.astro/
 
-comparisons/
+common_agents/
+archive/python/experiments/agent_translation/results/
+archive/python/experiments/ollama_translation/results/
+archive/python/experiments/ollama_word_fields/results/
 output_original/
