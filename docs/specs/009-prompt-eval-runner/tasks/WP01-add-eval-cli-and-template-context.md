@@ -37,8 +37,8 @@ yet; it should prove YAML input, prompt ID lookup, field selection,
 
 ## Done When
 
-- CLI parses `hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]`.
-- CLI parses `hindi eval grade --run <run-id-or-path>`.
+- CLI parses `hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]`.
+- CLI parses `hindi eval grade <run-id-or-path>`.
 - Help text documents the command and does not mention `--model`.
 - Eval context exposes `input_yaml`, `items_yaml`, structured `items`,
   `input_path`, `prompt_id`, and `run_path`.

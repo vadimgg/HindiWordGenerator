@@ -30,7 +30,7 @@
 - Render a template with `{{#each items}}`.
 - Render `items_yaml`.
 - Resolve prompt IDs to paired input/grading templates.
-- Resolve `--run` arguments by prepending `eval/` only when the argument does
+- Resolve grade run arguments by prepending `eval/` only when the argument does
   not already start with `eval/`.
 - Extract grader response from `grade_packet.md` using the exact
   `## Paste Grader Response Below` marker.
@@ -55,7 +55,7 @@
 
 - Run one live eval run against `sentence/register` with `--max-items 2`.
 - Inspect `summary.txt`, `prompt.txt`, and `response.txt`.
-- Run `hindi eval grade --run <eval-folder>` and paste a small valid grader
+- Run `hindi eval grade <eval-folder>` and paste a small valid grader
   response.
 
 ## Not Covered

@@ -7,8 +7,9 @@ workbench under `eval/<prompt-id>/<run-id>/`. The runner uses built-in paired
 prompt templates, selects fields from YAML source input, requires exactly one
 running Ollama model from `/api/ps`, writes prompt/response/meta/summary
 artifacts, and records human/agent grading responses as canonical `grade.json`.
-Follow-up testing added `hindi eval grade --response <path>` so spawned-agent or
-copied evaluator responses can be imported without pretending to be `$EDITOR`.
+Follow-up testing added `hindi eval grade <run-id> --response <path>` so
+spawned-agent or copied evaluator responses can be imported without pretending
+to be `$EDITOR`.
 
 ## Validation
 
@@ -18,13 +19,13 @@ Passed:
 - `cargo test`
 - `cargo clippy --all-targets --all-features -- -D warnings`
 - `cargo run -- eval --help`
-- `cargo run -- eval run --input input/sentences/complete_hindi_chapter_02_sentences.yaml --prompt-id sentence/register --max-items 1`
+- `cargo run -- eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 1`
   failed safely because no Ollama model was running.
-- Live `hindi eval run --input input/sentences/complete_hindi_chapter_02_sentences.yaml --prompt-id sentence/register --max-items 2`
+- Live `hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2`
   succeeded against `ollama:translategemma:12b` in 4.7s.
 - A spawned evaluator agent graded the generated `grade_prompt.txt`; its YAML
-  response was imported with `hindi eval grade --response <path>` and recorded
-  as `grade.json` with score `16/20`.
+  response was imported with `hindi eval grade <run-id> --response <path>` and
+  recorded as `grade.json` with score `16/20`.
 - `make check`
 
 ## Changed Files
@@ -40,7 +41,7 @@ Passed:
 
 ## Follow-Ups
 
-- Run a live eval smoke once exactly one Ollama model is running.
+- Run more prompt IDs through the same live eval and spawned-grader path.
 - Review the seeded prompts after a few real eval runs; they are intentionally
   practical starting points, not final benchmark prompts.
 

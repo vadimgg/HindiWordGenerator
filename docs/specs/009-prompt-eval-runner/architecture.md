@@ -24,10 +24,7 @@ template drift, and run metadata that is too vague to compare later.
 What the user runs:
 
 ```text
-hindi eval run \
-  --input input/sentences/complete_hindi_chapter_02_sentences.yaml \
-  --prompt-id sentence/register \
-  --max-items 2
+hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2
 ```
 
 Internal sequence:
@@ -66,7 +63,7 @@ All writes stay under `eval/`.
 What the user runs:
 
 ```text
-hindi eval grade --run sentence/register/2026-05-15_143012_translategemma_12b [--response grade.yaml]
+hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b [--response grade.yaml]
 ```
 
 Internal sequence:
@@ -132,7 +129,8 @@ Used by:
 Contract:
 
 - Path shape: `eval/<prompt-category>/<prompt-name>/<timestamp>_<model-slug>/`.
-- `--run` may accept either that path or `<prompt-category>/<prompt-name>/<run-id>`.
+- A grade run argument may be either that path or
+  `<prompt-category>/<prompt-name>/<run-id>`.
 - Resolution rule: if the argument starts with `eval/`, resolve it from the
   project root as given; otherwise prepend `eval/` and resolve from the project
   root. Do not probe arbitrary sibling directories before applying this rule.

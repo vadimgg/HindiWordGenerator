@@ -37,7 +37,7 @@ available.
   translation, and full enrichment.
 - Templates use `{{#each items}}` and include Hindi with romanisation directly
   underneath wherever Hindi appears.
-- `hindi eval grade --run <run-id-or-path>` opens `grade_packet.md` and records
+- `hindi eval grade <run-id-or-path>` opens `grade_packet.md` and records
   a structured five-axis grade response.
 - `make check` passes.
 - One live `hindi eval` smoke result is recorded in the final handoff, or the

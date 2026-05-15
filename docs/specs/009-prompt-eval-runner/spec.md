@@ -21,8 +21,8 @@ Rust workflow.
 
 ## Goals
 
-- Provide `hindi eval run --input <yaml> --prompt-id <id>`.
-- Provide `hindi eval grade --run <run-id-or-path> [--response <path>]`.
+- Provide `hindi eval run <prompt-id> <input-yaml>`.
+- Provide `hindi eval grade <run-id-or-path> [--response <path>]`.
 - Use the single currently running Ollama model from Ollama `/api/ps`; do not
   switch or start models for eval runs.
 - Use built-in prompt IDs such as `sentence/register`, with paired input and
@@ -50,7 +50,7 @@ Rust workflow.
 
 | ID | Criteria |
 |---|---|
-| AC01 | `hindi eval run --input <path> --prompt-id <id>` and `hindi eval grade --run <run-id-or-path> [--response <path>]` are parsed and documented in help output. |
+| AC01 | `hindi eval run <prompt-id> <input-yaml>` and `hindi eval grade <run-id-or-path> [--response <path>]` are parsed and documented in help output. |
 | AC02 | `hindi eval run` requires exactly one running Ollama model from `/api/ps` and prints the selected model. |
 | AC03 | Built-in prompt templates render with Handlebars using `{{#each items}}`, `{{items_yaml}}`, `{{input_yaml}}`, `{{input_path}}`, `{{prompt_id}}`, and `{{run_path}}`. |
 | AC04 | `--fields id,hindi,romanisation,english` selects top-level item fields; when omitted, fields default to `id,hindi,romanisation,english`; missing fields fail clearly. |
@@ -106,8 +106,8 @@ Rust workflow.
 
 ### Smoke Tests
 
-- `cargo run -- eval run --input input/sentences/complete_hindi_chapter_02_sentences.yaml --prompt-id sentence/register --max-items 2`
-- `cargo run -- eval grade --run sentence/register/<run-id>`
+- `cargo run -- eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2`
+- `cargo run -- eval grade sentence/register/<run-id>`
 - `make check`
 
 ### Drift / Consistency Checks

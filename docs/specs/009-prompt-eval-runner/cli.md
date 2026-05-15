@@ -4,8 +4,8 @@
 
 | Command | User Goal | Change | Side Effects |
 |---|---|---|---|
-| `hindi eval run --input <path> --prompt-id <id>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
-| `hindi eval grade --run <run-id-or-path> [--response <path>]` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
+| `hindi eval run <prompt-id> <input-yaml>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
+| `hindi eval grade <run-id-or-path> [--response <path>]` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
 
 ## Help Text
 
@@ -13,23 +13,33 @@
 Hindi Word Generator
 
 Usage:
-  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]
-  hindi eval grade --run <run-id-or-path> [--response <path>]
+  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]
+  hindi eval grade <run-id-or-path> [--response <path>]
+
+Examples:
+  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2
+  hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b
+  hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b --response /tmp/grade.yaml
 
 Runs built-in prompt templates against YAML input using the one currently
 running Ollama model. Writes diagnostics to
 eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.
 
+Arguments:
+  <prompt-id>          Built-in prompt id, e.g. sentence/register.
+  <input-yaml>         YAML source file.
+  <run-id-or-path>     Eval run folder or prompt-scoped run id to grade.
+
 Options:
-  --input <path>       YAML source file.
-  --prompt-id <id>     Built-in prompt id, e.g. sentence/register.
   --fields <list>      Comma-separated top-level item fields.
                       Default: id,hindi,romanisation,english
   --max-items <n>      Limit selected items before rendering.
-  --run <run-id-or-path>
-                       Eval run folder or prompt-scoped run id to grade.
   --response <path>    Optional YAML/JSON grader response file to import instead
                        of opening $EDITOR.
+
+Compatibility aliases:
+  hindi eval run --prompt-id <id> --input <path>
+  hindi eval grade --run <run-id-or-path>
 ```
 
 ## Success Output
@@ -59,7 +69,7 @@ Output
   meta       meta.json
 
 Next
-  hindi eval grade --run sentence/register/2026-05-15_143012_translategemma_12b
+  hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b
 ```
 
 ## Grade Output
@@ -81,6 +91,14 @@ Result
 
 Next
   less eval/sentence/register/2026-05-15_143012_translategemma_12b/summary.txt
+```
+
+With `--response`, the middle section changes:
+
+```text
+Import
+  source     /tmp/grade.yaml
+  response   grade_response.txt
 ```
 
 ## Progress And Log Messages
@@ -113,9 +131,9 @@ Next
   `grade_packet.md` in `$EDITOR`. The packet contains the rendered grading
   prompt plus this exact marker for the Claude/ChatGPT response:
   `## Paste Grader Response Below`.
-- Import path: `hindi eval grade --response <path>` writes the same grading
-  artifacts but reads the grader YAML/JSON from the provided file instead of
-  opening `$EDITOR`.
+- Import path: `hindi eval grade <run-id-or-path> --response <path>` writes the
+  same grading artifacts but reads the grader YAML/JSON from the provided file
+  instead of opening `$EDITOR`.
 - Non-interactive behavior: direct command, exits non-zero on errors.
 - Picker or fzf behavior: None.
 

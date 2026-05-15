@@ -140,7 +140,7 @@ impl EvalRunReport {
         output.push_str("  meta       meta.json\n\n");
         output.push_str("Next\n");
         output.push_str(&format!(
-            "  hindi eval grade --run {}\n",
+            "  hindi eval grade {}\n",
             prompt_scoped_run_id(&self.prompt_id, &self.run_path)
         ));
         output

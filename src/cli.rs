@@ -51,7 +51,11 @@ impl CliError {
 
 impl std::fmt::Display for CliError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}\n\n{}", self.message, help_text())
+        if self.message.contains("Usage:") {
+            write!(formatter, "{}", self.message)
+        } else {
+            write!(formatter, "{}\n\n{}", self.message, help_text())
+        }
     }
 }
 
@@ -149,9 +153,7 @@ where
         [command, action, ..] if command == "eval" && action == "grade" => {
             parse_eval_grade(&args[2..])
         }
-        [command, ..] if command == "eval" => Err(CliError::new(
-            "Usage: hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n       hindi eval grade --run <run-id-or-path>",
-        )),
+        [command, ..] if command == "eval" => Err(CliError::new(eval_usage_error())),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
 }
@@ -176,16 +178,26 @@ fn parse_eval_grade(args: &[String]) -> Result<Command, CliError> {
                 };
                 response = Some(value.clone());
             }
-            value => {
+            value if value.starts_with('-') => {
                 return Err(CliError::new(format!(
-                    "Unknown eval grade option: {value}\n\nUsage: hindi eval grade --run <run-id-or-path> [--response <path>]"
+                    "Unknown eval grade option: {value}\n\n{}",
+                    eval_grade_usage_error()
                 )));
+            }
+            value => {
+                if run.is_some() {
+                    return Err(CliError::new(format!(
+                        "Unexpected extra eval run id: {value}\n\n{}",
+                        eval_grade_usage_error()
+                    )));
+                }
+                run = Some(value.to_string());
             }
         }
         index += 1;
     }
     Ok(Command::EvalGrade {
-        run: run.ok_or_else(|| CliError::new("Missing required option: --run <run-id-or-path>"))?,
+        run: run.ok_or_else(|| CliError::new(eval_grade_usage_error()))?,
         response,
     })
 }
@@ -195,6 +207,7 @@ fn parse_eval_run(args: &[String]) -> Result<Command, CliError> {
     let mut prompt_id = None;
     let mut fields = None;
     let mut max_items = None;
+    let mut positional = Vec::new();
     let mut index = 0usize;
     while index < args.len() {
         match args[index].as_str() {
@@ -229,18 +242,49 @@ fn parse_eval_run(args: &[String]) -> Result<Command, CliError> {
                         .ok_or_else(|| CliError::new("--max-items must be a positive integer."))?,
                 );
             }
-            value => {
+            value if value.starts_with('-') => {
                 return Err(CliError::new(format!(
-                    "Unknown eval run option: {value}\n\nUsage: hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]"
+                    "Unknown eval run option: {value}\n\n{}",
+                    eval_run_usage_error()
                 )));
+            }
+            value => {
+                positional.push(value.to_string());
             }
         }
         index += 1;
     }
+    match positional.as_slice() {
+        [] => {}
+        [prompt] => {
+            if prompt_id.is_some() {
+                return Err(CliError::new(format!(
+                    "Prompt id was provided twice.\n\n{}",
+                    eval_run_usage_error()
+                )));
+            }
+            prompt_id = Some(prompt.clone());
+        }
+        [prompt, path] => {
+            if prompt_id.is_some() || input.is_some() {
+                return Err(CliError::new(format!(
+                    "Eval run input was provided twice.\n\n{}",
+                    eval_run_usage_error()
+                )));
+            }
+            prompt_id = Some(prompt.clone());
+            input = Some(path.clone());
+        }
+        _ => {
+            return Err(CliError::new(format!(
+                "Too many eval run arguments.\n\n{}",
+                eval_run_usage_error()
+            )));
+        }
+    }
     Ok(Command::EvalRun {
-        input: input.ok_or_else(|| CliError::new("Missing required option: --input <path>"))?,
-        prompt_id: prompt_id
-            .ok_or_else(|| CliError::new("Missing required option: --prompt-id <id>"))?,
+        input: input.ok_or_else(|| CliError::new(eval_run_usage_error()))?,
+        prompt_id: prompt_id.ok_or_else(|| CliError::new(eval_run_usage_error()))?,
         fields,
         max_items,
     })
@@ -256,7 +300,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n  hindi eval grade --run <run-id-or-path>\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  eval         Run and grade prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  eval         Run and grade prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -280,7 +324,19 @@ pub fn sentences_help_text() -> &'static str {
 }
 
 pub fn eval_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n  hindi eval grade --run <run-id-or-path> [--response <path>]\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nOptions:\n  --input <path>       YAML source file\n  --prompt-id <id>     Built-in prompt id, e.g. sentence/register\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --run <run-id-or-path>\n                       Eval run folder or prompt-scoped run id to grade\n  --response <path>    Optional YAML/JSON grader response file to import instead of opening $EDITOR"
+    "Hindi Word Generator\n\nUsage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n\nExamples:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b --response /tmp/grade.yaml\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nArguments:\n  <prompt-id>          Built-in prompt id, e.g. sentence/register\n  <input-yaml>         YAML source file\n  <run-id-or-path>     Eval run folder or prompt-scoped run id to grade\n\nOptions:\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --response <path>    Optional YAML/JSON grader response file to import instead of opening $EDITOR\n\nCompatibility aliases:\n  hindi eval run --prompt-id <id> --input <path>\n  hindi eval grade --run <run-id-or-path>"
+}
+
+fn eval_usage_error() -> &'static str {
+    "Usage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n\nExamples:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b"
+}
+
+fn eval_run_usage_error() -> &'static str {
+    "Missing eval run arguments.\n\nUsage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n\nExample:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n\nCompatibility alias:\n  hindi eval run --prompt-id sentence/register --input input/sentences/complete_hindi_chapter_02_sentences.yaml"
+}
+
+fn eval_grade_usage_error() -> &'static str {
+    "Missing eval grade run id.\n\nUsage:\n  hindi eval grade <run-id-or-path> [--response <path>]\n\nExamples:\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b --response /tmp/grade.yaml\n\nCompatibility alias:\n  hindi eval grade --run sentence/register/unix_1778842644180_translategemma_12b"
 }
 
 #[cfg(test)]
@@ -342,10 +398,8 @@ mod tests {
             parse([
                 "eval",
                 "run",
-                "--input",
-                "input/sentences/sample.yaml",
-                "--prompt-id",
-                "sentence/register"
+                "sentence/register",
+                "input/sentences/sample.yaml"
             ])
             .unwrap(),
             Command::EvalRun {
@@ -359,10 +413,8 @@ mod tests {
             parse([
                 "eval",
                 "run",
-                "--input",
-                "input/sentences/sample.yaml",
-                "--prompt-id",
                 "sentence/register",
+                "input/sentences/sample.yaml",
                 "--fields",
                 "id,hindi",
                 "--max-items",
@@ -377,7 +429,7 @@ mod tests {
             }
         );
         assert_eq!(
-            parse(["eval", "grade", "--run", "sentence/register/run1"]).unwrap(),
+            parse(["eval", "grade", "sentence/register/run1"]).unwrap(),
             Command::EvalGrade {
                 run: "sentence/register/run1".to_string(),
                 response: None,
@@ -387,7 +439,6 @@ mod tests {
             parse([
                 "eval",
                 "grade",
-                "--run",
                 "sentence/register/run1",
                 "--response",
                 "/tmp/grade.yaml"
@@ -401,28 +452,54 @@ mod tests {
     }
 
     #[test]
+    fn eval_named_flags_still_work_as_aliases() {
+        assert_eq!(
+            parse([
+                "eval",
+                "run",
+                "--input",
+                "input/sentences/sample.yaml",
+                "--prompt-id",
+                "sentence/register"
+            ])
+            .unwrap(),
+            Command::EvalRun {
+                input: "input/sentences/sample.yaml".to_string(),
+                prompt_id: "sentence/register".to_string(),
+                fields: None,
+                max_items: None,
+            }
+        );
+        assert_eq!(
+            parse(["eval", "grade", "--run", "sentence/register/run1"]).unwrap(),
+            Command::EvalGrade {
+                run: "sentence/register/run1".to_string(),
+                response: None,
+            }
+        );
+    }
+
+    #[test]
     fn eval_run_requires_input_and_prompt_id() {
         let error = parse(["eval", "run"]).unwrap_err().to_string();
-        assert!(error.contains("--input"));
+        assert!(error.contains("hindi eval run <prompt-id> <input-yaml>"));
 
-        let error = parse(["eval", "run", "--input", "x.yaml"])
+        let error = parse(["eval", "run", "sentence/register"])
             .unwrap_err()
             .to_string();
-        assert!(error.contains("--prompt-id"));
+        assert!(error.contains("<input-yaml>"));
 
-        let error = parse([
-            "eval",
-            "run",
-            "--input",
-            "x.yaml",
-            "--prompt-id",
-            "p",
-            "--max-items",
-            "0",
-        ])
-        .unwrap_err()
-        .to_string();
+        let error = parse(["eval", "run", "p", "x.yaml", "--max-items", "0"])
+            .unwrap_err()
+            .to_string();
         assert!(error.contains("positive integer"));
+    }
+
+    #[test]
+    fn eval_grade_requires_run_id() {
+        let error = parse(["eval", "grade"]).unwrap_err().to_string();
+
+        assert!(error.contains("hindi eval grade <run-id-or-path>"));
     }
 
     #[test]
