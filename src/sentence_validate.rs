@@ -2,6 +2,7 @@
 
 use crate::sentence_schema::{SentenceBatch, SentenceCard, SourceRef};
 use crate::source_identity::normalize_nfc;
+use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,6 +36,23 @@ impl ExpectedSource {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValidationReport {
     errors: Vec<String>,
+    issues: Vec<ValidationIssue>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ValidationIssue {
+    pub code: String,
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sentence_index: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub field: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item_id: Option<String>,
 }
 
 impl ValidationReport {
@@ -46,8 +64,29 @@ impl ValidationReport {
         &self.errors
     }
 
+    pub fn issues(&self) -> &[ValidationIssue] {
+        &self.issues
+    }
+
     fn push(&mut self, message: impl Into<String>) {
-        self.errors.push(message.into());
+        let message = message.into();
+        self.issues.push(ValidationIssue::from_message(&message));
+        self.errors.push(message);
+    }
+}
+
+impl ValidationIssue {
+    fn from_message(message: &str) -> Self {
+        let path = path_from_message(message);
+        Self {
+            code: code_from_message(message).to_string(),
+            message: message.to_string(),
+            sentence_index: path.as_deref().and_then(sentence_index_from_path),
+            field: path.as_deref().and_then(field_from_path),
+            path,
+            source_file: source_from_message(message).map(|(file, _)| file),
+            item_id: source_from_message(message).map(|(_, item_id)| item_id),
+        }
     }
 }
 
@@ -61,7 +100,10 @@ pub fn validate_sentence_batch(
     batch: &SentenceBatch,
     expected_sources: &[ExpectedSource],
 ) -> ValidationReport {
-    let mut report = ValidationReport { errors: Vec::new() };
+    let mut report = ValidationReport {
+        errors: Vec::new(),
+        issues: Vec::new(),
+    };
 
     required_batch_field(&mut report, "title", batch.title.as_deref());
     required_batch_field(&mut report, "subtitle", batch.subtitle.as_deref());
@@ -312,6 +354,84 @@ fn is_blank(value: &str) -> bool {
     value.trim().is_empty()
 }
 
+fn path_from_message(message: &str) -> Option<String> {
+    let first = message.split_whitespace().next()?;
+    if first.starts_with("batch.") || first.starts_with("sentences[") {
+        Some(first.trim_end_matches('.').to_string())
+    } else {
+        None
+    }
+}
+
+fn sentence_index_from_path(path: &str) -> Option<usize> {
+    let start = path.find("sentences[")? + "sentences[".len();
+    let rest = &path[start..];
+    let end = rest.find(']')?;
+    rest[..end].parse().ok()
+}
+
+fn field_from_path(path: &str) -> Option<String> {
+    path.rsplit_once('.')
+        .map(|(_, field)| field.to_string())
+        .or_else(|| Some(path.to_string()))
+}
+
+fn source_from_message(message: &str) -> Option<(String, String)> {
+    let source_start = if let Some(index) = message.find(" source row: ") {
+        index + " source row: ".len()
+    } else if let Some(index) = message.find(" current source for ") {
+        index + " current source for ".len()
+    } else if let Some(index) = message.find(" candidate sentence for source ") {
+        index + " candidate sentence for source ".len()
+    } else if let Some(index) = message.find(" for source ") {
+        index + " for source ".len()
+    } else {
+        return None;
+    };
+    let source = message[source_start..]
+        .trim_end_matches('.')
+        .trim_end_matches(',')
+        .trim();
+    let (file, item_id) = source.rsplit_once('#')?;
+    Some((file.to_string(), item_id.to_string()))
+}
+
+fn code_from_message(message: &str) -> &'static str {
+    if message.contains(" is required.") {
+        "required_field"
+    } else if message.contains("unsupported value") {
+        "unsupported_register"
+    } else if message.contains("must contain at least one sentence") {
+        "empty_sentences"
+    } else if message.contains("must contain at least one word") {
+        "empty_words"
+    } else if message.contains("must contain at least one token") {
+        "empty_tokens"
+    } else if message.contains("duplicates") {
+        "duplicate_word_id"
+    } else if message.contains("duplicate candidate sentence") {
+        "duplicate_candidate"
+    } else if message.contains("fingerprint does not match") {
+        "source_fingerprint_mismatch"
+    } else if message.contains("does not match a planned source row") {
+        "unplanned_source_ref"
+    } else if message.contains("legacy-only") {
+        "legacy_word_index"
+    } else if message.contains("unknown word id") {
+        "unknown_word_id"
+    } else if message.contains("is not referenced") {
+        "unreferenced_word"
+    } else if message.contains("does not reconstruct") {
+        "roman_reconstruction"
+    } else if message.contains("missing candidate sentence") {
+        "missing_candidate"
+    } else if message.contains("kind must be") {
+        "invalid_kind"
+    } else {
+        "validation_error"
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{validate_sentence_batch, ExpectedSource};
@@ -335,6 +455,12 @@ mod tests {
 
         assert!(errors_contain(&report, "literal is required"));
         assert!(errors_contain(&report, "unsupported value"));
+        assert!(report
+            .issues()
+            .iter()
+            .any(|issue| issue.sentence_index == Some(0)
+                && issue.field.as_deref() == Some("literal")
+                && issue.code == "required_field"));
     }
 
     #[test]

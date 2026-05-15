@@ -1,4 +1,5 @@
 use crate::project::ProjectRoot;
+use crate::sentence_validate::ValidationIssue;
 use serde::Serialize;
 use std::fs;
 use std::io;
@@ -46,6 +47,8 @@ pub struct SentenceStageReport {
 pub struct ValidationSummary {
     pub valid: bool,
     pub errors: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub issues: Vec<ValidationIssue>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

@@ -14,7 +14,7 @@ use crate::sentence_enrichment::{
 use crate::sentence_plan::{
     generation_plan, PlannedSentenceBatch, PlannedSentenceRow, SentencePlanError,
 };
-use crate::sentence_validate::{validate_sentence_batch, ExpectedSource};
+use crate::sentence_validate::{validate_sentence_batch, ExpectedSource, ValidationIssue};
 use crate::source_identity::content_fingerprint;
 use std::io;
 use std::path::PathBuf;
@@ -202,20 +202,23 @@ pub fn generate_from<C: SentenceModelClient>(
             "batch {batch_number}/{planned_batches}: validating merged response"
         ));
         let attempt = merge_staged_enrichment(&batch, staged)
-            .map_err(|error| error.to_string())
+            .map_err(|error| AttemptError::new(error.to_string()))
             .and_then(|candidate| {
                 let expected = expected_sources(&batch);
                 let validation = validate_sentence_batch(&candidate, &expected);
                 if !validation.is_valid() {
-                    return Err(validation.errors().join("\n"));
+                    return Err(AttemptError {
+                        message: validation.errors().join("\n"),
+                        issues: validation.issues().to_vec(),
+                    });
                 }
                 progress(&format!(
                     "batch {batch_number}/{planned_batches}: validation passed in {}",
                     format_elapsed(validate_started.elapsed())
                 ));
                 let write_started = Instant::now();
-                let write =
-                    write_sentence_batch(&target, &candidate).map_err(|error| error.to_string());
+                let write = write_sentence_batch(&target, &candidate)
+                    .map_err(|error| AttemptError::new(error.to_string()));
                 if write.is_ok() {
                     progress(&format!(
                         "batch {batch_number}/{planned_batches}: accepted output written in {}",
@@ -235,6 +238,7 @@ pub fn generate_from<C: SentenceModelClient>(
                     started_at,
                     true,
                     stages,
+                    Vec::new(),
                     Vec::new(),
                     vec![write
                         .path
@@ -261,7 +265,8 @@ pub fn generate_from<C: SentenceModelClient>(
                     started_at,
                     false,
                     stages,
-                    vec![error.clone()],
+                    vec![error.message.clone()],
+                    error.issues.clone(),
                     Vec::new(),
                     vec![batch.target_path.clone()],
                 );
@@ -278,7 +283,7 @@ pub fn generate_from<C: SentenceModelClient>(
                     planned_batches,
                     accepted,
                     run_reports,
-                    message: Some(error),
+                    message: Some(error.message),
                     recovery: Some(
                         "Inspect the run report, fix prompt/model/source issues, then rerun `hindi sentences generate --max-batches 1`.".to_string(),
                     ),
@@ -337,6 +342,21 @@ fn not_ready(
         run_reports: Vec::new(),
         message: Some(readiness.message),
         recovery: readiness.recovery,
+    }
+}
+
+#[derive(Debug, Clone)]
+struct AttemptError {
+    message: String,
+    issues: Vec<ValidationIssue>,
+}
+
+impl AttemptError {
+    fn new(message: String) -> Self {
+        Self {
+            message,
+            issues: Vec::new(),
+        }
     }
 }
 
@@ -554,6 +574,7 @@ fn failed_batch_outcome(
         stages,
         vec![error.clone()],
         Vec::new(),
+        Vec::new(),
         vec![batch.target_path.clone()],
     );
     let report_path = write_sentence_run_report(root, &report)
@@ -585,6 +606,7 @@ fn report_for(
     valid: bool,
     stages: Vec<SentenceStageReport>,
     errors: Vec<String>,
+    issues: Vec<ValidationIssue>,
     accepted: Vec<PathBuf>,
     skipped: Vec<PathBuf>,
 ) -> SentenceRunReport {
@@ -607,7 +629,11 @@ fn report_for(
         stages,
         started_at_unix: started_at,
         finished_at_unix: unix_now(),
-        validation: ValidationSummary { valid, errors },
+        validation: ValidationSummary {
+            valid,
+            errors,
+            issues,
+        },
         writes: WriteSummary {
             accepted: accepted
                 .iter()

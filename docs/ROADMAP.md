@@ -14,9 +14,9 @@ This is the active implementation plan. Older detailed planning drafts live in
 | YAML item IDs migrated | Done |
 | Sentence planner | Done |
 | Validator and writer | Done |
-| Local sentence generation | Pending |
+| Local sentence generation | Done |
 | Audio parity | Done |
-| Viewer/export parity | Pending |
+| Viewer/export parity | Done |
 
 ## M1: Rust CLI Skeleton
 
@@ -124,6 +124,11 @@ Acceptance:
 
 Goal: generate one small sentence batch with the configured local model.
 
+Status: Done. Rust can generate accepted sentence batches through focused
+per-sentence stages, validate them before writing, keep run reports under
+`runs/sentences/`, and run a learner-quality scan before larger generation
+runs.
+
 Command:
 
 ```bash
@@ -148,8 +153,8 @@ Acceptance:
 - Leaves a minimal run report under `runs/sentences/` with command, status,
   sources, targets, aggregate prompt fingerprint, per-stage prompt IDs,
   per-stage prompt fingerprints, model name and best available Ollama model
-  metadata (digest when obtainable), timings, validation result, and
-  accepted/skipped writes.
+  metadata (digest when obtainable), timings, validation result, structured
+  validation issues, and accepted/skipped writes.
 - Keeps the archived Python full-card prompt as reference only; normal Rust
   generation uses staged prompts rather than the old full-enrichment prompt.
 - Viewer-compatible JSON remains under `output/sentences/`.
@@ -187,6 +192,9 @@ Acceptance:
 ## M6: Viewer And Export Parity
 
 Goal: make Rust-generated output usable in the existing viewer and export flow.
+
+Status: Done. The viewer serves accepted Rust sentence output with audio, and
+the Rust CLI can export a source/topic Anki artifact from accepted output.
 
 Commands:
 
