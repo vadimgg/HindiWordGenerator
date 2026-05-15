@@ -157,6 +157,8 @@ Acceptance:
   folder to inspect before rerunning generation.
 - Viewer `word_id` compatibility is present before running M4 against real
   source, so the first new Rust card renders correctly.
+- `hindi sentences quality` scans accepted output for obvious learner-quality
+  issues before larger generation runs.
 
 ## M5: Audio Parity
 

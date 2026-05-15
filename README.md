@@ -25,6 +25,7 @@ The first useful workflow should stay short:
 hindi doctor
 hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
+hindi sentences quality
 hindi sentences audio
 hindi viewer
 ```

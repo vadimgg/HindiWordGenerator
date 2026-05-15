@@ -14,6 +14,7 @@ input/sentences/*.yaml
   -> hindi sentences plan
   -> hindi sentences generate
   -> output/sentences/*.json
+  -> hindi sentences quality
   -> hindi sentences audio
   -> audio/sentences/*.mp3
   -> viewer / Anki export
@@ -26,6 +27,7 @@ rest of the surface lands across M2–M6):
 hindi doctor
 hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
+hindi sentences quality
 hindi sentences audio
 hindi viewer
 ```

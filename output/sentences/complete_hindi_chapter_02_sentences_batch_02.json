@@ -114,7 +114,7 @@
       "hindi": "क्या ये शब्दकोश भी महँगे हैं?",
       "romanisation": "kyā ye śabdkoś bhī mahãge haĩ?",
       "english": "Are these dictionaries also expensive?",
-      "literal": "What this dictionaries also expensive are?",
+      "literal": "These dictionaries also expensive are?",
       "register": "standard",
       "source_ref": {
         "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
@@ -164,7 +164,7 @@
           "id": "w1",
           "hindi": "क्या",
           "roman": "kyā",
-          "meaning": "what",
+          "meaning": "yes/no question marker",
           "kind": "word"
         },
         {

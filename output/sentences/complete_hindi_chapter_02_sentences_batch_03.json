@@ -6,7 +6,7 @@
       "hindi": "क्या वह भी शब्दकोश है?",
       "romanisation": "kyā vah bhī śabdkoś hai?",
       "english": "Is it a dictionary too?",
-      "literal": "What, that also dictionary is?",
+      "literal": "That also dictionary is?",
       "register": "standard",
       "source_ref": {
         "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
@@ -50,7 +50,7 @@
           "id": "w1",
           "hindi": "क्या",
           "roman": "kyā",
-          "meaning": "what/is it",
+          "meaning": "yes/no question marker",
           "kind": "word"
         },
         {
@@ -88,7 +88,7 @@
       "hindi": "नहीं नहीं, वह शब्दकोश नहीं है, रामायण है!",
       "romanisation": "nahī̃ nahī̃, vah śabdkoś nahī̃ hai, rāmāyaṇ hai!",
       "english": "No no, it's not a dictionary, it's the Ramayan!",
-      "literal": "नहीं नहीं, वह शब्दकोश नहीं है, रामायण है!",
+      "literal": "No no, that dictionary not is, Ramayan is!",
       "register": "standard",
       "source_ref": {
         "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
