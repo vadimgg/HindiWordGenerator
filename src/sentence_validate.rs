@@ -284,7 +284,23 @@ fn is_roman_separator(ch: char) -> bool {
     ch.is_whitespace()
         || matches!(
             ch,
-            ',' | '.' | '?' | '!' | ';' | ':' | '।' | '॥' | '(' | ')' | '[' | ']' | '"' | '“' | '”'
+            ',' | '.'
+                | '?'
+                | '!'
+                | ';'
+                | ':'
+                | '-'
+                | '–'
+                | '—'
+                | '।'
+                | '॥'
+                | '('
+                | ')'
+                | '['
+                | ']'
+                | '"'
+                | '“'
+                | '”'
         )
 }
 
@@ -409,6 +425,35 @@ mod tests {
         batch.sentences[0].tokens[1].roman = Some("he".to_string());
         let report = validate_sentence_batch(&batch, &[expected()]);
         assert!(errors_contain(&report, "does not reconstruct"));
+    }
+
+    #[test]
+    fn romanisation_reconstruction_ignores_standalone_dash_punctuation() {
+        let mut batch = valid_batch();
+        batch.sentences[0].romanisation = Some("yahā̃ – hai.".to_string());
+        batch.sentences[0]
+            .tokens
+            .push(crate::sentence_schema::SentenceToken {
+                hindi: Some("है".to_string()),
+                roman: Some("hai".to_string()),
+                kind: Some("word".to_string()),
+                word_id: Some("w2".to_string()),
+                word_index: None,
+            });
+        batch.sentences[0]
+            .words
+            .push(crate::sentence_schema::SentenceWord {
+                id: Some("w2".to_string()),
+                hindi: Some("है".to_string()),
+                roman: Some("hai".to_string()),
+                meaning: Some("is".to_string()),
+                kind: None,
+                gender: None,
+                number: None,
+                note: None,
+            });
+
+        assert!(validate_sentence_batch(&batch, &[expected()]).is_valid());
     }
 
     fn valid_batch() -> crate::sentence_schema::SentenceBatch {

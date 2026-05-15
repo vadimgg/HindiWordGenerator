@@ -40,7 +40,9 @@ pub struct SentenceToken {
     pub hindi: Option<String>,
     pub roman: Option<String>,
     pub kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub word_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub word_index: Option<usize>,
 }
 

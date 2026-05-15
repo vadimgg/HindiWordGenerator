@@ -2,7 +2,7 @@
 id: WP01
 title: Normalize model tokens
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: []
 acceptance_refs: [AC01, AC02, AC04]
 extra_skills: []

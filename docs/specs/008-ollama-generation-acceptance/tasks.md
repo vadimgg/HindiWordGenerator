@@ -5,11 +5,11 @@
 | ID | Title | Agent Type | Status | Dependencies | Acceptance |
 |---|---|---|---|---|---|
 
-| WP01 | Normalize model tokens | project-manager | planned | none | none |
+| WP01 | Normalize model tokens | project-manager | done | none | none |
 
-| WP02 | Add generation progress output | project-manager | planned | none | none |
+| WP02 | Add generation progress output | project-manager | done | none | none |
 
-| WP03 | Validate live generation smoke | project-manager | planned | none | none |
+| WP03 | Validate live generation smoke | project-manager | done | none | none |
 
 ## Notes
 

@@ -2,7 +2,7 @@
 id: WP02
 title: Add generation progress output
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP01]
 acceptance_refs: [AC03]
 extra_skills: []
