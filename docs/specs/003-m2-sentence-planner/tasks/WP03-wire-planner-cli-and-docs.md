@@ -2,7 +2,7 @@
 id: WP03
 title: Wire planner CLI and docs
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP02"]
 acceptance_refs: ["AC01", "AC09", "AC10", "AC11", "AC12", "AC13", "AC14"]
 extra_skills: []

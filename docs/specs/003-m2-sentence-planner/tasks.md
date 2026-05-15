@@ -4,10 +4,10 @@
 
 | ID | Title | Agent Type | Status | Dependencies | Acceptance |
 |---|---|---|---|---|---|
-| WP01 | Review planner contract and output shape | rust-reviewer | planned | none | AC01-AC15 |
-| WP02 | Implement sentence planner domain | rust-engineer | planned | WP01 | AC02-AC12, AC14-AC15 |
-| WP03 | Wire planner CLI and docs | rust-engineer | planned | WP02 | AC01, AC09-AC14 |
-| WP04 | Review planner read-only safety | rust-reviewer | planned | WP03 | AC01-AC15 |
+| WP01 | Review planner contract and output shape | rust-reviewer | done | none | AC01-AC15 |
+| WP02 | Implement sentence planner domain | rust-engineer | done | WP01 | AC02-AC12, AC14-AC15 |
+| WP03 | Wire planner CLI and docs | rust-engineer | done | WP02 | AC01, AC09-AC14 |
+| WP04 | Review planner read-only safety | rust-reviewer | done | WP03 | AC01-AC15 |
 
 ## Notes
 

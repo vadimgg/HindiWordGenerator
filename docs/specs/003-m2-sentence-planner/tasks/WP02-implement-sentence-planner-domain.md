@@ -2,7 +2,7 @@
 id: WP02
 title: Implement sentence planner domain
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP01"]
 acceptance_refs: ["AC02", "AC03", "AC04", "AC05", "AC06", "AC07", "AC08", "AC09", "AC10", "AC11", "AC12", "AC14", "AC15"]
 extra_skills: []

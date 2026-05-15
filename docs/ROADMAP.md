@@ -12,7 +12,7 @@ This is the active implementation plan. Older detailed planning drafts live in
 | Active Rust docs simplified | Done |
 | Rust binary crate | Done |
 | YAML item IDs migrated | Done |
-| Sentence planner | Pending |
+| Sentence planner | Done |
 | Local sentence generation | Pending |
 | Audio parity | Pending |
 | Viewer/export parity | Pending |
@@ -35,7 +35,6 @@ Acceptance:
   config file status, and Ollama reachability.
 - No command writes accepted output.
 - CLI output follows the Hindi display rule.
-- `hindi sentences plan` is not yet exposed; arg parser provides `--help` only.
 
 ## M1.5: YAML ID Migration
 

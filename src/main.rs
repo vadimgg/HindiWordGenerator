@@ -1,6 +1,7 @@
 mod cli;
 mod doctor;
 mod project;
+mod sentence_plan;
 mod source_ids;
 
 use std::process::ExitCode;
@@ -53,6 +54,26 @@ fn main() -> ExitCode {
             match source_ids::migrate_from_current_dir(dry_run) {
                 Ok(report) => {
                     println!("{}", report.render_migration());
+                    if report.has_errors() {
+                        ExitCode::from(1)
+                    } else {
+                        ExitCode::SUCCESS
+                    }
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Ok(cli::Command::SentencesHelp) => {
+            println!("{}", cli::sentences_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::SentencesPlan { max_batches }) => {
+            match sentence_plan::plan_from_current_dir(max_batches) {
+                Ok(report) => {
+                    println!("{}", report.render());
                     if report.has_errors() {
                         ExitCode::from(1)
                     } else {
