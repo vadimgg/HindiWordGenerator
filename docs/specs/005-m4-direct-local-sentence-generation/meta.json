@@ -1,0 +1,9 @@
+{
+  "id": "005",
+  "slug": "m4-direct-local-sentence-generation",
+  "title": "M4 Direct Local Sentence Generation",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/005-m4-direct-local-sentence-generation",
+  "created_at": "2026-05-15T04:18:11.112693+00:00"
+}
