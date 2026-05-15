@@ -2,7 +2,7 @@
 id: WP05
 title: Review validation writer safety
 agent_type: rust-reviewer
-status: planned
+status: done
 dependencies: ["WP04"]
 acceptance_refs: ["AC01", "AC02", "AC03", "AC04", "AC05", "AC06", "AC07", "AC08", "AC09", "AC10", "AC11", "AC12", "AC13", "AC14", "AC15", "AC16", "AC17", "AC18", "AC19", "AC20"]
 extra_skills: []

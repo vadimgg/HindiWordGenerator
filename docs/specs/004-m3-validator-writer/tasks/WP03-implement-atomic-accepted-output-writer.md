@@ -2,7 +2,7 @@
 id: WP03
 title: Implement atomic accepted output writer
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP02"]
 acceptance_refs: ["AC15", "AC16", "AC17", "AC18"]
 extra_skills: []

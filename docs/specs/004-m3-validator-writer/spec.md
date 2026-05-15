@@ -136,7 +136,7 @@ output in this spec.
 - `cargo test`
 - `cargo clippy --all-targets -- -D warnings`
 - `cargo run -- sentences plan --max-batches 1`
-- `npm run build` inside `viewer/` if viewer dependencies are available.
+- `npm --prefix viewer run build` if viewer dependencies are available.
 
 ### Drift / Consistency Checks
 

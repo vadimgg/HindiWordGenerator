@@ -76,4 +76,4 @@ validation, collision checks, and serialization must finish before that rename.
 - `cargo run -- sentences plan --max-batches 1`
 - `git diff --name-only -- input output audio runs`
 - `git diff --check`
-- `npm run build` in `viewer/` if dependencies are present.
+- `npm --prefix viewer run build` if dependencies are present.

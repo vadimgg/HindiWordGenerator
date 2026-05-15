@@ -79,6 +79,7 @@ export interface Word {
 }
 
 export interface SentenceWord {
+  id?: string;
   hindi: string;
   roman: string;
   meaning: string;
@@ -91,7 +92,8 @@ export interface SentenceToken {
   hindi: string;
   roman: string;
   kind: 'word';
-  word_index: number;
+  word_id?: string;
+  word_index?: number;
 }
 
 export interface Sentence {
