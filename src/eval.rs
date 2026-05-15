@@ -993,13 +993,11 @@ fn grouped_eval_rows(rows: &[EvalSummaryRow]) -> Vec<EvalRowGroup<'_>> {
 fn label_repeated_model_runs(mut rows: Vec<EvalSummaryRow>, history: bool) -> Vec<EvalSummaryRow> {
     let mut counts: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in &rows {
-        *counts
-            .entry((row.prompt_id.clone(), model_group_key(row, history)))
-            .or_default() += 1;
+        *counts.entry(label_group_key(row, history)).or_default() += 1;
     }
     let mut seen: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in &mut rows {
-        let key = (row.prompt_id.clone(), model_group_key(row, history));
+        let key = label_group_key(row, history);
         let count = *counts.get(&key).unwrap_or(&1);
         let mut base = strip_ollama_prefix(&row.model).to_string();
         if history {
@@ -1015,6 +1013,14 @@ fn label_repeated_model_runs(mut rows: Vec<EvalSummaryRow>, history: bool) -> Ve
         }
     }
     rows
+}
+
+fn label_group_key(row: &EvalSummaryRow, history: bool) -> (String, String) {
+    let source_key = format!("{}#{}", row.input_path, row.item_ids().join(","));
+    (
+        format!("{}#{}", source_key, row.prompt_id),
+        model_group_key(row, history),
+    )
 }
 
 fn model_group_key(row: &EvalSummaryRow, history: bool) -> String {
