@@ -1,0 +1,9 @@
+{
+  "id": "003",
+  "slug": "m2-sentence-planner",
+  "title": "M2 Sentence Planner",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/003-m2-sentence-planner",
+  "created_at": "2026-05-15T02:41:38.258074+00:00"
+}

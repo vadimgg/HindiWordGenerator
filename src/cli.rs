@@ -6,6 +6,8 @@ pub enum Command {
     SourceIdsHelp,
     SourceIdsCheck,
     SourceIdsMigrate { dry_run: bool },
+    SentencesHelp,
+    SentencesPlan { max_batches: usize },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -62,14 +64,32 @@ where
         {
             Ok(Command::SourceIdsMigrate { dry_run: true })
         }
-        [command, subcommand, ..] if command == "source" && subcommand == "ids" => {
-            Err(CliError::new("Usage: hindi source ids check | migrate [--check]"))
+        [command, subcommand, ..] if command == "source" && subcommand == "ids" => Err(
+            CliError::new("Usage: hindi source ids check | migrate [--check]"),
+        ),
+        [command, flag] if command == "sentences" && is_help_flag(flag) => {
+            Ok(Command::SentencesHelp)
+        }
+        [command, action, flag, value]
+            if command == "sentences" && action == "plan" && flag == "--max-batches" =>
+        {
+            parse_positive_usize(value)
+                .map(|max_batches| Command::SentencesPlan { max_batches })
+                .ok_or_else(|| CliError::new("--max-batches must be a positive integer."))
+        }
+        [command, action] if command == "sentences" && action == "plan" => {
+            Err(CliError::new("Missing required option: --max-batches <n>"))
         }
         [command, ..] if command == "sentences" => Err(CliError::new(
-            "`hindi sentences plan` is not available yet. M2 adds: hindi sentences plan --max-batches 1",
+            "Usage: hindi sentences plan --max-batches <n>",
         )),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
+}
+
+fn parse_positive_usize(value: &str) -> Option<usize> {
+    let parsed = value.parse().ok()?;
+    (parsed > 0).then_some(parsed)
 }
 
 fn is_help_flag(value: &str) -> bool {
@@ -77,7 +97,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n\nM2 adds:\n  hindi sentences plan --max-batches 1"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan pending sentence batches"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -86,6 +106,10 @@ pub fn doctor_help_text() -> &'static str {
 
 pub fn source_ids_help_text() -> &'static str {
     "Hindi Word Generator\n\nUsage:\n  hindi source ids check\n  hindi source ids migrate [--check]\n\nCommands:\n  check      Validate source IDs without writing files\n  migrate   Add missing source IDs\n\nOptions:\n  --check    Preview migration without writing files"
+}
+
+pub fn sentences_help_text() -> &'static str {
+    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n\nCommands:\n  plan    Preview pending sentence batches without writing output"
 }
 
 #[cfg(test)]
@@ -119,11 +143,26 @@ mod tests {
     }
 
     #[test]
-    fn sentences_plan_is_not_exposed_in_m1() {
-        let error = parse(["sentences", "plan"]).unwrap_err().to_string();
+    fn exposes_sentences_plan_command() {
+        assert_eq!(
+            parse(["sentences", "--help"]).unwrap(),
+            Command::SentencesHelp
+        );
+        assert_eq!(
+            parse(["sentences", "plan", "--max-batches", "2"]).unwrap(),
+            Command::SentencesPlan { max_batches: 2 }
+        );
+    }
 
-        assert!(error.contains("not available yet"));
-        assert!(error.contains("M2 adds"));
+    #[test]
+    fn sentences_plan_requires_positive_max_batches() {
+        let missing = parse(["sentences", "plan"]).unwrap_err().to_string();
+        assert!(missing.contains("Missing required option"));
+
+        let zero = parse(["sentences", "plan", "--max-batches", "0"])
+            .unwrap_err()
+            .to_string();
+        assert!(zero.contains("positive integer"));
     }
 
     #[test]
