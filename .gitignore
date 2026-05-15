@@ -13,6 +13,7 @@ dist/
 target/
 viewer/node_modules/
 viewer/dist/
+runs/
 
 demos-read-only/
 reference/

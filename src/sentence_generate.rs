@@ -12,6 +12,7 @@ use crate::source_identity::content_fingerprint;
 use std::fs;
 use std::io;
 use std::path::PathBuf;
+use std::time::Instant;
 
 const PROMPT_PATH: &str = "generation_prompt_sentences_enrichment.txt";
 
@@ -112,6 +113,7 @@ pub fn generate_from<C: SentenceModelClient>(
     max_batches: usize,
     client: &C,
 ) -> Result<SentenceGenerateOutcome, SentenceGenerateError> {
+    let command_started = Instant::now();
     let config = load_config(root)?;
     let model = config.sentence_generation_model;
     let (plan_summary, generation_plan) = generation_plan(root, max_batches)?;
@@ -138,12 +140,23 @@ pub fn generate_from<C: SentenceModelClient>(
         });
     }
     let planned_batches = generation_plan.batches.len();
+    progress(&format!(
+        "planned {planned_batches} batch(es) in {}",
+        format_elapsed(command_started.elapsed())
+    ));
 
+    let readiness_started = Instant::now();
+    progress(&format!("checking model {}", model.original));
     let readiness = client.check_model(&model);
+    progress(&format!(
+        "model check finished in {}",
+        format_elapsed(readiness_started.elapsed())
+    ));
     if !readiness.ready {
         return Ok(not_ready(model.original, planned_batches, readiness));
     }
 
+    let prompt_started = Instant::now();
     let prompt_path = root.join(PROMPT_PATH);
     let prompt_template =
         fs::read_to_string(&prompt_path).map_err(|source| SentenceGenerateError::Io {
@@ -151,30 +164,64 @@ pub fn generate_from<C: SentenceModelClient>(
             source,
         })?;
     let prompt_fingerprint = content_fingerprint(prompt_template.as_bytes());
+    progress(&format!(
+        "loaded prompt {} in {}",
+        PROMPT_PATH,
+        format_elapsed(prompt_started.elapsed())
+    ));
     let mut accepted = Vec::new();
     let mut run_reports = Vec::new();
 
-    for batch in generation_plan.batches {
+    for (index, batch) in generation_plan.batches.into_iter().enumerate() {
+        let batch_number = index + 1;
         let started_at = unix_now();
         let prompt = build_prompt(&prompt_template, &batch.rows);
         let target = root.join(&batch.target_path);
-        let attempt = client
-            .generate(&model, &prompt)
-            .map_err(|error| error.to_string())
-            .and_then(|output| {
-                merge_enrichment(&batch, &output.text).map_err(|error| error.to_string())
-            })
-            .and_then(|candidate| {
-                let expected = expected_sources(&batch);
-                let validation = validate_sentence_batch(&candidate, &expected);
-                if !validation.is_valid() {
-                    return Err(validation.errors().join("\n"));
-                }
-                write_sentence_batch(&target, &candidate).map_err(|error| error.to_string())
-            });
+        progress(&format!(
+            "batch {batch_number}/{planned_batches}: sending {} item(s) to model",
+            batch.rows.len()
+        ));
+        let generate_started = Instant::now();
+        let attempt = match client.generate(&model, &prompt) {
+            Ok(output) => {
+                progress(&format!(
+                    "batch {batch_number}/{planned_batches}: model response received in {}",
+                    format_elapsed(generate_started.elapsed())
+                ));
+                let validate_started = Instant::now();
+                progress(&format!(
+                    "batch {batch_number}/{planned_batches}: validating response"
+                ));
+                merge_enrichment(&batch, &output.text)
+                    .map_err(|error| error.to_string())
+                    .and_then(|candidate| {
+                        let expected = expected_sources(&batch);
+                        let validation = validate_sentence_batch(&candidate, &expected);
+                        if !validation.is_valid() {
+                            return Err(validation.errors().join("\n"));
+                        }
+                        progress(&format!(
+                            "batch {batch_number}/{planned_batches}: validation passed in {}",
+                            format_elapsed(validate_started.elapsed())
+                        ));
+                        let write_started = Instant::now();
+                        let write = write_sentence_batch(&target, &candidate)
+                            .map_err(|error| error.to_string());
+                        if write.is_ok() {
+                            progress(&format!(
+                                "batch {batch_number}/{planned_batches}: accepted output written in {}",
+                                format_elapsed(write_started.elapsed())
+                            ));
+                        }
+                        write
+                    })
+            }
+            Err(error) => Err(error.to_string()),
+        };
 
         match attempt {
             Ok(write) => {
+                let report_started = Instant::now();
                 let report = report_for(
                     &batch,
                     &model.original,
@@ -192,10 +239,15 @@ pub fn generate_from<C: SentenceModelClient>(
                 );
                 let report_path = write_sentence_run_report(root, &report)
                     .map_err(|error| SentenceGenerateError::Report(error.to_string()))?;
+                progress(&format!(
+                    "batch {batch_number}/{planned_batches}: run report written in {}",
+                    format_elapsed(report_started.elapsed())
+                ));
                 accepted.extend(report.writes.accepted.iter().map(PathBuf::from));
                 run_reports.push(report_path);
             }
             Err(error) => {
+                let report_started = Instant::now();
                 let report = report_for(
                     &batch,
                     &model.original,
@@ -209,6 +261,10 @@ pub fn generate_from<C: SentenceModelClient>(
                 );
                 let report_path = write_sentence_run_report(root, &report)
                     .map_err(|error| SentenceGenerateError::Report(error.to_string()))?;
+                progress(&format!(
+                    "batch {batch_number}/{planned_batches}: failed run report written in {}",
+                    format_elapsed(report_started.elapsed())
+                ));
                 run_reports.push(report_path);
                 return Ok(SentenceGenerateOutcome {
                     success: false,
@@ -224,6 +280,10 @@ pub fn generate_from<C: SentenceModelClient>(
             }
         }
     }
+    progress(&format!(
+        "generation finished in {}",
+        format_elapsed(command_started.elapsed())
+    ));
 
     Ok(SentenceGenerateOutcome {
         success: true,
@@ -234,6 +294,21 @@ pub fn generate_from<C: SentenceModelClient>(
         message: None,
         recovery: None,
     })
+}
+
+fn progress(message: &str) {
+    println!("  {message}");
+}
+
+fn format_elapsed(duration: std::time::Duration) -> String {
+    let seconds = duration.as_secs_f64();
+    if seconds < 1.0 {
+        format!("{:.0}ms", seconds * 1000.0)
+    } else if seconds < 60.0 {
+        format!("{seconds:.1}s")
+    } else {
+        format!("{:.1}m", seconds / 60.0)
+    }
 }
 
 fn current_dir() -> Result<PathBuf, SentenceGenerateError> {

@@ -116,7 +116,7 @@ pub fn merge_enrichment(
                 item_id: row.id.clone(),
                 fingerprint: row.fingerprint.clone(),
             }),
-            tokens: item.tokens,
+            tokens: word_tokens_only(item.tokens),
             words: item.words,
             anki_tags: item.anki_tags,
             audio: None,
@@ -128,6 +128,13 @@ pub fn merge_enrichment(
         subtitle: batch.subtitle.clone(),
         sentences,
     })
+}
+
+fn word_tokens_only(tokens: Vec<SentenceToken>) -> Vec<SentenceToken> {
+    tokens
+        .into_iter()
+        .filter(|token| token.kind.as_deref() == Some("word"))
+        .collect()
 }
 
 fn parse_response(response_text: &str) -> Result<EnrichmentResponse, EnrichmentError> {
@@ -212,6 +219,23 @@ mod tests {
             merged.sentences[0].source_ref.as_ref().unwrap().item_id,
             "0001"
         );
+    }
+
+    #[test]
+    fn removes_non_word_tokens_from_model_output() {
+        let batch = PlannedSentenceBatch {
+            source_file: PathBuf::from("input/sentences/example.yaml"),
+            title: Some("Title".to_string()),
+            subtitle: Some("Chapter".to_string()),
+            target_path: PathBuf::from("output/sentences/example_batch_01.json"),
+            rows: vec![row("0001")],
+        };
+        let output = r#"{"items":[{"id":"0001","literal":"here","register":"standard","tokens":[{"hindi":"यहाँ","roman":"yahā̃","kind":"word","word_id":"w1"},{"hindi":"?","roman":"?","kind":"punct","word_id":"w2"}],"words":[{"id":"w1","hindi":"यहाँ","roman":"yahā̃","meaning":"here"}]}]}"#;
+
+        let merged = merge_enrichment(&batch, output).unwrap();
+
+        assert_eq!(merged.sentences[0].tokens.len(), 1);
+        assert_eq!(merged.sentences[0].tokens[0].word_id.as_deref(), Some("w1"));
     }
 
     fn row(id: &str) -> PlannedSentenceRow {
