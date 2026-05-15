@@ -3,12 +3,22 @@ instructions: |
   Give a close literal English rendering for each sentence. The literal should
   reveal Hindi structure while staying understandable.
 
+  Return exactly one result for each input item, using the same id values as
+  the input. Do not invent, renumber, omit, or copy earlier examples.
+
+  Each result must contain only:
+  - id
+  - literal
+
+  Do not return hindi, romanisation, english, notes, rationale, or any other
+  source fields in the results.
+
   Return raw YAML only. Do not wrap the response in markdown fences. Do not add
   prose before or after the YAML.
 
   Required shape:
   results:
-    - id: "0001"
+    - id: "<same id as input item>"
       literal: "..."
 items:
 {{#each items}}

@@ -3,6 +3,10 @@ instructions: |
   Use the given English translation to help map the Hindi sentence into a
   word-by-word learner breakdown. Do not invent words that are not present.
 
+  Return exactly one result for each input item, using the exact same id values
+  as the input. Do not renumber items. Do not use example ids like "0001"
+  unless "0001" is actually present in the input.
+
   Hard rule: words are word entries only. Do not include spaces or punctuation
   as entries, and do not attach punctuation to Hindi or roman strings.
   Question marks, commas, periods, danda, dashes, parentheses, and quote marks
@@ -36,7 +40,7 @@ instructions: |
 
   Required shape:
   results:
-    - id: "0001"
+    - id: "<same id as input item>"
       words:
         - hindi: "..."
           roman: "..."

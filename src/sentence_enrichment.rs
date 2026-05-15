@@ -262,7 +262,7 @@ fn generation_stage_prompt_templates() -> Vec<StagePromptTemplate> {
         },
         StagePromptTemplate {
             id: LITERAL_STAGE_ID,
-            version: "v2",
+            version: "v3",
             template: include_str!("eval_prompts/sentence_literal.yaml.hbs"),
         },
         StagePromptTemplate {
@@ -380,6 +380,9 @@ fn word_breakdown_to_tokens_and_words(
         let word_id = word.id.clone().unwrap_or_else(|| format!("w{}", index + 1));
         word.id = Some(word_id.clone());
         word.kind = word.kind.or_else(|| Some("word".to_string()));
+        word.hindi = word.hindi.map(strip_attached_punctuation);
+        word.roman = word.roman.map(strip_attached_punctuation);
+        word.meaning = word.meaning.map(strip_attached_punctuation);
         tokens.push(SentenceToken {
             hindi: word.hindi.clone(),
             roman: word.roman.clone(),
@@ -390,6 +393,14 @@ fn word_breakdown_to_tokens_and_words(
         words.push(word);
     }
     (tokens, words, breakdown.anki_tags)
+}
+
+fn strip_attached_punctuation(value: String) -> String {
+    value
+        .trim()
+        .trim_matches(is_punctuation_char)
+        .trim()
+        .to_string()
 }
 
 fn is_punctuation_only_word(word: &SentenceWord) -> bool {
@@ -623,6 +634,39 @@ results:
         assert_eq!(merged.sentences[0].words.len(), 1);
         assert_eq!(merged.sentences[0].tokens.len(), 1);
         assert_eq!(merged.sentences[0].words[0].hindi.as_deref(), Some("यहाँ"));
+    }
+
+    #[test]
+    fn staged_merge_strips_attached_punctuation_from_word_fields() {
+        let mut source_row = row("0001");
+        source_row.hindi = "है".to_string();
+        source_row.romanisation = "hai?".to_string();
+        source_row.english = "Is it?".to_string();
+        let batch = batch(vec![source_row]);
+        let staged = StagedEnrichment {
+            register: vec![register("0001")],
+            literal: vec![literal("0001")],
+            word_breakdown: vec![WordBreakdownStageRecord {
+                id: "0001".to_string(),
+                words: vec![SentenceWord {
+                    id: None,
+                    hindi: Some("है?".to_string()),
+                    roman: Some("hai?".to_string()),
+                    meaning: Some("is?".to_string()),
+                    kind: None,
+                    gender: None,
+                    number: None,
+                    note: None,
+                }],
+                anki_tags: Vec::new(),
+            }],
+        };
+
+        let merged = merge_staged_enrichment(&batch, staged).unwrap();
+
+        assert_eq!(merged.sentences[0].tokens[0].hindi.as_deref(), Some("है"));
+        assert_eq!(merged.sentences[0].tokens[0].roman.as_deref(), Some("hai"));
+        assert_eq!(merged.sentences[0].words[0].meaning.as_deref(), Some("is"));
     }
 
     #[test]
