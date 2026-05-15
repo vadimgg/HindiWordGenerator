@@ -1,202 +1,276 @@
 # Architecture
 
-## How To Read This Document
-
-This is a design audit, not a code tour. Read it looking for wrong module
-ownership, duplicated abstractions, unclear write ordering, and data that could
-silently drift.
-
-If something here feels vague or uncomfortable, stop and make the design more
-concrete before implementation. A bad architectural decision caught here costs
-almost nothing. The same decision caught after implementation becomes a
-refactor.
-
-This document should answer five questions:
-
-1. What changed and why?
-2. Which module owns each part of the behavior?
-3. What happens inside each user-facing command?
-4. Which files persist, and how can they drift?
-5. What should reviewers reject even if the code compiles?
-
 ## Part 1 - What Changed And Why
 
-Write one plain-English summary from the user's initial problem statement. Name
-the practical change first, then name the main architectural risk.
-
-Keep this section big-picture. Detailed module rules come next.
+Spec 009 adds a prompt workbench around built-in prompt IDs. Normal generation
+still owns accepted output; eval owns temporary prompt experiments under
+`eval/`. The main risks are accidental writes to learner data, prompt/grading
+template drift, and run metadata that is too vague to compare later.
 
 ## Part 2 - Module Ownership
 
-Each module has one job. The `Must never` column is as important as the `Owns`
-column. A violation is a design bug even when tests pass.
-
 | Module | Owns | Must never |
 |---|---|---|
-| `src/commands/...` | Parse CLI args, build typed requests, call the owning domain, print typed results. | Own workflow rules, parse project files directly, or decide data authority. |
-| `src/<domain>/...` | Own the business rules for this change. Replace this row with concrete modules after reading the code. | Print user-facing output or read CLI parser structs directly. |
-| `src/documents/` | Markdown, frontmatter, template rendering, and managed document sections. | Own spec or task lifecycle decisions. |
-| `src/core/` | Small cross-cutting primitives only. | Become a dumping ground for domain behavior. |
-
-### Review Rules
-
-- Commands parse input and print output.
-- Domain modules own rules, validation, and state changes.
-- Template files own generated document shape, not runtime logic.
-- Work-package frontmatter owns task state.
-- Generated views are safe to refresh and must not become authority.
-- Old files should be deleted or backlogged, not moved without a real owner.
+| `src/cli.rs` | Parse `hindi eval run` and `hindi eval grade`, print help text. | Load YAML, call Ollama, render Handlebars templates, or write eval files. |
+| `src/eval.rs` | Eval input loading, prompt ID resolution, template context, artifact writes, grade packet flow, grade parsing, report rendering. | Write `output/`, manage Ollama lifecycle, or print directly from deep helpers. |
+| `src/eval_prompts/` | Built-in input/grading templates registered by prompt ID. | Become user run output or accepted learner data. |
+| `src/ollama.rs` | `/api/ps` running-model lookup and model generation calls. | Shell out to `ollama ps` unless HTTP support is impossible. |
+| `src/main.rs` | Wire parsed commands to eval execution and map success to exit codes. | Own eval rules or construct prompt contexts. |
 
 ## Part 3 - Command Internals
 
-Add one subsection for each user-facing command touched by this spec. If the
-change has no command, replace this section with the relevant public entry point
-or workflow.
+### `hindi eval run`
 
-### `brief example command`
-
-What the user sees:
+What the user runs:
 
 ```text
-brief example command --flag value
-
-What Happened
-  Summarize the visible result.
-
-Next
-  Show the next command or human action.
+hindi eval run \
+  --input input/sentences/complete_hindi_chapter_02_sentences.yaml \
+  --prompt-id sentence/register \
+  --max-items 2
 ```
 
 Internal sequence:
 
 ```text
-src/commands/example.rs
-  parse args
-  build ExampleRequest
-  call src/example/domain.rs
+src/cli.rs
+  parse EvalRun { input, prompt_id, fields, max_items }
 
-src/example/domain.rs
-  validate all inputs and existing state
-  prepare writes in memory
-  point of no return
-  write authority files
-  refresh advisory indexes if needed
-  return ExampleResult
+src/eval.rs
+  discover project root
+  resolve built-in prompt id and paired grading template
+  load YAML source
+  select top-level fields, defaulting to id,hindi,romanisation,english
+  limit selected items
+  build Handlebars context
+  render input prompt
+  ask src/ollama.rs for running models via /api/ps
+  require exactly one running model
+  send prompt to selected model
+  create eval/<prompt-id>/<run-id>/
+  write prompt.txt
+  write response.txt
+  write meta.json
+  write summary.txt
+  return EvalRunReport
 
-src/commands/example.rs
-  print ExampleResult
+src/main.rs
+  print EvalRunReport
 ```
 
-Abstraction requirements:
+Point of no return: after Ollama returns and the eval run directory is created.
+All writes stay under `eval/`.
 
-- The command layer should not contain domain rules.
-- The domain layer should accept a typed request and return a typed result.
-- All validation should happen before the first write.
-- User-facing output should be built from the typed result.
+### `hindi eval grade`
 
-Reject in review:
+What the user runs:
 
-- Command modules containing slug rules, ID allocation, path building, or status
-  routing.
-- Domain modules calling `println!()` or reading clap parser structs.
-- Template rendering inlined into a domain when a shared renderer should be
-  used.
-- Silent fallback to old, legacy, or undocumented data sources.
-- Disk writes before all validation has passed.
+```text
+hindi eval grade --run sentence/register/2026-05-15_143012_translategemma_12b
+```
+
+Internal sequence:
+
+```text
+src/cli.rs
+  parse EvalGrade { run }
+
+src/eval.rs
+  resolve run as either eval/... path or prompt-scoped run id
+  load meta.json
+  resolve paired grading prompt from meta.prompt_id
+  render grade prompt with run metadata, source items, prompt.txt, response.txt
+  write grade_prompt.txt
+  write grade_packet.md
+  open grade_packet.md in $EDITOR
+  extract pasted grader response from grade_packet.md
+  write grade_response.txt
+  parse response as YAML or JSON
+  validate shared grading schema
+  write grade.json
+  update summary.txt
+  return EvalGradeReport
+
+src/main.rs
+  print EvalGradeReport
+```
+
+The editor packet contains the rendered grading prompt plus a clearly marked
+paste area. The command does not call Claude/ChatGPT directly.
 
 ## Part 4 - Shared Abstractions
 
-Name shared helpers before implementation starts. If two modules need the same
-logic, it should usually exist once with tests.
-
-| Abstraction | Used By | Contract | Must Not |
-|---|---|---|---|
-| Name the helper once it is known. | List every caller. | State input, output, and error behavior. | State what would make the helper too broad or unsafe. |
-
-Use this section for helpers such as template rendering, slug normalization,
-active-spec resolution, ID allocation, parsing, frontmatter mutation, generated
-index refresh, or output formatting.
-
-For each important helper, add a short subsection:
-
-```text
-### helper_name
+### Prompt Registry
 
 Used by:
-- command or module A
-- command or module B
+
+- `hindi eval run`
+- `hindi eval grade`
 
 Contract:
-- input
-- output
-- errors
-- what it never reads or writes
+
+- Input: prompt ID such as `sentence/register`.
+- Output: prompt metadata, input template, grading template, default fields,
+  grading threshold.
+- Error: unknown prompt ID or missing paired template.
 
 Review smell:
-- the same logic appears inline in two modules
+
+- Prompt IDs assembled from filesystem paths.
+- Input and grading templates registered independently.
+
+### Eval Run Path
+
+Used by:
+
+- `hindi eval run`
+- `hindi eval grade`
+
+Contract:
+
+- Path shape: `eval/<prompt-category>/<prompt-name>/<timestamp>_<model-slug>/`.
+- `--run` may accept either that path or `<prompt-category>/<prompt-name>/<run-id>`.
+- Model slug must be filesystem-safe.
+
+Review smell:
+
+- Flat `eval/<run-id>/` folders.
+- Prompt ID omitted from the path.
+
+### Grade Schema
+
+Used by:
+
+- Grading prompt templates
+- `hindi eval grade`
+- Future reports
+
+Contract:
+
+```yaml
+run_id: sentence/register/2026-05-15_143012_translategemma_12b
+grader: human
+graded_at: "2026-05-15T15:00:00Z"
+scores:
+  accuracy:
+    score: 4
+    max: 4
+    note: ""
+  completeness:
+    score: 4
+    max: 4
+    note: ""
+  format_compliance:
+    score: 4
+    max: 4
+    note: ""
+  consistency:
+    score: 4
+    max: 4
+    note: ""
+  confidence:
+    score: 4
+    max: 4
+    note: ""
+total:
+  score: 20
+  max: 20
+  pct: 100
+verdict: pass
+item_flags: []
+summary: "Accurate and complete."
 ```
 
+Axis scale:
+
+- `1` broken
+- `2` weak
+- `3` acceptable
+- `4` good
+
+The grading template for each prompt ID defines task-specific guidance and pass
+threshold while preserving the shared schema.
+
+Review smell:
+
+- A prompt-specific grade file that cannot be compared with other prompt IDs.
+- A neutral midpoint scale such as 1-5.
+
 ## Part 5 - Data And Drift Risks
-
-List every file that persists between commands. If a command writes a file that
-is not in this table, add it or treat the write as a design smell.
-
-If this spec does not touch commands, workflow state, or persistent files, keep
-this section short and write `Not touched in this spec` under the irrelevant
-tables.
 
 ### Persistent Files
 
 | File | Written By | Read By | Rule |
 |---|---|---|---|
-| `docs/specs/<spec>/tasks/WP*.md` | `src/tasks/` and humans | `src/tasks/`, `src/specs/`, humans, agents | Work-package frontmatter owns task state. |
-| `docs/specs/<spec>/tasks.md` | `src/tasks/` and humans | humans and agents | Readable index. Refresh from work-package files; do not treat as authority. |
-| Add every persistent file touched by this spec. | Name the module or command. | Name readers. | Say who wins on conflict or how drift is handled. |
+| `eval/<prompt-id>/<run-id>/prompt.txt` | `hindi eval run` | humans, `hindi eval grade` | Exact rendered prompt sent to Ollama. |
+| `eval/<prompt-id>/<run-id>/response.txt` | `hindi eval run` | humans, `hindi eval grade` | Raw model response, never parsed as authority. |
+| `eval/<prompt-id>/<run-id>/meta.json` | `hindi eval run` | humans, `hindi eval grade`, future reports | Run provenance: prompt ID, model, timing, input path, fields, item count, artifact paths. |
+| `eval/<prompt-id>/<run-id>/summary.txt` | `hindi eval run`, `hindi eval grade` | humans | Human-readable digest; regenerated from run/grade state. |
+| `eval/<prompt-id>/<run-id>/grade_prompt.txt` | `hindi eval grade` | humans | Exact grading prompt text. |
+| `eval/<prompt-id>/<run-id>/grade_packet.md` | `hindi eval grade`, user editor | humans, `hindi eval grade` | Editor handoff file with prompt and paste area. |
+| `eval/<prompt-id>/<run-id>/grade_response.txt` | `hindi eval grade` | humans, future reports | Raw pasted grader response. |
+| `eval/<prompt-id>/<run-id>/grade.json` | `hindi eval grade` | humans, future reports | Parsed shared grade schema. |
+
+All `eval/` files are ignored by git by default.
 
 ### Drift Scenarios
 
-#### Drift Scenario A - Name The Drift
+#### Input And Grading Prompt Drift
 
-**How it happens.** Explain the concrete way two files, generated views, or
-modules can disagree.
+**How it happens.** A prompt ID gets an input template but no matching grading
+template, or they use different output expectations.
 
-**What breaks.** Explain the user-visible or implementation risk.
+**What breaks.** `hindi eval grade` cannot produce useful quality data for a
+run.
 
-**Detection.** Name the function, test, command, or review check that catches
-it.
+**Detection.** Prompt registry unit test requires every prompt ID to have input
+and grading templates.
 
-**Resolution.** Say whether a command repairs it, refreshes a generated view, or
-stops for human action.
+**Resolution.** Stop with an unknown/missing paired template error.
 
-> **Review flag.** Give reviewers one specific thing to look for in code.
+#### Run Metadata Drift
+
+**How it happens.** `summary.txt` or grade files disagree with `meta.json`.
+
+**What breaks.** Future reports compare the wrong prompt/model/timing.
+
+**Detection.** Grade command loads `meta.json` and updates summary from current
+run files.
+
+**Resolution.** Treat `meta.json` and `grade.json` as structured sources;
+`summary.txt` is rebuildable.
+
+#### Output Authority Drift
+
+**How it happens.** Eval code writes to `output/` or accepted generation code
+reads from `eval/`.
+
+**What breaks.** Experiments become learner data by accident.
+
+**Detection.** Integration test asserts eval writes no files under `output/`.
+
+**Resolution.** Eval writes only under `eval/`; normal generation ignores
+`eval/`.
 
 ## Part 6 - Code Review Checklist
 
-Use this when reviewing implementation PRs. Each row should be concrete enough
-to grep for or inspect directly.
-
 | Area | Reject | Accept |
 |---|---|---|
-| Command layer | Business logic, file parsing, workflow decisions, or path construction. | Parse args, build typed request, call domain, print typed result. |
-| Domain layer | `println!()` or direct clap types. | Typed request in, typed result out. |
-| Template rendering | Two separate render implementations. | One named renderer with tests. |
-| Write ordering | Validation and writes interleaved. | All validation first, then a clear write phase. |
-| Error handling | Silent partial writes or vague recovery. | Clear message listing what changed and what to do next. |
-| Data authority | Generated views or legacy projections treated as truth. | Authority comes from the file named in the data table. |
-| Reuse | Same parser, renderer, normalizer, or resolver logic in two places. | One named helper with tests. |
-| Legacy paths | Old folders read as fallback sources. | Old folders ignored, removed, or backlogged explicitly. |
+| CLI naming | `hindi eval --input` or `hindi eval input` in new code/docs. | `hindi eval run` and `hindi eval grade`. |
+| Model selection | `--model`, model switching, shell-only `ollama ps`. | Exactly one running model from `/api/ps`. |
+| Prompt storage | User prompt paths as the primary v1 flow. | Built-in prompt IDs with paired input/grading templates. |
+| Run layout | Flat `eval/<run-id>/`. | `eval/<prompt-category>/<prompt-name>/<run-id>/`. |
+| Eval writes | Any write under `output/`. | Writes only under ignored `eval/`. |
+| Grade schema | Free-form prose only. | Shared five-axis schema plus item flags and summary. |
+| Editor flow | Ambiguous file opened in `$EDITOR`. | `grade_packet.md` opened, prompt and paste area both visible. |
 
 ## Appendix - Files Removed Or Moved
 
-If this spec removes files, list them here with one reason each. If nothing is
-removed, say so.
-
-| File | Reason |
-|---|---|
-| Add removed path here. | Explain the former owner and the new owner, or say no current owner exists. |
+None.
 
 ## Appendix - Out-Of-Scope Residue
 
-Record suspicious code, stale docs, or architecture smells found while planning
-or implementing this spec. Do not fix them here unless they directly block the
-work. Use `brief backlog add` for follow-up items that should survive the spec.
+- Future `hindi eval report` / `compare` can aggregate `meta.json` and
+  `grade.json`.
+- Future non-interactive grade import can reuse the same parser without opening
+  `$EDITOR`.

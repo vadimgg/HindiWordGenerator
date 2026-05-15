@@ -2,12 +2,13 @@
 
 ## Scope
 
-Add `hindi eval input` and `hindi eval grade` for running built-in prompt
+Add `hindi eval run` and `hindi eval grade` for running built-in prompt
 templates against YAML source input and grading eval results without touching
-accepted learner output. `input` uses the currently running Ollama model and
-writes a structured run folder under ignored `eval/`. `grade` renders the
-matching built-in grading prompt for a previous eval run, opens it in `$EDITOR`,
-and lets the user paste a structured grader response back into the run folder.
+accepted learner output. `run` uses the currently running Ollama model and
+writes a structured run folder under ignored `eval/<prompt-id>/<run-id>/`.
+`grade` renders the matching built-in grading prompt for a previous eval run,
+opens a single editor packet containing the prompt plus a paste area, and stores
+the structured grader response back into the run folder.
 
 ## Problem
 
@@ -20,10 +21,10 @@ Rust workflow.
 
 ## Goals
 
-- Provide `hindi eval input --input <yaml> --prompt-id <id>`.
-- Provide `hindi eval grade --run <eval-folder>`.
-- Use the single currently running Ollama model from `ollama ps`; do not switch
-  or start models for eval input.
+- Provide `hindi eval run --input <yaml> --prompt-id <id>`.
+- Provide `hindi eval grade --run <run-id-or-path>`.
+- Use the single currently running Ollama model from Ollama `/api/ps`; do not
+  switch or start models for eval runs.
 - Use built-in prompt IDs such as `sentence/register`, with paired input and
   grading templates compiled into the Rust binary.
 - Render prompts with Handlebars and support batch-friendly `{{#each items}}`.
@@ -31,7 +32,9 @@ Rust workflow.
   `input_path`, `prompt_id`, and `run_path`.
 - Support `--fields` and `--max-items` so prompts can receive only the fields
   they need.
-- Always write run artifacts under ignored `eval/<run-id>/`.
+- Default `--fields` to `id,hindi,romanisation,english`.
+- Always write run artifacts under ignored `eval/<prompt-id>/<run-id>/`, e.g.
+  `eval/sentence/register/2026-05-15_143012_translategemma_12b/`.
 - Seed paired sentence prompt templates for the major sub-tasks we want to test.
 - Store grader responses in a consistent parsed result file for reporting.
 
@@ -47,16 +50,17 @@ Rust workflow.
 
 | ID | Criteria |
 |---|---|
-| AC01 | `hindi eval input --input <path> --prompt-id <id>` and `hindi eval grade --run <eval-folder>` are parsed and documented in help output. |
-| AC02 | `hindi eval input` requires exactly one running Ollama model from `ollama ps` and prints the selected model. |
+| AC01 | `hindi eval run --input <path> --prompt-id <id>` and `hindi eval grade --run <run-id-or-path>` are parsed and documented in help output. |
+| AC02 | `hindi eval run` requires exactly one running Ollama model from `/api/ps` and prints the selected model. |
 | AC03 | Built-in prompt templates render with Handlebars using `{{#each items}}`, `{{items_yaml}}`, `{{input_yaml}}`, `{{input_path}}`, `{{prompt_id}}`, and `{{run_path}}`. |
-| AC04 | `--fields id,hindi,romanisation,english` selects top-level item fields; missing fields fail clearly. |
+| AC04 | `--fields id,hindi,romanisation,english` selects top-level item fields; when omitted, fields default to `id,hindi,romanisation,english`; missing fields fail clearly. |
 | AC05 | `--max-items <n>` limits the selected item list before rendering. |
-| AC06 | Each input run writes `eval/<run-id>/prompt.txt`, `response.txt`, `result.json`, and `summary.txt`. |
+| AC06 | Each eval run writes `eval/<prompt-id>/<run-id>/prompt.txt`, `response.txt`, `meta.json`, and `summary.txt`. |
 | AC07 | `eval/` is ignored by git. |
 | AC08 | Paired sentence input/grading prompt templates exist for source QA, English translation, literal translation, register, word breakdown, word breakdown from existing translation, and full enrichment. |
 | AC09 | The command never writes accepted output under `output/`. |
-| AC10 | `hindi eval grade` renders the grading prompt for an eval run, opens it in `$EDITOR`, accepts/persists pasted grader YAML or JSON, and updates the run summary. |
+| AC10 | `hindi eval grade` renders the grading prompt for an eval run, opens `grade_packet.md` in `$EDITOR`, accepts/persists pasted grader YAML or JSON, writes `grade_prompt.txt`, `grade_response.txt`, `grade.json`, and updates `summary.txt`. |
+| AC11 | `grade.json` uses the shared grading schema: axis scores for accuracy, completeness, format compliance, consistency, confidence; total; verdict; item flags; summary. |
 
 ## Architecture Notes
 
@@ -71,39 +75,39 @@ Rust workflow.
 
 ### Workflow State Touched
 
-- New ignored run output under `eval/`.
+- New ignored run output under `eval/<prompt-id>/<run-id>/`.
 - No accepted learner output is touched.
 
 ### External Effects And Reuse
 
 - Calls local Ollama HTTP API.
-- Uses `ollama ps` data semantics, implemented through Rust HTTP calls where
-  practical.
+- Uses Ollama `/api/ps` for running-model detection.
 - Reuses existing source YAML parsing shape where possible.
 - Reuses existing raw HTTP Ollama client patterns where practical.
-- Opens `$EDITOR` for grading prompt and response capture.
+- Opens `$EDITOR` for grading packet response capture.
 
 ## Testing Plan
 
 ### Unit Tests
 
-- CLI parse/help coverage for `hindi eval input` and `hindi eval grade`.
+- CLI parse/help coverage for `hindi eval run` and `hindi eval grade`.
 - Template context construction with full YAML and selected fields.
 - Missing selected field error.
 - `--max-items` selection.
 - Run ID/model slug safety.
-- Grader response parsing for YAML/JSON.
+- Grader response parsing for YAML/JSON and shared grade schema validation.
 
 ### Integration Tests
 
-- Fake Ollama client test for eval command writing run artifacts.
+- Fake Ollama client test for eval command writing run artifacts under the
+  prompt-id hierarchy.
 - Verify output is under `eval/` and not `output/`.
 - Fake editor/import test for `hindi eval grade`.
 
 ### Smoke Tests
 
-- `cargo run -- eval input --input input/sentences/complete_hindi_chapter_02_sentences.yaml --prompt-id sentence/register --max-items 2`
-- `cargo run -- eval grade --run eval/<run-id>`
+- `cargo run -- eval run --input input/sentences/complete_hindi_chapter_02_sentences.yaml --prompt-id sentence/register --max-items 2`
+- `cargo run -- eval grade --run sentence/register/<run-id>`
 - `make check`
 
 ### Drift / Consistency Checks

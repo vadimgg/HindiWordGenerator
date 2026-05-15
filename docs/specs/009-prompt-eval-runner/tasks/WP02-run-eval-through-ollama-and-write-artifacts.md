@@ -28,15 +28,15 @@ canceled_at: null
 
 ## Goal
 
-Connect `hindi eval input` to the one currently running Ollama model and persist
-each run under ignored `eval/<run-id>/` without touching accepted learner
-output.
+Connect `hindi eval run` to the one currently running Ollama model and persist
+each run under ignored `eval/<prompt-id>/<run-id>/` without touching accepted
+learner output.
 
 ## Done When
 
 - Eval detects exactly one running Ollama model and prints it.
 - Zero or multiple running models fail with recovery text.
-- Eval writes `prompt.txt`, `response.txt`, `result.json`, and `summary.txt`.
+- Eval writes `prompt.txt`, `response.txt`, `meta.json`, and `summary.txt`.
 - `.gitignore` ignores `eval/`.
 - Tests prove eval writes nothing under `output/`.
 
@@ -48,5 +48,4 @@ output.
 
 ## Handoff Notes
 
-Prefer adding a small Ollama `ps` API helper rather than shelling out to
-`ollama ps`, unless the API shape is unexpectedly awkward.
+Use Ollama `/api/ps` for running-model detection rather than shelling out.

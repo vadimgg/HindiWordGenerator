@@ -30,15 +30,15 @@ canceled_at: null
 
 ## Goal
 
-Add the `hindi eval input` / `hindi eval grade` command shapes plus pure
+Add the `hindi eval run` / `hindi eval grade` command shapes plus pure
 template-context machinery. This work package does not need to contact Ollama
 yet; it should prove YAML input, prompt ID lookup, field selection,
 `--max-items`, and Handlebars rendering work.
 
 ## Done When
 
-- CLI parses `hindi eval input --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]`.
-- CLI parses `hindi eval grade --run <eval-folder>`.
+- CLI parses `hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]`.
+- CLI parses `hindi eval grade --run <run-id-or-path>`.
 - Help text documents the command and does not mention `--model`.
 - Eval context exposes `input_yaml`, `items_yaml`, structured `items`,
   `input_path`, `prompt_id`, and `run_path`.

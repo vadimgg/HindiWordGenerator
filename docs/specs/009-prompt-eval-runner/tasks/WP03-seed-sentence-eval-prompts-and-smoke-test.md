@@ -4,7 +4,7 @@ title: Seed sentence eval prompts, grading prompts, and smoke test
 agent_type: rust-engineer
 status: planned
 dependencies: [WP01, WP02]
-acceptance_refs: [AC08]
+acceptance_refs: [AC08, AC10, AC11]
 extra_skills: []
 read_scope:
   - docs/ROMANISATION.md
@@ -37,8 +37,8 @@ available.
   translation, and full enrichment.
 - Templates use `{{#each items}}` and include Hindi with romanisation directly
   underneath wherever Hindi appears.
-- `hindi eval grade --run <eval-folder>` opens a grading prompt and records a
-  structured response.
+- `hindi eval grade --run <run-id-or-path>` opens `grade_packet.md` and records
+  a structured five-axis grade response.
 - `make check` passes.
 - One live `hindi eval` smoke result is recorded in the final handoff, or the
   reason it was skipped is recorded.

@@ -4,8 +4,8 @@
 
 | Command | User Goal | Change | Side Effects |
 |---|---|---|---|
-| `hindi eval input --input <path> --prompt-id <id>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<run-id>/`. |
-| `hindi eval grade --run <eval-folder>` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
+| `hindi eval run --input <path> --prompt-id <id>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
+| `hindi eval grade --run <run-id-or-path>` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
 
 ## Help Text
 
@@ -13,12 +13,12 @@
 Hindi Word Generator
 
 Usage:
-  hindi eval input --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]
-  hindi eval grade --run <eval-folder>
+  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]
+  hindi eval grade --run <run-id-or-path>
 
 Runs built-in prompt templates against YAML input using the one currently
-running Ollama model. Writes diagnostics to eval/<run-id>/ and never writes
-accepted output.
+running Ollama model. Writes diagnostics to
+eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.
 
 Options:
   --input <path>       YAML source file.
@@ -26,7 +26,8 @@ Options:
   --fields <list>      Comma-separated top-level item fields.
                       Default: id,hindi,romanisation,english
   --max-items <n>      Limit selected items before rendering.
-  --run <eval-folder>  Eval run folder to grade.
+  --run <run-id-or-path>
+                       Eval run folder or prompt-scoped run id to grade.
 ```
 
 ## Success Output
@@ -36,7 +37,7 @@ Eval Prompt
 
 Model
   selected   ollama:translategemma:12b
-  source     ollama ps
+  source     Ollama /api/ps
 
 Input
   file       input/sentences/complete_hindi_chapter_02_sentences.yaml
@@ -47,15 +48,16 @@ Input
 Timing
   render     4ms
   model      12.3s
+  total      12.4s
 
 Output
-  folder     eval/2026-05-15_143012_translategemma_12b
+  folder     eval/sentence/register/2026-05-15_143012_translategemma_12b
   prompt     prompt.txt
   response   response.txt
-  result     result.json
+  meta       meta.json
 
 Next
-  hindi eval grade --run eval/2026-05-15_143012_translategemma_12b_sentence_register
+  hindi eval grade --run sentence/register/2026-05-15_143012_translategemma_12b
 ```
 
 ## Grade Output
@@ -64,19 +66,19 @@ Next
 Eval Grade
 
 Run
-  folder     eval/2026-05-15_143012_translategemma_12b_sentence_register
+  folder     eval/sentence/register/2026-05-15_143012_translategemma_12b
   prompt id  sentence/register
 
 Editor
-  opened     $EDITOR
-  file       grade_response.txt
+  opened     grade_packet.md
+  response   grade_response.txt
 
 Result
   parsed     ok
   grade      grade.json
 
 Next
-  less eval/2026-05-15_143012_translategemma_12b_sentence_register/summary.txt
+  less eval/sentence/register/2026-05-15_143012_translategemma_12b/summary.txt
 ```
 
 ## Progress And Log Messages
@@ -86,7 +88,7 @@ Next
 | Before model detection | `checking running Ollama model` | Always print. |
 | Before model call | `sending rendered prompt to model` | Always print. |
 | After model response | `model response received in <time>` | Always print. |
-| Before grade editor | `opening grading prompt in $EDITOR` | Always print. |
+| Before grade editor | `opening grade_packet.md in $EDITOR` | Always print to stderr. |
 
 ## Warning And Error Output
 
@@ -97,12 +99,17 @@ Next
 | Missing field | `Field "english" is missing from item "0001".` | Change `--fields` or fix source YAML. |
 | Template render error | `Could not render prompt template.` | Fix the `.hbs` file. |
 | Unknown prompt ID | `Unknown prompt id "sentence/foo".` | List supported prompt IDs. |
+| Missing run | `Eval run not found: sentence/register/missing.` | Run `hindi eval run` first or pass a valid `eval/...` path. |
+| Missing meta | `Eval run is missing meta.json.` | The run folder is incomplete; rerun eval. |
+| Missing paired grading template | `Prompt id "sentence/register" has no grading template.` | Fix built-in prompt registration. |
+| Missing editor | `$EDITOR is not set.` | Set `EDITOR` or use the future non-interactive import path. |
 | Grade parse error | `Could not parse grader response as YAML or JSON.` | Fix the response file and rerun. |
 
 ## Interactive Behavior
 
-- Prompts: `$EDITOR` opens for `hindi eval grade` so the user can copy the
-  rendered grading prompt to Claude/ChatGPT and paste the structured response.
+- Prompts: `hindi eval grade` writes `grade_prompt.txt` and opens
+  `grade_packet.md` in `$EDITOR`. The packet contains the rendered grading
+  prompt plus a marked paste area for the Claude/ChatGPT response.
 - Non-interactive behavior: direct command, exits non-zero on errors.
 - Picker or fzf behavior: None.
 
