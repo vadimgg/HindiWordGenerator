@@ -678,7 +678,16 @@ fn strip_optional_fence(response: &str) -> &str {
     let Some(close) = after_open.rfind("```") else {
         return response;
     };
-    after_open[..close].trim()
+    let inside = after_open[..close].trim();
+    if !inside.is_empty() {
+        return inside;
+    }
+    let tail = after_open[close + 3..].trim();
+    if tail.is_empty() {
+        inside
+    } else {
+        tail
+    }
 }
 
 fn parse_grade(response: &str) -> Result<Grade, EvalError> {
@@ -903,6 +912,16 @@ mod tests {
     fn extracts_grade_response_from_marker_and_fence() {
         let response = extract_grade_response(
             "## Grading Prompt\nx\n\n## Paste Grader Response Below\n\n```yaml\nverdict: pass\n```\n",
+        )
+        .unwrap();
+
+        assert_eq!(response, "verdict: pass");
+    }
+
+    #[test]
+    fn extracts_grade_response_pasted_after_empty_fence() {
+        let response = extract_grade_response(
+            "## Paste Grader Response Below\n\n```yaml\n```\nverdict: pass\n",
         )
         .unwrap();
 
