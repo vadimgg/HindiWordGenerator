@@ -32,6 +32,7 @@ pub enum Command {
     },
     EvalGrade {
         run: String,
+        response: Option<String>,
     },
 }
 
@@ -145,19 +146,48 @@ where
         )),
         [command, flag] if command == "eval" && is_help_flag(flag) => Ok(Command::EvalHelp),
         [command, action, ..] if command == "eval" && action == "run" => parse_eval_run(&args[2..]),
-        [command, action, flag, value]
-            if command == "eval" && action == "grade" && flag == "--run" =>
-        {
-            Ok(Command::EvalGrade { run: value.clone() })
-        }
         [command, action, ..] if command == "eval" && action == "grade" => {
-            Err(CliError::new("Usage: hindi eval grade --run <run-id-or-path>"))
+            parse_eval_grade(&args[2..])
         }
         [command, ..] if command == "eval" => Err(CliError::new(
             "Usage: hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n       hindi eval grade --run <run-id-or-path>",
         )),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
+}
+
+fn parse_eval_grade(args: &[String]) -> Result<Command, CliError> {
+    let mut run = None;
+    let mut response = None;
+    let mut index = 0usize;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--run" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --run."));
+                };
+                run = Some(value.clone());
+            }
+            "--response" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --response."));
+                };
+                response = Some(value.clone());
+            }
+            value => {
+                return Err(CliError::new(format!(
+                    "Unknown eval grade option: {value}\n\nUsage: hindi eval grade --run <run-id-or-path> [--response <path>]"
+                )));
+            }
+        }
+        index += 1;
+    }
+    Ok(Command::EvalGrade {
+        run: run.ok_or_else(|| CliError::new("Missing required option: --run <run-id-or-path>"))?,
+        response,
+    })
 }
 
 fn parse_eval_run(args: &[String]) -> Result<Command, CliError> {
@@ -250,7 +280,7 @@ pub fn sentences_help_text() -> &'static str {
 }
 
 pub fn eval_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n  hindi eval grade --run <run-id-or-path>\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nOptions:\n  --input <path>       YAML source file\n  --prompt-id <id>     Built-in prompt id, e.g. sentence/register\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --run <run-id-or-path>\n                       Eval run folder or prompt-scoped run id to grade"
+    "Hindi Word Generator\n\nUsage:\n  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n  hindi eval grade --run <run-id-or-path> [--response <path>]\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nOptions:\n  --input <path>       YAML source file\n  --prompt-id <id>     Built-in prompt id, e.g. sentence/register\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --run <run-id-or-path>\n                       Eval run folder or prompt-scoped run id to grade\n  --response <path>    Optional YAML/JSON grader response file to import instead of opening $EDITOR"
 }
 
 #[cfg(test)]
@@ -350,6 +380,22 @@ mod tests {
             parse(["eval", "grade", "--run", "sentence/register/run1"]).unwrap(),
             Command::EvalGrade {
                 run: "sentence/register/run1".to_string(),
+                response: None,
+            }
+        );
+        assert_eq!(
+            parse([
+                "eval",
+                "grade",
+                "--run",
+                "sentence/register/run1",
+                "--response",
+                "/tmp/grade.yaml"
+            ])
+            .unwrap(),
+            Command::EvalGrade {
+                run: "sentence/register/run1".to_string(),
+                response: Some("/tmp/grade.yaml".to_string()),
             }
         );
     }

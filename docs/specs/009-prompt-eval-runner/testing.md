@@ -42,6 +42,8 @@
 - The same run writes nothing under `output/`.
 - Fake grade run writes `grade_prompt.txt`, `grade_packet.md`,
   `grade_response.txt`, and `grade.json`.
+- Fake grade run can import a grader response from `--response <path>` without
+  opening `$EDITOR`.
 
 ## Drift Checks
 

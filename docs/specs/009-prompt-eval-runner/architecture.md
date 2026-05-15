@@ -66,7 +66,7 @@ All writes stay under `eval/`.
 What the user runs:
 
 ```text
-hindi eval grade --run sentence/register/2026-05-15_143012_translategemma_12b
+hindi eval grade --run sentence/register/2026-05-15_143012_translategemma_12b [--response grade.yaml]
 ```
 
 Internal sequence:
@@ -82,8 +82,11 @@ src/eval.rs
   render grade prompt with run metadata, source items, prompt.txt, response.txt
   write grade_prompt.txt
   write grade_packet.md
-  open grade_packet.md in $EDITOR
-  extract pasted grader response from grade_packet.md
+  if --response provided:
+    read grader response from file
+  else:
+    open grade_packet.md in $EDITOR
+    extract pasted grader response from grade_packet.md
   write grade_response.txt
   parse response as YAML or JSON
   validate shared grading schema

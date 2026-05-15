@@ -157,16 +157,18 @@ fn main() -> ExitCode {
                 ExitCode::from(1)
             }
         },
-        Ok(cli::Command::EvalGrade { run }) => match eval::grade_from_current_dir(&run) {
-            Ok(report) => {
-                println!("{}", report.render());
-                ExitCode::SUCCESS
+        Ok(cli::Command::EvalGrade { run, response }) => {
+            match eval::grade_from_current_dir(&run, response.as_deref()) {
+                Ok(report) => {
+                    println!("{}", report.render());
+                    ExitCode::SUCCESS
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
             }
-            Err(error) => {
-                eprintln!("{error}");
-                ExitCode::from(1)
-            }
-        },
+        }
         Ok(cli::Command::Viewer) => match viewer::run_from_current_dir() {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => {

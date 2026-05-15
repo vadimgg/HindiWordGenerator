@@ -5,7 +5,7 @@
 | Command | User Goal | Change | Side Effects |
 |---|---|---|---|
 | `hindi eval run --input <path> --prompt-id <id>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
-| `hindi eval grade --run <run-id-or-path>` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
+| `hindi eval grade --run <run-id-or-path> [--response <path>]` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
 
 ## Help Text
 
@@ -14,7 +14,7 @@ Hindi Word Generator
 
 Usage:
   hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]
-  hindi eval grade --run <run-id-or-path>
+  hindi eval grade --run <run-id-or-path> [--response <path>]
 
 Runs built-in prompt templates against YAML input using the one currently
 running Ollama model. Writes diagnostics to
@@ -28,6 +28,8 @@ Options:
   --max-items <n>      Limit selected items before rendering.
   --run <run-id-or-path>
                        Eval run folder or prompt-scoped run id to grade.
+  --response <path>    Optional YAML/JSON grader response file to import instead
+                       of opening $EDITOR.
 ```
 
 ## Success Output
@@ -111,6 +113,9 @@ Next
   `grade_packet.md` in `$EDITOR`. The packet contains the rendered grading
   prompt plus this exact marker for the Claude/ChatGPT response:
   `## Paste Grader Response Below`.
+- Import path: `hindi eval grade --response <path>` writes the same grading
+  artifacts but reads the grader YAML/JSON from the provided file instead of
+  opening `$EDITOR`.
 - Non-interactive behavior: direct command, exits non-zero on errors.
 - Picker or fzf behavior: None.
 

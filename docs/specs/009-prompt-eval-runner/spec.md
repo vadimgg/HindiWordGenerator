@@ -22,7 +22,7 @@ Rust workflow.
 ## Goals
 
 - Provide `hindi eval run --input <yaml> --prompt-id <id>`.
-- Provide `hindi eval grade --run <run-id-or-path>`.
+- Provide `hindi eval grade --run <run-id-or-path> [--response <path>]`.
 - Use the single currently running Ollama model from Ollama `/api/ps`; do not
   switch or start models for eval runs.
 - Use built-in prompt IDs such as `sentence/register`, with paired input and
@@ -50,7 +50,7 @@ Rust workflow.
 
 | ID | Criteria |
 |---|---|
-| AC01 | `hindi eval run --input <path> --prompt-id <id>` and `hindi eval grade --run <run-id-or-path>` are parsed and documented in help output. |
+| AC01 | `hindi eval run --input <path> --prompt-id <id>` and `hindi eval grade --run <run-id-or-path> [--response <path>]` are parsed and documented in help output. |
 | AC02 | `hindi eval run` requires exactly one running Ollama model from `/api/ps` and prints the selected model. |
 | AC03 | Built-in prompt templates render with Handlebars using `{{#each items}}`, `{{items_yaml}}`, `{{input_yaml}}`, `{{input_path}}`, `{{prompt_id}}`, and `{{run_path}}`. |
 | AC04 | `--fields id,hindi,romanisation,english` selects top-level item fields; when omitted, fields default to `id,hindi,romanisation,english`; missing fields fail clearly. |
@@ -59,7 +59,7 @@ Rust workflow.
 | AC07 | `eval/` is ignored by git. |
 | AC08 | Paired sentence input/grading prompt templates exist for source QA, English translation, literal translation, register, word breakdown, word breakdown from existing translation, and full enrichment. |
 | AC09 | The command never writes accepted output under `output/`. |
-| AC10 | `hindi eval grade` renders the grading prompt for an eval run, opens `grade_packet.md` in `$EDITOR`, accepts/persists pasted grader YAML or JSON, writes `grade_prompt.txt`, `grade_response.txt`, `grade.json`, and updates `summary.txt`. |
+| AC10 | `hindi eval grade` renders the grading prompt for an eval run, opens `grade_packet.md` in `$EDITOR` unless `--response <path>` is provided, accepts/persists pasted or imported grader YAML or JSON, writes `grade_prompt.txt`, `grade_response.txt`, `grade.json`, and updates `summary.txt`. |
 | AC11 | `grade.json` uses the shared grading schema: axis scores for accuracy, completeness, format compliance, consistency, confidence; total; verdict; item flags; summary. |
 
 ## Architecture Notes

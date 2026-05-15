@@ -151,6 +151,13 @@ impl EvalRunReport {
 pub struct EvalGradeReport {
     run_path: PathBuf,
     prompt_id: String,
+    response_source: GradeResponseSource,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum GradeResponseSource {
+    Editor,
+    File(PathBuf),
 }
 
 impl EvalGradeReport {
@@ -159,9 +166,18 @@ impl EvalGradeReport {
         output.push_str("Run\n");
         output.push_str(&format!("  folder     {}\n", self.run_path.display()));
         output.push_str(&format!("  prompt id  {}\n\n", self.prompt_id));
-        output.push_str("Editor\n");
-        output.push_str("  opened     grade_packet.md\n");
-        output.push_str("  response   grade_response.txt\n\n");
+        match &self.response_source {
+            GradeResponseSource::Editor => {
+                output.push_str("Editor\n");
+                output.push_str("  opened     grade_packet.md\n");
+                output.push_str("  response   grade_response.txt\n\n");
+            }
+            GradeResponseSource::File(path) => {
+                output.push_str("Import\n");
+                output.push_str(&format!("  source     {}\n", path.display()));
+                output.push_str("  response   grade_response.txt\n\n");
+            }
+        }
         output.push_str("Result\n");
         output.push_str("  parsed     ok\n");
         output.push_str("  grade      grade.json\n\n");
@@ -364,12 +380,19 @@ pub fn run_with_client<C: EvalModelClient>(
     })
 }
 
-pub fn grade_from_current_dir(run: &str) -> Result<EvalGradeReport, EvalError> {
+pub fn grade_from_current_dir(
+    run: &str,
+    response_path: Option<&str>,
+) -> Result<EvalGradeReport, EvalError> {
     let root = ProjectRoot::discover_from(current_dir()?)?;
-    grade_from(&root, run)
+    grade_from(&root, run, response_path)
 }
 
-pub fn grade_from(root: &ProjectRoot, run: &str) -> Result<EvalGradeReport, EvalError> {
+pub fn grade_from(
+    root: &ProjectRoot,
+    run: &str,
+    response_path: Option<&str>,
+) -> Result<EvalGradeReport, EvalError> {
     let run_path = resolve_run_path(root, run);
     if !run_path.is_dir() {
         return Err(EvalError::Input(format!("Eval run not found: {run}.")));
@@ -386,9 +409,14 @@ pub fn grade_from(root: &ProjectRoot, run: &str) -> Result<EvalGradeReport, Eval
     })?;
     let meta: EvalMeta = serde_json::from_str(&meta_content)?;
     let template = prompt_template(&meta.prompt_id)?;
-    let response_path = run_path.join("response.txt");
-    let response = fs::read_to_string(&response_path).map_err(|source| EvalError::Io {
-        path: response_path,
+    let model_prompt_path = run_path.join("prompt.txt");
+    let model_prompt = fs::read_to_string(&model_prompt_path).map_err(|source| EvalError::Io {
+        path: model_prompt_path,
+        source,
+    })?;
+    let model_response_path = run_path.join("response.txt");
+    let response = fs::read_to_string(&model_response_path).map_err(|source| EvalError::Io {
+        path: model_response_path,
         source,
     })?;
     let context = json!({
@@ -398,6 +426,7 @@ pub fn grade_from(root: &ProjectRoot, run: &str) -> Result<EvalGradeReport, Eval
         "fields": meta.fields,
         "item_count": meta.item_count,
         "model": meta.model,
+        "prompt": model_prompt,
         "response": response,
         "threshold_pct": template.threshold_pct,
     });
@@ -407,13 +436,28 @@ pub fn grade_from(root: &ProjectRoot, run: &str) -> Result<EvalGradeReport, Eval
         format!("## Grading Prompt\n\n{grade_prompt}\n\n{GRADE_RESPONSE_MARKER}\n\n```yaml\n```\n");
     let packet_path = run_path.join("grade_packet.md");
     write_file(&packet_path, &packet)?;
-    eprintln!("opening grade_packet.md in $EDITOR");
-    open_editor(&packet_path)?;
-    let packet_after = fs::read_to_string(&packet_path).map_err(|source| EvalError::Io {
-        path: packet_path.clone(),
-        source,
-    })?;
-    let grade_response = extract_grade_response(&packet_after)?;
+    let (grade_response, response_source) = if let Some(response_path) = response_path {
+        let path = resolve_input_path(root, response_path);
+        let content = fs::read_to_string(&path).map_err(|source| EvalError::Io {
+            path: path.clone(),
+            source,
+        })?;
+        (
+            content,
+            GradeResponseSource::File(relative_to_root(root, &path)),
+        )
+    } else {
+        eprintln!("opening grade_packet.md in $EDITOR");
+        open_editor(&packet_path)?;
+        let packet_after = fs::read_to_string(&packet_path).map_err(|source| EvalError::Io {
+            path: packet_path.clone(),
+            source,
+        })?;
+        (
+            extract_grade_response(&packet_after)?,
+            GradeResponseSource::Editor,
+        )
+    };
     write_file(&run_path.join("grade_response.txt"), &grade_response)?;
     let grade = parse_grade(&grade_response)?;
     write_json(&run_path.join("grade.json"), &grade)?;
@@ -426,6 +470,7 @@ pub fn grade_from(root: &ProjectRoot, run: &str) -> Result<EvalGradeReport, Eval
     Ok(EvalGradeReport {
         run_path: relative_to_root(root, &run_path),
         prompt_id: meta_for_summary.prompt_id,
+        response_source,
     })
 }
 
@@ -1000,6 +1045,82 @@ items:
             .is_file());
         assert!(root_path.join(&report.run_path).join("meta.json").is_file());
         assert!(!root_path.join("output/response.txt").exists());
+        fs::remove_dir_all(root_path).unwrap();
+    }
+
+    #[test]
+    fn imports_grade_response_from_file_without_editor() {
+        let root_path = temp_path("eval-grade-root");
+        fs::create_dir_all(root_path.join("docs")).unwrap();
+        fs::create_dir_all(root_path.join("input")).unwrap();
+        fs::create_dir_all(root_path.join("output")).unwrap();
+        fs::create_dir_all(root_path.join("eval/sentence/register/run1")).unwrap();
+        fs::write(root_path.join("docs/DESIGN.md"), "").unwrap();
+        fs::write(root_path.join("docs/ROADMAP.md"), "").unwrap();
+        fs::write(
+            root_path.join("eval/sentence/register/run1/meta.json"),
+            r#"{
+  "run_id": "sentence/register/run1",
+  "prompt_id": "sentence/register",
+  "input_path": "input/sentences/sample.yaml",
+  "fields": ["id", "hindi", "romanisation", "english"],
+  "max_items": 1,
+  "item_count": 1,
+  "model": "ollama:test",
+  "model_digest": null,
+  "model_source": "Ollama /api/ps",
+  "started_at": "unix:1",
+  "finished_at": "unix:2",
+  "timing_ms": { "render": 1, "model": 2, "total": 3 },
+  "artifacts": { "prompt": "prompt.txt", "response": "response.txt", "summary": "summary.txt" }
+}"#,
+        )
+        .unwrap();
+        fs::write(
+            root_path.join("eval/sentence/register/run1/prompt.txt"),
+            "task: sentence_register_detection\nitems: []",
+        )
+        .unwrap();
+        fs::write(
+            root_path.join("eval/sentence/register/run1/response.txt"),
+            "results: []",
+        )
+        .unwrap();
+        fs::write(
+            root_path.join("grade.yaml"),
+            r#"
+run_id: sentence/register/run1
+grader: test
+graded_at: unix:3
+scores:
+  accuracy: { score: 4, max: 4, note: "" }
+  completeness: { score: 4, max: 4, note: "" }
+  format_compliance: { score: 4, max: 4, note: "" }
+  consistency: { score: 4, max: 4, note: "" }
+  confidence: { score: 4, max: 4, note: "" }
+total: { score: 20, max: 20, pct: 100 }
+verdict: pass
+item_flags: []
+summary: Imported grade.
+"#,
+        )
+        .unwrap();
+        let root = ProjectRoot::discover_from(&root_path).unwrap();
+
+        super::grade_from(&root, "sentence/register/run1", Some("grade.yaml")).unwrap();
+
+        assert!(root_path
+            .join("eval/sentence/register/run1/grade_prompt.txt")
+            .is_file());
+        assert!(root_path
+            .join("eval/sentence/register/run1/grade_packet.md")
+            .is_file());
+        assert!(root_path
+            .join("eval/sentence/register/run1/grade_response.txt")
+            .is_file());
+        assert!(root_path
+            .join("eval/sentence/register/run1/grade.json")
+            .is_file());
         fs::remove_dir_all(root_path).unwrap();
     }
 
