@@ -1,0 +1,9 @@
+{
+  "id": "006",
+  "slug": "m5-audio-parity",
+  "title": "M5 Audio Parity",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/006-m5-audio-parity",
+  "created_at": "2026-05-15T07:41:53.615993+00:00"
+}
