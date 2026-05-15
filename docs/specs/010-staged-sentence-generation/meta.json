@@ -1,0 +1,9 @@
+{
+  "id": "010",
+  "slug": "staged-sentence-generation",
+  "title": "staged sentence generation",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/010-staged-sentence-generation",
+  "created_at": "2026-05-15T14:39:10.505845+00:00"
+}
