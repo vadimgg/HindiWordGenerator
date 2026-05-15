@@ -128,14 +128,17 @@ Evaluated Sentences
   English  At the moment there are 14 – nine girls and five boys.
 
 Results
-Test       Model               Items      Time  Grade      Verdict  Run
+Test       Model               Items      Time  Grade      Verdict  Run Folder
 ---------  ------------------  ---------  ----  ---------  -------  -------------------------------------
 register   translategemma:12b  0001,0002  4.6s  16/20 80%  pass     2026-05-15_143012_translategemma_12b
 source-qa  translategemma:12b  0001,0002  4.4s  18/20 90%  pass     2026-05-15_143020_translategemma_12b
+Run Folder points to eval/<prompt-id>/<run-folder>/.
 
 Notes
-  register   Register detection is usable; main caveat is markdown fencing.
-  source-qa  Correctly identifies both source rows as clean.
+  register
+    Register detection is usable; main caveat is markdown fencing.
+  source-qa
+    Correctly identifies both source rows as clean.
 ```
 
 ## Progress And Log Messages
@@ -176,8 +179,10 @@ Notes
 
 ## Color And Emphasis
 
-`hindi eval report` colors pass/fail/not-graded verdicts and score bands by
-default. `--no-color` prints the same table without ANSI color codes.
+`hindi eval report` colors section titles, table headers, test names, model
+names, speed bands, score bands, and pass/fail/not-graded verdicts by default.
+Slow model times are red, medium times are yellow, and fast times are green.
+`--no-color` prints the same table without ANSI color codes.
 
 ## UX Review Notes
 

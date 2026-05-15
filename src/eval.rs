@@ -219,7 +219,7 @@ struct EvalSourceItem {
 
 impl EvalSummaryReport {
     pub fn render(&self) -> String {
-        let mut output = String::from("Eval Report\n\n");
+        let mut output = format!("{}\n\n", self.section_title("Eval Report"));
         if self.rows.is_empty() {
             output.push_str("No eval runs found under eval/.\n");
             return output;
@@ -227,15 +227,22 @@ impl EvalSummaryReport {
 
         let grouped_rows = grouped_eval_rows(&self.rows);
         for (index, group) in grouped_rows.iter().enumerate() {
-            output.push_str(&format!("Evaluation Set {}\n", index + 1));
             output.push_str(&format!(
-                "Input\n  file    {}\n  items   {}\n",
+                "{}\n",
+                self.section_title(&format!("Evaluation Set {}", index + 1))
+            ));
+            output.push_str(&format!(
+                "{}\n  file    {}\n  items   {}\n",
+                self.subsection_title("Input"),
                 group.input_path,
                 format_item_ids(&group.item_ids, group.item_count)
             ));
             output.push_str("  scope   every result below grades this full item set\n\n");
 
-            output.push_str("Evaluated Sentences\n");
+            output.push_str(&format!(
+                "{}\n",
+                self.subsection_title("Evaluated Sentences")
+            ));
             for item in &group.source_items {
                 output.push_str(&format!("#{}\n", item.id));
                 output.push_str(&format!("  Hindi    {}\n", item.hindi));
@@ -243,17 +250,17 @@ impl EvalSummaryReport {
                 output.push_str(&format!("  English  {}\n\n", item.english));
             }
 
-            output.push_str("Results\n");
+            output.push_str(&format!("{}\n", self.subsection_title("Results")));
             output.push_str(&self.render_result_table(&group.rows));
+            output.push_str("Run Folder points to eval/<prompt-id>/<run-folder>/.\n");
 
-            output.push_str("\nNotes\n");
+            output.push_str(&format!("\n{}\n", self.subsection_title("Notes")));
             for row in &group.rows {
                 let summary = row.summary.as_deref().unwrap_or("not graded yet");
-                output.push_str(&format!(
-                    "  {:<34} {}\n",
-                    short_prompt_id(&row.prompt_id),
-                    summary
-                ));
+                let label = short_prompt_id(&row.prompt_id);
+                let colored_label = color_test_name(&label, self.color);
+                output.push_str(&format!("  {}\n", colored_label));
+                output.push_str(&wrap_note(summary, 4, 92));
             }
 
             if index + 1 < grouped_rows.len() {
@@ -265,7 +272,15 @@ impl EvalSummaryReport {
     }
 
     fn render_result_table(&self, rows: &[&EvalSummaryRow]) -> String {
-        let headers = ["Test", "Model", "Items", "Time", "Grade", "Verdict", "Run"];
+        let headers = [
+            "Test",
+            "Model",
+            "Items",
+            "Time",
+            "Grade",
+            "Verdict",
+            "Run Folder",
+        ];
         let plain_rows = rows
             .iter()
             .map(|row| {
@@ -283,20 +298,36 @@ impl EvalSummaryReport {
             })
             .collect::<Vec<_>>();
         let widths = table_widths(&headers, &plain_rows);
-        let mut output = render_table_header(&headers, &widths);
+        let mut output = render_table_header(&headers, &widths, self.color);
         for (row, cells) in rows.iter().zip(plain_rows) {
             let colored = vec![
-                cells[0].clone(),
-                cells[1].clone(),
+                color_test_name(&cells[0], self.color),
+                color_model(&cells[1], self.color),
                 cells[2].clone(),
-                cells[3].clone(),
+                color_time(&cells[3], row.model_ms, self.color),
                 color_grade(&cells[4], row.score.as_ref(), self.color),
                 color_verdict(&cells[5], self.color),
-                cells[6].clone(),
+                color_run_id(&cells[6], self.color),
             ];
             output.push_str(&render_table_row(&colored, &widths));
         }
         output
+    }
+
+    fn section_title(&self, text: &str) -> String {
+        if self.color {
+            paint(text, "1;36")
+        } else {
+            text.to_string()
+        }
+    }
+
+    fn subsection_title(&self, text: &str) -> String {
+        if self.color {
+            paint(text, "1;34")
+        } else {
+            text.to_string()
+        }
     }
 }
 
@@ -765,14 +796,18 @@ fn table_widths(headers: &[&str], rows: &[Vec<String>]) -> Vec<usize> {
     widths
 }
 
-fn render_table_header(headers: &[&str], widths: &[usize]) -> String {
-    let mut output = render_table_row(
-        &headers
-            .iter()
-            .map(|header| header.to_string())
-            .collect::<Vec<_>>(),
-        widths,
-    );
+fn render_table_header(headers: &[&str], widths: &[usize], color: bool) -> String {
+    let header_cells = headers
+        .iter()
+        .map(|header| {
+            if color {
+                paint(header, "1;37")
+            } else {
+                header.to_string()
+            }
+        })
+        .collect::<Vec<_>>();
+    let mut output = render_table_row(&header_cells, widths);
     output.push_str(&format!(
         "{}\n",
         widths
@@ -841,6 +876,36 @@ fn color_grade(text: &str, score: Option<&GradeTotal>, color: bool) -> String {
     paint(text, code)
 }
 
+fn color_test_name(text: &str, color: bool) -> String {
+    if color {
+        paint(text, "1;35")
+    } else {
+        text.to_string()
+    }
+}
+
+fn color_model(text: &str, color: bool) -> String {
+    if color {
+        paint(text, "36")
+    } else {
+        text.to_string()
+    }
+}
+
+fn color_time(text: &str, ms: u128, color: bool) -> String {
+    if !color {
+        return text.to_string();
+    }
+    let code = if ms <= 5_000 {
+        "32"
+    } else if ms <= 20_000 {
+        "33"
+    } else {
+        "31"
+    };
+    paint(text, code)
+}
+
 fn color_verdict(text: &str, color: bool) -> String {
     if !color {
         return text.to_string();
@@ -853,8 +918,40 @@ fn color_verdict(text: &str, color: bool) -> String {
     }
 }
 
+fn color_run_id(text: &str, color: bool) -> String {
+    if color {
+        paint(text, "2")
+    } else {
+        text.to_string()
+    }
+}
+
 fn paint(text: &str, code: &str) -> String {
     format!("\x1b[{code}m{text}\x1b[0m")
+}
+
+fn wrap_note(text: &str, indent: usize, width: usize) -> String {
+    let prefix = " ".repeat(indent);
+    let mut output = String::new();
+    let mut line = String::new();
+    for word in text.split_whitespace() {
+        if !line.is_empty() && visible_len(&line) + 1 + visible_len(word) > width {
+            output.push_str(&prefix);
+            output.push_str(line.trim_end());
+            output.push('\n');
+            line.clear();
+        }
+        if !line.is_empty() {
+            line.push(' ');
+        }
+        line.push_str(word);
+    }
+    if !line.is_empty() {
+        output.push_str(&prefix);
+        output.push_str(line.trim_end());
+        output.push('\n');
+    }
+    output
 }
 
 fn short_prompt_id(prompt_id: &str) -> String {
