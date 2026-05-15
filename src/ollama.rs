@@ -183,10 +183,59 @@ fn parse_http_response(response: &str) -> Result<HttpResponse, ModelClientError>
         .and_then(|line| line.split_whitespace().nth(1))
         .and_then(|value| value.parse::<u16>().ok())
         .ok_or_else(|| ModelClientError::Http(io::Error::other("invalid HTTP status")))?;
-    Ok(HttpResponse {
-        status,
-        body: body.to_string(),
-    })
+    let is_chunked = head.lines().any(|line| {
+        let line = line.to_ascii_lowercase();
+        line.starts_with("transfer-encoding:") && line.contains("chunked")
+    });
+    let body = match is_chunked {
+        true => decode_chunked_body(body)?,
+        false => body.to_string(),
+    };
+    Ok(HttpResponse { status, body })
+}
+
+fn decode_chunked_body(body: &str) -> Result<String, ModelClientError> {
+    let bytes = body.as_bytes();
+    let mut index = 0;
+    let mut decoded = Vec::new();
+
+    loop {
+        let size_end = find_crlf(bytes, index)
+            .ok_or_else(|| ModelClientError::Http(io::Error::other("invalid chunked response")))?;
+        let size_line = std::str::from_utf8(&bytes[index..size_end])
+            .map_err(|_| ModelClientError::Http(io::Error::other("invalid chunk size")))?;
+        let size_hex = size_line.split(';').next().unwrap_or_default().trim();
+        let size = usize::from_str_radix(size_hex, 16)
+            .map_err(|_| ModelClientError::Http(io::Error::other("invalid chunk size")))?;
+        index = size_end + 2;
+        if size == 0 {
+            break;
+        }
+        if bytes.len() < index + size + 2 {
+            return Err(ModelClientError::Http(io::Error::other(
+                "truncated chunked response",
+            )));
+        }
+        decoded.extend_from_slice(&bytes[index..index + size]);
+        index += size;
+        if &bytes[index..index + 2] != b"\r\n" {
+            return Err(ModelClientError::Http(io::Error::other(
+                "invalid chunk terminator",
+            )));
+        }
+        index += 2;
+    }
+
+    String::from_utf8(decoded)
+        .map_err(|_| ModelClientError::Http(io::Error::other("invalid chunked utf-8 body")))
+}
+
+fn find_crlf(bytes: &[u8], start: usize) -> Option<usize> {
+    bytes
+        .get(start..)?
+        .windows(2)
+        .position(|window| window == b"\r\n")
+        .map(|offset| start + offset)
 }
 
 #[cfg(test)]
@@ -200,5 +249,16 @@ mod tests {
 
         assert_eq!(response.status, 200);
         assert_eq!(response.body, "{}");
+    }
+
+    #[test]
+    fn parses_chunked_http_response_body() {
+        let response = parse_http_response(
+            "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n8\r\n{\"ok\":1}\r\n0\r\n\r\n",
+        )
+        .unwrap();
+
+        assert_eq!(response.status, 200);
+        assert_eq!(response.body, "{\"ok\":1}");
     }
 }
