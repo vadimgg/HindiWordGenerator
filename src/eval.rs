@@ -191,7 +191,6 @@ impl EvalGradeReport {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EvalSummaryReport {
     rows: Vec<EvalSummaryRow>,
-    source_items: Vec<EvalSourceItem>,
     color: bool,
 }
 
@@ -199,7 +198,8 @@ pub struct EvalSummaryReport {
 struct EvalSummaryRow {
     prompt_id: String,
     model: String,
-    item_ids: Vec<String>,
+    input_path: String,
+    source_items: Vec<EvalSourceItem>,
     item_count: usize,
     model_ms: u128,
     score: Option<GradeTotal>,
@@ -225,26 +225,54 @@ impl EvalSummaryReport {
             return output;
         }
 
-        if !self.source_items.is_empty() {
-            output.push_str("Source Items\n");
-            for item in &self.source_items {
-                output.push_str(&format!("#{}  {}\n", item.id, item.input_path));
+        let grouped_rows = grouped_eval_rows(&self.rows);
+        for (index, group) in grouped_rows.iter().enumerate() {
+            output.push_str(&format!("Evaluation Set {}\n", index + 1));
+            output.push_str(&format!(
+                "Input\n  file    {}\n  items   {}\n",
+                group.input_path,
+                format_item_ids(&group.item_ids, group.item_count)
+            ));
+            output.push_str("  scope   every result below grades this full item set\n\n");
+
+            output.push_str("Evaluated Sentences\n");
+            for item in &group.source_items {
+                output.push_str(&format!("#{}\n", item.id));
                 output.push_str(&format!("  Hindi    {}\n", item.hindi));
                 output.push_str(&format!("  Roman    {}\n", item.romanisation));
                 output.push_str(&format!("  English  {}\n\n", item.english));
             }
+
+            output.push_str("Results\n");
+            output.push_str(&self.render_result_table(&group.rows));
+
+            output.push_str("\nNotes\n");
+            for row in &group.rows {
+                let summary = row.summary.as_deref().unwrap_or("not graded yet");
+                output.push_str(&format!(
+                    "  {:<34} {}\n",
+                    short_prompt_id(&row.prompt_id),
+                    summary
+                ));
+            }
+
+            if index + 1 < grouped_rows.len() {
+                output.push('\n');
+            }
         }
 
-        output.push_str("Results\n");
+        output
+    }
+
+    fn render_result_table(&self, rows: &[&EvalSummaryRow]) -> String {
         let headers = ["Test", "Model", "Items", "Time", "Grade", "Verdict", "Run"];
-        let plain_rows = self
-            .rows
+        let plain_rows = rows
             .iter()
             .map(|row| {
                 vec![
                     short_prompt_id(&row.prompt_id),
                     strip_ollama_prefix(&row.model).to_string(),
-                    format_item_ids(&row.item_ids, row.item_count),
+                    format_item_ids(&row.item_ids(), row.item_count),
                     format_ms(row.model_ms),
                     format_grade(row.score.as_ref()),
                     row.verdict
@@ -255,8 +283,8 @@ impl EvalSummaryReport {
             })
             .collect::<Vec<_>>();
         let widths = table_widths(&headers, &plain_rows);
-        output.push_str(&render_table_header(&headers, &widths));
-        for (row, cells) in self.rows.iter().zip(plain_rows) {
+        let mut output = render_table_header(&headers, &widths);
+        for (row, cells) in rows.iter().zip(plain_rows) {
             let colored = vec![
                 cells[0].clone(),
                 cells[1].clone(),
@@ -268,19 +296,26 @@ impl EvalSummaryReport {
             ];
             output.push_str(&render_table_row(&colored, &widths));
         }
-
-        output.push_str("\nNotes\n");
-        for row in &self.rows {
-            let summary = row.summary.as_deref().unwrap_or("not graded yet");
-            output.push_str(&format!(
-                "  {:<34} {}\n",
-                short_prompt_id(&row.prompt_id),
-                summary
-            ));
-        }
-
         output
     }
+}
+
+impl EvalSummaryRow {
+    fn item_ids(&self) -> Vec<String> {
+        self.source_items
+            .iter()
+            .map(|item| item.id.clone())
+            .collect()
+    }
+}
+
+#[derive(Debug)]
+struct EvalRowGroup<'a> {
+    input_path: String,
+    item_ids: Vec<String>,
+    item_count: usize,
+    source_items: Vec<EvalSourceItem>,
+    rows: Vec<&'a EvalSummaryRow>,
 }
 
 #[derive(Debug, Clone)]
@@ -494,7 +529,6 @@ fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, Eva
     if !eval_root.is_dir() {
         return Ok(EvalSummaryReport {
             rows: Vec::new(),
-            source_items: Vec::new(),
             color,
         });
     }
@@ -504,7 +538,6 @@ fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, Eva
     meta_paths.sort();
 
     let mut rows = Vec::new();
-    let mut source_items_by_key = BTreeMap::new();
     for meta_path in meta_paths {
         let run_path = meta_path.parent().unwrap_or(&eval_root).to_path_buf();
         let meta_content = fs::read_to_string(&meta_path).map_err(|source| EvalError::Io {
@@ -513,11 +546,12 @@ fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, Eva
         })?;
         let meta: EvalMeta = serde_json::from_str(&meta_content)?;
         let grade = read_optional_grade(&run_path)?;
-        let item_ids = source_items_for_meta(root, &meta, &mut source_items_by_key);
+        let source_items = source_items_for_meta(root, &meta);
         rows.push(EvalSummaryRow {
             prompt_id: meta.prompt_id,
             model: meta.model,
-            item_ids,
+            input_path: meta.input_path,
+            source_items,
             item_count: meta.item_count,
             model_ms: meta.timing_ms.model,
             score: grade.as_ref().map(|grade| grade.total.clone()),
@@ -535,11 +569,7 @@ fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, Eva
             .then_with(|| left.run_id.cmp(&right.run_id))
     });
 
-    Ok(EvalSummaryReport {
-        rows,
-        source_items: source_items_by_key.into_values().collect(),
-        color,
-    })
+    Ok(EvalSummaryReport { rows, color })
 }
 
 pub fn grade_from(
@@ -668,11 +698,7 @@ fn read_optional_grade(run_path: &Path) -> Result<Option<Grade>, EvalError> {
         .map_err(EvalError::Json)
 }
 
-fn source_items_for_meta(
-    root: &ProjectRoot,
-    meta: &EvalMeta,
-    source_items_by_key: &mut BTreeMap<String, EvalSourceItem>,
-) -> Vec<String> {
+fn source_items_for_meta(root: &ProjectRoot, meta: &EvalMeta) -> Vec<EvalSourceItem> {
     let input_path = resolve_input_path(root, &meta.input_path);
     let Ok(content) = fs::read_to_string(&input_path) else {
         return Vec::new();
@@ -687,22 +713,37 @@ fn source_items_for_meta(
         .max_items
         .unwrap_or(meta.item_count)
         .min(source.items.len());
-    let mut item_ids = Vec::new();
+    let mut source_items = Vec::new();
     for item in source.items.iter().take(limit) {
         let id = item_string(item, "id").unwrap_or_else(|| "<unknown>".to_string());
-        let key = format!("{input_relative}#{id}");
-        item_ids.push(id.clone());
-        source_items_by_key
+        source_items.push(EvalSourceItem {
+            input_path: input_relative.clone(),
+            id,
+            hindi: item_string(item, "hindi").unwrap_or_default(),
+            romanisation: item_string(item, "romanisation").unwrap_or_default(),
+            english: item_string(item, "english").unwrap_or_default(),
+        });
+    }
+    source_items
+}
+
+fn grouped_eval_rows(rows: &[EvalSummaryRow]) -> Vec<EvalRowGroup<'_>> {
+    let mut groups_by_key: BTreeMap<String, EvalRowGroup<'_>> = BTreeMap::new();
+    for row in rows {
+        let item_ids = row.item_ids();
+        let key = format!("{}#{}", row.input_path, item_ids.join(","));
+        groups_by_key
             .entry(key)
-            .or_insert_with(|| EvalSourceItem {
-                input_path: input_relative.clone(),
-                id,
-                hindi: item_string(item, "hindi").unwrap_or_default(),
-                romanisation: item_string(item, "romanisation").unwrap_or_default(),
-                english: item_string(item, "english").unwrap_or_default(),
+            .and_modify(|group| group.rows.push(row))
+            .or_insert_with(|| EvalRowGroup {
+                input_path: row.input_path.clone(),
+                item_ids,
+                item_count: row.item_count,
+                source_items: row.source_items.clone(),
+                rows: vec![row],
             });
     }
-    item_ids
+    groups_by_key.into_values().collect()
 }
 
 fn item_string(item: &Map<String, Value>, field: &str) -> Option<String> {

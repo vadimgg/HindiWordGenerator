@@ -110,11 +110,22 @@ Import
 ```text
 Eval Report
 
-Source Items
-#0001  input/sentences/complete_hindi_chapter_02_sentences.yaml
+Evaluation Set 1
+Input
+  file    input/sentences/complete_hindi_chapter_02_sentences.yaml
+  items   0001,0002
+  scope   every result below grades this full item set
+
+Evaluated Sentences
+#0001
   Hindi    अध्यापक जी, यहाँ कितने विद्यार्थी हैं?
   Roman    adhyāpak jī, yahā̃ kitne vidyārthī haĩ?
   English  Teacher ji, how many students are here?
+
+#0002
+  Hindi    अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।
+  Roman    abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.
+  English  At the moment there are 14 – nine girls and five boys.
 
 Results
 Test       Model               Items      Time  Grade      Verdict  Run
