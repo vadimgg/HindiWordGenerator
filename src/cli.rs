@@ -9,6 +9,7 @@ pub enum Command {
     SentencesHelp,
     SentencesPlan { max_batches: usize },
     SentencesGenerate { max_batches: usize },
+    SentencesAudio,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -91,8 +92,11 @@ where
         [command, action] if command == "sentences" && action == "generate" => {
             Err(CliError::new("Missing required option: --max-batches <n>"))
         }
+        [command, action] if command == "sentences" && action == "audio" => {
+            Ok(Command::SentencesAudio)
+        }
         [command, ..] if command == "sentences" => Err(CliError::new(
-            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n>",
+            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio",
         )),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
@@ -108,7 +112,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan or generate pending sentence batches"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -120,7 +124,7 @@ pub fn source_ids_help_text() -> &'static str {
 }
 
 pub fn sentences_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n\nCommands:\n  plan       Preview pending sentence batches without writing output\n  generate   Generate pending sentence batches with the configured local model"
+    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n\nCommands:\n  plan       Preview pending sentence batches without writing output\n  generate   Generate pending sentence batches with the configured local model\n  audio      Backfill missing audio for accepted sentence batches"
 }
 
 #[cfg(test)]
@@ -166,6 +170,10 @@ mod tests {
         assert_eq!(
             parse(["sentences", "generate", "--max-batches", "2"]).unwrap(),
             Command::SentencesGenerate { max_batches: 2 }
+        );
+        assert_eq!(
+            parse(["sentences", "audio"]).unwrap(),
+            Command::SentencesAudio
         );
     }
 

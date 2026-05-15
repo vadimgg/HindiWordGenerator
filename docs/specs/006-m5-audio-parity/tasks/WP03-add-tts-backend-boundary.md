@@ -2,7 +2,7 @@
 id: WP03
 title: Add TTS backend boundary
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP01]
 acceptance_refs: [AC09, AC10, AC11]
 extra_skills: []

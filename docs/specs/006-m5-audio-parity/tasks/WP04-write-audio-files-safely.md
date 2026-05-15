@@ -2,7 +2,7 @@
 id: WP04
 title: Write audio files safely
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP03]
 acceptance_refs: [AC04, AC05, AC06, AC09, AC10]
 extra_skills: []

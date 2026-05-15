@@ -2,7 +2,7 @@
 id: WP06
 title: Review audio safety and parity
 agent_type: rust-reviewer
-status: planned
+status: done
 dependencies: [WP07]
 acceptance_refs: [AC01, AC02, AC03, AC04, AC05, AC06, AC07, AC08, AC09, AC10, AC11]
 extra_skills: []

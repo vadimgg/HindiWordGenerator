@@ -5,6 +5,7 @@ mod doctor;
 mod ollama;
 mod project;
 mod run_report;
+mod sentence_audio;
 mod sentence_enrichment;
 mod sentence_generate;
 mod sentence_plan;
@@ -12,6 +13,7 @@ mod sentence_schema;
 mod sentence_validate;
 mod source_identity;
 mod source_ids;
+mod tts;
 
 use std::process::ExitCode;
 
@@ -111,6 +113,20 @@ fn main() -> ExitCode {
                 }
             }
         }
+        Ok(cli::Command::SentencesAudio) => match sentence_audio::audio_from_current_dir() {
+            Ok(report) => {
+                println!("{}", report.render());
+                if report.success {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::from(1)
+                }
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
         Err(error) => {
             eprintln!("{error}");
             ExitCode::from(2)

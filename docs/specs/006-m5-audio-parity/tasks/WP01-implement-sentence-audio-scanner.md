@@ -2,7 +2,7 @@
 id: WP01
 title: Implement sentence audio scanner
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP02]
 acceptance_refs: [AC02, AC03, AC04, AC05]
 extra_skills: []

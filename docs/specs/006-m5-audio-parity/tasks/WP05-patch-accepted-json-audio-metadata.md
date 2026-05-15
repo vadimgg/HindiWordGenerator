@@ -2,7 +2,7 @@
 id: WP05
 title: Patch accepted JSON audio metadata
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP04]
 acceptance_refs: [AC03, AC07, AC08, AC09, AC10]
 extra_skills: []

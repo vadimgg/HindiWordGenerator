@@ -2,7 +2,7 @@
 id: WP07
 title: Wire audio CLI and reports
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP05]
 acceptance_refs: [AC01, AC02, AC09]
 extra_skills: []
