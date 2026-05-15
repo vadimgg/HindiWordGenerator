@@ -34,6 +34,9 @@ pub enum Command {
         run: String,
         response: Option<String>,
     },
+    EvalReport {
+        color: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -152,6 +155,17 @@ where
         [command, action, ..] if command == "eval" && action == "run" => parse_eval_run(&args[2..]),
         [command, action, ..] if command == "eval" && action == "grade" => {
             parse_eval_grade(&args[2..])
+        }
+        [command, action] if command == "eval" && action == "report" => {
+            Ok(Command::EvalReport { color: true })
+        }
+        [command, action, flag]
+            if command == "eval" && action == "report" && flag == "--no-color" =>
+        {
+            Ok(Command::EvalReport { color: false })
+        }
+        [command, action, ..] if command == "eval" && action == "report" => {
+            Err(CliError::new("Usage: hindi eval report [--no-color]"))
         }
         [command, ..] if command == "eval" => Err(CliError::new(eval_usage_error())),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
@@ -300,7 +314,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  eval         Run and grade prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color]\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -324,11 +338,11 @@ pub fn sentences_help_text() -> &'static str {
 }
 
 pub fn eval_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n\nExamples:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b --response /tmp/grade.yaml\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nArguments:\n  <prompt-id>          Built-in prompt id, e.g. sentence/register\n  <input-yaml>         YAML source file\n  <run-id-or-path>     Eval run folder or prompt-scoped run id to grade\n\nOptions:\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --response <path>    Optional YAML/JSON grader response file to import instead of opening $EDITOR\n\nCompatibility aliases:\n  hindi eval run --prompt-id <id> --input <path>\n  hindi eval grade --run <run-id-or-path>"
+    "Hindi Word Generator\n\nUsage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color]\n\nExamples:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b --response /tmp/grade.yaml\n  hindi eval report\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nArguments:\n  <prompt-id>          Built-in prompt id, e.g. sentence/register\n  <input-yaml>         YAML source file\n  <run-id-or-path>     Eval run folder or prompt-scoped run id to grade\n\nOptions:\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --response <path>    Optional YAML/JSON grader response file to import instead of opening $EDITOR\n  --no-color           Print eval report without ANSI colors\n\nCompatibility aliases:\n  hindi eval run --prompt-id <id> --input <path>\n  hindi eval grade --run <run-id-or-path>"
 }
 
 fn eval_usage_error() -> &'static str {
-    "Usage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n\nExamples:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b"
+    "Usage:\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color]\n\nExamples:\n  hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2\n  hindi eval grade sentence/register/unix_1778842644180_translategemma_12b\n  hindi eval report"
 }
 
 fn eval_run_usage_error() -> &'static str {
@@ -448,6 +462,14 @@ mod tests {
                 run: "sentence/register/run1".to_string(),
                 response: Some("/tmp/grade.yaml".to_string()),
             }
+        );
+        assert_eq!(
+            parse(["eval", "report"]).unwrap(),
+            Command::EvalReport { color: true }
+        );
+        assert_eq!(
+            parse(["eval", "report", "--no-color"]).unwrap(),
+            Command::EvalReport { color: false }
         );
     }
 

@@ -11,7 +11,7 @@ template drift, and run metadata that is too vague to compare later.
 
 | Module | Owns | Must never |
 |---|---|---|
-| `src/cli.rs` | Parse `hindi eval run` and `hindi eval grade`, print help text. | Load YAML, call Ollama, render Handlebars templates, or write eval files. |
+| `src/cli.rs` | Parse `hindi eval run`, `hindi eval grade`, and `hindi eval report`; print help text. | Load YAML, call Ollama, render Handlebars templates, or write eval files. |
 | `src/eval.rs` | Eval input loading, prompt ID resolution, template context, artifact writes, grade packet flow, grade parsing, report rendering. | Write `output/`, manage Ollama lifecycle, or print directly from deep helpers. |
 | `src/eval_prompts/` | Built-in input/grading templates registered by prompt ID. | Become user run output or accepted learner data. |
 | `src/ollama.rs` | `/api/ps` running-model lookup and model generation calls. | Shell out to `ollama ps` unless HTTP support is impossible. |
@@ -98,6 +98,37 @@ src/main.rs
 The editor packet contains the rendered grading prompt plus a clearly marked
 paste area. The command does not call Claude/ChatGPT directly.
 
+### `hindi eval report`
+
+What the user runs:
+
+```text
+hindi eval report [--no-color]
+```
+
+Internal sequence:
+
+```text
+src/cli.rs
+  parse EvalReport { color }
+
+src/eval.rs
+  discover project root
+  recursively scan eval/ for meta.json files
+  load optional grade.json beside each meta.json
+  load source YAML referenced by meta.input_path when available
+  collect displayed source rows by item id
+  render source Hindi, romanisation, and English
+  render one summary row per eval run
+  color score/verdict cells unless --no-color was passed
+
+src/main.rs
+  print EvalSummaryReport
+```
+
+The report is read-only. It treats `meta.json` and optional `grade.json` as
+structured authority and uses source YAML only for human display context.
+
 ## Part 4 - Shared Abstractions
 
 ### Prompt Registry
@@ -106,6 +137,7 @@ Used by:
 
 - `hindi eval run`
 - `hindi eval grade`
+- `hindi eval report`
 
 Contract:
 
@@ -147,7 +179,7 @@ Used by:
 
 - Grading prompt templates
 - `hindi eval grade`
-- Future reports
+- `hindi eval report`
 
 Contract for `grade.json`:
 
@@ -224,7 +256,7 @@ Used by:
 
 - `hindi eval run`
 - `hindi eval grade`
-- Future reports
+- `hindi eval report`
 
 Contract for `meta.json`:
 
@@ -317,12 +349,12 @@ treat it as structured authority.
 |---|---|---|---|
 | `eval/<prompt-id>/<run-id>/prompt.txt` | `hindi eval run` | humans, `hindi eval grade` | Exact rendered prompt sent to Ollama. |
 | `eval/<prompt-id>/<run-id>/response.txt` | `hindi eval run` | humans, `hindi eval grade` | Raw model response, never parsed as authority. |
-| `eval/<prompt-id>/<run-id>/meta.json` | `hindi eval run` | humans, `hindi eval grade`, future reports | Run provenance: prompt ID, model, timing, input path, fields, item count, artifact paths. |
+| `eval/<prompt-id>/<run-id>/meta.json` | `hindi eval run` | humans, `hindi eval grade`, `hindi eval report` | Run provenance: prompt ID, model, timing, input path, fields, item count, artifact paths. |
 | `eval/<prompt-id>/<run-id>/summary.txt` | `hindi eval run`, `hindi eval grade` | humans | Human-readable digest; regenerated from run/grade state. |
 | `eval/<prompt-id>/<run-id>/grade_prompt.txt` | `hindi eval grade` | humans | Exact grading prompt text. |
 | `eval/<prompt-id>/<run-id>/grade_packet.md` | `hindi eval grade`, user editor | humans, `hindi eval grade` | Editor handoff file with prompt and paste area. |
-| `eval/<prompt-id>/<run-id>/grade_response.txt` | `hindi eval grade` | humans, future reports | Raw pasted grader response. |
-| `eval/<prompt-id>/<run-id>/grade.json` | `hindi eval grade` | humans, future reports | Parsed shared grade schema. |
+| `eval/<prompt-id>/<run-id>/grade_response.txt` | `hindi eval grade` | humans | Raw pasted grader response. |
+| `eval/<prompt-id>/<run-id>/grade.json` | `hindi eval grade` | humans, `hindi eval report` | Parsed shared grade schema. |
 
 All `eval/` files are ignored by git by default.
 
@@ -369,7 +401,7 @@ reads from `eval/`.
 
 | Area | Reject | Accept |
 |---|---|---|
-| CLI naming | `hindi eval --input` or `hindi eval input` in new code/docs. | `hindi eval run` and `hindi eval grade`. |
+| CLI naming | `hindi eval --input` or `hindi eval input` in new code/docs. | `hindi eval run`, `hindi eval grade`, and `hindi eval report`. |
 | Model selection | `--model`, model switching, shell-only `ollama ps`. | Exactly one running model from `/api/ps`. |
 | Prompt storage | User prompt paths as the primary v1 flow. | Built-in prompt IDs with paired input/grading templates. |
 | Run layout | Flat `eval/<run-id>/`. | `eval/<prompt-category>/<prompt-name>/<run-id>/`. |
@@ -383,7 +415,7 @@ None.
 
 ## Appendix - Out-Of-Scope Residue
 
-- Future `hindi eval report` / `compare` can aggregate `meta.json` and
-  `grade.json`.
+- Future `hindi eval compare` can add model-to-model analytics over `meta.json`
+  and `grade.json`.
 - Future non-interactive grade import can reuse the same parser without opening
   `$EDITOR`.

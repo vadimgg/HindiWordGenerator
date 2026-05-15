@@ -6,6 +6,7 @@
 |---|---|---|---|
 | `hindi eval run <prompt-id> <input-yaml>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
 | `hindi eval grade <run-id-or-path> [--response <path>]` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
+| `hindi eval report [--no-color]` | Scan eval runs and show source rows, models, timings, scores, verdicts, and grader notes. | New command. | Read-only. |
 
 ## Help Text
 
@@ -15,11 +16,13 @@ Hindi Word Generator
 Usage:
   hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]
   hindi eval grade <run-id-or-path> [--response <path>]
+  hindi eval report [--no-color]
 
 Examples:
   hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2
   hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b
   hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b --response /tmp/grade.yaml
+  hindi eval report
 
 Runs built-in prompt templates against YAML input using the one currently
 running Ollama model. Writes diagnostics to
@@ -36,6 +39,7 @@ Options:
   --max-items <n>      Limit selected items before rendering.
   --response <path>    Optional YAML/JSON grader response file to import instead
                        of opening $EDITOR.
+  --no-color           Print eval report without ANSI colors.
 
 Compatibility aliases:
   hindi eval run --prompt-id <id> --input <path>
@@ -101,6 +105,28 @@ Import
   response   grade_response.txt
 ```
 
+## Report Output
+
+```text
+Eval Report
+
+Source Items
+#0001  input/sentences/complete_hindi_chapter_02_sentences.yaml
+  Hindi    अध्यापक जी, यहाँ कितने विद्यार्थी हैं?
+  Roman    adhyāpak jī, yahā̃ kitne vidyārthī haĩ?
+  English  Teacher ji, how many students are here?
+
+Results
+Test       Model               Items      Time  Grade      Verdict  Run
+---------  ------------------  ---------  ----  ---------  -------  -------------------------------------
+register   translategemma:12b  0001,0002  4.6s  16/20 80%  pass     2026-05-15_143012_translategemma_12b
+source-qa  translategemma:12b  0001,0002  4.4s  18/20 90%  pass     2026-05-15_143020_translategemma_12b
+
+Notes
+  register   Register detection is usable; main caveat is markdown fencing.
+  source-qa  Correctly identifies both source rows as clean.
+```
+
 ## Progress And Log Messages
 
 | Moment | Message | Notes |
@@ -139,8 +165,8 @@ Import
 
 ## Color And Emphasis
 
-Use the existing plain CLI style first. Color can come later if the project
-adopts a shared renderer.
+`hindi eval report` colors pass/fail/not-graded verdicts and score bands by
+default. `--no-color` prints the same table without ANSI color codes.
 
 ## UX Review Notes
 

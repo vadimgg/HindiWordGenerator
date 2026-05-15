@@ -2,11 +2,12 @@
 
 ## Summary
 
-Implemented `hindi eval run` and `hindi eval grade` as an ignored prompt
-workbench under `eval/<prompt-id>/<run-id>/`. The runner uses built-in paired
-prompt templates, selects fields from YAML source input, requires exactly one
-running Ollama model from `/api/ps`, writes prompt/response/meta/summary
-artifacts, and records human/agent grading responses as canonical `grade.json`.
+Implemented `hindi eval run`, `hindi eval grade`, and `hindi eval report` as an
+ignored prompt workbench under `eval/<prompt-id>/<run-id>/`. The runner uses
+built-in paired prompt templates, selects fields from YAML source input,
+requires exactly one running Ollama model from `/api/ps`, writes
+prompt/response/meta/summary artifacts, records human/agent grading responses
+as canonical `grade.json`, and prints a scan-friendly report across eval runs.
 Follow-up testing added `hindi eval grade <run-id> --response <path>` so
 spawned-agent or copied evaluator responses can be imported without pretending
 to be `$EDITOR`.
@@ -26,6 +27,9 @@ Passed:
 - A spawned evaluator agent graded the generated `grade_prompt.txt`; its YAML
   response was imported with `hindi eval grade <run-id> --response <path>` and
   recorded as `grade.json` with score `16/20`.
+- `cargo run -- eval report --no-color` printed the source Hindi with
+  romanisation and English, plus prompt/model/timing/grade/verdict/notes rows
+  for local eval runs.
 - `make check`
 
 ## Changed Files
@@ -44,6 +48,8 @@ Passed:
 - Run more prompt IDs through the same live eval and spawned-grader path.
 - Review the seeded prompts after a few real eval runs; they are intentionally
   practical starting points, not final benchmark prompts.
+- Add filtering or comparison analytics once `eval/` contains enough model runs
+  to make that useful.
 
 <!-- brief:close:start -->
 ## Summary

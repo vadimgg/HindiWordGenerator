@@ -3,6 +3,7 @@ use crate::project::{ProjectRoot, ProjectRootError};
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
+use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -187,6 +188,101 @@ impl EvalGradeReport {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvalSummaryReport {
+    rows: Vec<EvalSummaryRow>,
+    source_items: Vec<EvalSourceItem>,
+    color: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct EvalSummaryRow {
+    prompt_id: String,
+    model: String,
+    item_ids: Vec<String>,
+    item_count: usize,
+    model_ms: u128,
+    score: Option<GradeTotal>,
+    verdict: Option<String>,
+    summary: Option<String>,
+    run_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct EvalSourceItem {
+    input_path: String,
+    id: String,
+    hindi: String,
+    romanisation: String,
+    english: String,
+}
+
+impl EvalSummaryReport {
+    pub fn render(&self) -> String {
+        let mut output = String::from("Eval Report\n\n");
+        if self.rows.is_empty() {
+            output.push_str("No eval runs found under eval/.\n");
+            return output;
+        }
+
+        if !self.source_items.is_empty() {
+            output.push_str("Source Items\n");
+            for item in &self.source_items {
+                output.push_str(&format!("#{}  {}\n", item.id, item.input_path));
+                output.push_str(&format!("  Hindi    {}\n", item.hindi));
+                output.push_str(&format!("  Roman    {}\n", item.romanisation));
+                output.push_str(&format!("  English  {}\n\n", item.english));
+            }
+        }
+
+        output.push_str("Results\n");
+        let headers = ["Test", "Model", "Items", "Time", "Grade", "Verdict", "Run"];
+        let plain_rows = self
+            .rows
+            .iter()
+            .map(|row| {
+                vec![
+                    short_prompt_id(&row.prompt_id),
+                    strip_ollama_prefix(&row.model).to_string(),
+                    format_item_ids(&row.item_ids, row.item_count),
+                    format_ms(row.model_ms),
+                    format_grade(row.score.as_ref()),
+                    row.verdict
+                        .clone()
+                        .unwrap_or_else(|| "not graded".to_string()),
+                    short_run_id(&row.run_id),
+                ]
+            })
+            .collect::<Vec<_>>();
+        let widths = table_widths(&headers, &plain_rows);
+        output.push_str(&render_table_header(&headers, &widths));
+        for (row, cells) in self.rows.iter().zip(plain_rows) {
+            let colored = vec![
+                cells[0].clone(),
+                cells[1].clone(),
+                cells[2].clone(),
+                cells[3].clone(),
+                color_grade(&cells[4], row.score.as_ref(), self.color),
+                color_verdict(&cells[5], self.color),
+                cells[6].clone(),
+            ];
+            output.push_str(&render_table_row(&colored, &widths));
+        }
+
+        output.push_str("\nNotes\n");
+        for row in &self.rows {
+            let summary = row.summary.as_deref().unwrap_or("not graded yet");
+            output.push_str(&format!(
+                "  {:<34} {}\n",
+                short_prompt_id(&row.prompt_id),
+                summary
+            ));
+        }
+
+        output
+    }
+}
+
 #[derive(Debug, Clone)]
 struct PromptTemplate {
     id: &'static str,
@@ -233,7 +329,7 @@ struct EvalArtifacts {
     summary: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 struct Grade {
     run_id: String,
     grader: String,
@@ -245,7 +341,7 @@ struct Grade {
     summary: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 struct GradeScores {
     accuracy: AxisScore,
     completeness: AxisScore,
@@ -254,14 +350,14 @@ struct GradeScores {
     confidence: AxisScore,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 struct AxisScore {
     score: u8,
     max: u8,
     note: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 struct GradeTotal {
     score: u8,
     max: u8,
@@ -388,6 +484,64 @@ pub fn grade_from_current_dir(
     grade_from(&root, run, response_path)
 }
 
+pub fn report_from_current_dir(color: bool) -> Result<EvalSummaryReport, EvalError> {
+    let root = ProjectRoot::discover_from(current_dir()?)?;
+    report_from(&root, color)
+}
+
+fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, EvalError> {
+    let eval_root = root.join("eval");
+    if !eval_root.is_dir() {
+        return Ok(EvalSummaryReport {
+            rows: Vec::new(),
+            source_items: Vec::new(),
+            color,
+        });
+    }
+
+    let mut meta_paths = Vec::new();
+    collect_meta_paths(&eval_root, &mut meta_paths)?;
+    meta_paths.sort();
+
+    let mut rows = Vec::new();
+    let mut source_items_by_key = BTreeMap::new();
+    for meta_path in meta_paths {
+        let run_path = meta_path.parent().unwrap_or(&eval_root).to_path_buf();
+        let meta_content = fs::read_to_string(&meta_path).map_err(|source| EvalError::Io {
+            path: meta_path.clone(),
+            source,
+        })?;
+        let meta: EvalMeta = serde_json::from_str(&meta_content)?;
+        let grade = read_optional_grade(&run_path)?;
+        let item_ids = source_items_for_meta(root, &meta, &mut source_items_by_key);
+        rows.push(EvalSummaryRow {
+            prompt_id: meta.prompt_id,
+            model: meta.model,
+            item_ids,
+            item_count: meta.item_count,
+            model_ms: meta.timing_ms.model,
+            score: grade.as_ref().map(|grade| grade.total.clone()),
+            verdict: grade.as_ref().map(|grade| grade.verdict.clone()),
+            summary: grade.as_ref().map(|grade| grade.summary.clone()),
+            run_id: relative_to_root(root, &run_path)
+                .to_string_lossy()
+                .to_string(),
+        });
+    }
+
+    rows.sort_by(|left, right| {
+        left.prompt_id
+            .cmp(&right.prompt_id)
+            .then_with(|| left.run_id.cmp(&right.run_id))
+    });
+
+    Ok(EvalSummaryReport {
+        rows,
+        source_items: source_items_by_key.into_values().collect(),
+        color,
+    })
+}
+
 pub fn grade_from(
     root: &ProjectRoot,
     run: &str,
@@ -479,6 +633,202 @@ fn prompt_template(prompt_id: &str) -> Result<PromptTemplate, EvalError> {
         .into_iter()
         .find(|template| template.id == prompt_id)
         .ok_or_else(|| EvalError::UnknownPrompt(prompt_id.to_string()))
+}
+
+fn collect_meta_paths(directory: &Path, paths: &mut Vec<PathBuf>) -> Result<(), EvalError> {
+    for entry in fs::read_dir(directory).map_err(|source| EvalError::Io {
+        path: directory.to_path_buf(),
+        source,
+    })? {
+        let entry = entry.map_err(|source| EvalError::Io {
+            path: directory.to_path_buf(),
+            source,
+        })?;
+        let path = entry.path();
+        if path.is_dir() {
+            collect_meta_paths(&path, paths)?;
+        } else if path.file_name().and_then(|value| value.to_str()) == Some("meta.json") {
+            paths.push(path);
+        }
+    }
+    Ok(())
+}
+
+fn read_optional_grade(run_path: &Path) -> Result<Option<Grade>, EvalError> {
+    let path = run_path.join("grade.json");
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(&path).map_err(|source| EvalError::Io {
+        path: path.clone(),
+        source,
+    })?;
+    serde_json::from_str(&content)
+        .map(Some)
+        .map_err(EvalError::Json)
+}
+
+fn source_items_for_meta(
+    root: &ProjectRoot,
+    meta: &EvalMeta,
+    source_items_by_key: &mut BTreeMap<String, EvalSourceItem>,
+) -> Vec<String> {
+    let input_path = resolve_input_path(root, &meta.input_path);
+    let Ok(content) = fs::read_to_string(&input_path) else {
+        return Vec::new();
+    };
+    let Ok(source) = serde_yaml::from_str::<SourceYaml>(&content) else {
+        return Vec::new();
+    };
+    let input_relative = relative_to_root(root, &input_path)
+        .to_string_lossy()
+        .to_string();
+    let limit = meta
+        .max_items
+        .unwrap_or(meta.item_count)
+        .min(source.items.len());
+    let mut item_ids = Vec::new();
+    for item in source.items.iter().take(limit) {
+        let id = item_string(item, "id").unwrap_or_else(|| "<unknown>".to_string());
+        let key = format!("{input_relative}#{id}");
+        item_ids.push(id.clone());
+        source_items_by_key
+            .entry(key)
+            .or_insert_with(|| EvalSourceItem {
+                input_path: input_relative.clone(),
+                id,
+                hindi: item_string(item, "hindi").unwrap_or_default(),
+                romanisation: item_string(item, "romanisation").unwrap_or_default(),
+                english: item_string(item, "english").unwrap_or_default(),
+            });
+    }
+    item_ids
+}
+
+fn item_string(item: &Map<String, Value>, field: &str) -> Option<String> {
+    item.get(field)
+        .and_then(Value::as_str)
+        .map(ToString::to_string)
+}
+
+fn table_widths(headers: &[&str], rows: &[Vec<String>]) -> Vec<usize> {
+    let mut widths = headers
+        .iter()
+        .map(|header| visible_len(header))
+        .collect::<Vec<_>>();
+    for row in rows {
+        for (index, cell) in row.iter().enumerate() {
+            widths[index] = widths[index].max(visible_len(cell));
+        }
+    }
+    widths
+}
+
+fn render_table_header(headers: &[&str], widths: &[usize]) -> String {
+    let mut output = render_table_row(
+        &headers
+            .iter()
+            .map(|header| header.to_string())
+            .collect::<Vec<_>>(),
+        widths,
+    );
+    output.push_str(&format!(
+        "{}\n",
+        widths
+            .iter()
+            .map(|width| "-".repeat(*width))
+            .collect::<Vec<_>>()
+            .join("  ")
+    ));
+    output
+}
+
+fn render_table_row(cells: &[String], widths: &[usize]) -> String {
+    let mut parts = Vec::new();
+    for (cell, width) in cells.iter().zip(widths) {
+        parts.push(pad_cell(cell, *width));
+    }
+    format!("{}\n", parts.join("  "))
+}
+
+fn pad_cell(cell: &str, width: usize) -> String {
+    let padding = width.saturating_sub(visible_len(cell));
+    format!("{cell}{}", " ".repeat(padding))
+}
+
+fn visible_len(value: &str) -> usize {
+    let mut length = 0usize;
+    let mut chars = value.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\x1b' && chars.peek() == Some(&'[') {
+            chars.next();
+            for code in chars.by_ref() {
+                if code == 'm' {
+                    break;
+                }
+            }
+        } else {
+            length += 1;
+        }
+    }
+    length
+}
+
+fn format_item_ids(item_ids: &[String], item_count: usize) -> String {
+    if item_ids.is_empty() {
+        return item_count.to_string();
+    }
+    item_ids.join(",")
+}
+
+fn format_grade(score: Option<&GradeTotal>) -> String {
+    score
+        .map(|score| format!("{}/{} {}%", score.score, score.max, score.pct))
+        .unwrap_or_else(|| "-".to_string())
+}
+
+fn color_grade(text: &str, score: Option<&GradeTotal>, color: bool) -> String {
+    if !color {
+        return text.to_string();
+    }
+    let code = match score.map(|score| score.pct) {
+        Some(pct) if pct >= 85 => "32",
+        Some(pct) if pct >= 70 => "33",
+        Some(_) => "31",
+        None => "2",
+    };
+    paint(text, code)
+}
+
+fn color_verdict(text: &str, color: bool) -> String {
+    if !color {
+        return text.to_string();
+    }
+    match text.to_ascii_lowercase().as_str() {
+        "pass" => paint(text, "32"),
+        "fail" => paint(text, "31"),
+        "not graded" => paint(text, "33"),
+        _ => text.to_string(),
+    }
+}
+
+fn paint(text: &str, code: &str) -> String {
+    format!("\x1b[{code}m{text}\x1b[0m")
+}
+
+fn short_prompt_id(prompt_id: &str) -> String {
+    prompt_id
+        .strip_prefix("sentence/")
+        .unwrap_or(prompt_id)
+        .to_string()
+}
+
+fn strip_ollama_prefix(model: &str) -> &str {
+    model.strip_prefix("ollama:").unwrap_or(model)
+}
+
+fn short_run_id(run_id: &str) -> String {
+    run_id.rsplit('/').next().unwrap_or(run_id).to_string()
 }
 
 fn prompt_templates() -> Vec<PromptTemplate> {
@@ -1121,6 +1471,82 @@ summary: Imported grade.
         assert!(root_path
             .join("eval/sentence/register/run1/grade.json")
             .is_file());
+        fs::remove_dir_all(root_path).unwrap();
+    }
+
+    #[test]
+    fn renders_eval_report_with_source_rows_and_grade() {
+        let root_path = temp_path("eval-report-root");
+        fs::create_dir_all(root_path.join("docs")).unwrap();
+        fs::create_dir_all(root_path.join("input/sentences")).unwrap();
+        fs::create_dir_all(root_path.join("output")).unwrap();
+        fs::create_dir_all(root_path.join("eval/sentence/register/run1")).unwrap();
+        fs::write(root_path.join("docs/DESIGN.md"), "").unwrap();
+        fs::write(root_path.join("docs/ROADMAP.md"), "").unwrap();
+        fs::write(
+            root_path.join("input/sentences/sample.yaml"),
+            r#"
+title: Sample
+subtitle: One
+items:
+  - id: "0001"
+    hindi: "यहाँ"
+    romanisation: "yahā̃"
+    english: "Here."
+"#,
+        )
+        .unwrap();
+        fs::write(
+            root_path.join("eval/sentence/register/run1/meta.json"),
+            r#"{
+  "run_id": "sentence/register/run1",
+  "prompt_id": "sentence/register",
+  "input_path": "input/sentences/sample.yaml",
+  "fields": ["id", "hindi", "romanisation", "english"],
+  "max_items": 1,
+  "item_count": 1,
+  "model": "ollama:test-model:1b",
+  "model_digest": null,
+  "model_source": "Ollama /api/ps",
+  "started_at": "unix:1",
+  "finished_at": "unix:2",
+  "timing_ms": { "render": 1, "model": 2100, "total": 2200 },
+  "artifacts": { "prompt": "prompt.txt", "response": "response.txt", "summary": "summary.txt" }
+}"#,
+        )
+        .unwrap();
+        fs::write(
+            root_path.join("eval/sentence/register/run1/grade.json"),
+            r#"{
+  "run_id": "sentence/register/run1",
+  "grader": "test",
+  "graded_at": "unix:3",
+  "scores": {
+    "accuracy": { "score": 4, "max": 4, "note": "" },
+    "completeness": { "score": 4, "max": 4, "note": "" },
+    "format_compliance": { "score": 3, "max": 4, "note": "" },
+    "consistency": { "score": 4, "max": 4, "note": "" },
+    "confidence": { "score": 4, "max": 4, "note": "" }
+  },
+  "total": { "score": 19, "max": 20, "pct": 95 },
+  "verdict": "pass",
+  "item_flags": [],
+  "summary": "Clean register result."
+}"#,
+        )
+        .unwrap();
+        let root = ProjectRoot::discover_from(&root_path).unwrap();
+
+        let rendered = super::report_from(&root, false).unwrap().render();
+
+        assert!(rendered.contains("Hindi    यहाँ"));
+        assert!(rendered.contains("Roman    yahā̃"));
+        assert!(rendered.contains("English  Here."));
+        assert!(rendered.contains("register"));
+        assert!(rendered.contains("test-model:1b"));
+        assert!(rendered.contains("19/20 95%"));
+        assert!(rendered.contains("pass"));
+        assert!(rendered.contains("Clean register result."));
         fs::remove_dir_all(root_path).unwrap();
     }
 

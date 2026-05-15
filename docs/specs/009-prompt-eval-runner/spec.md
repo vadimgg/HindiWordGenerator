@@ -2,13 +2,15 @@
 
 ## Scope
 
-Add `hindi eval run` and `hindi eval grade` for running built-in prompt
-templates against YAML source input and grading eval results without touching
-accepted learner output. `run` uses the currently running Ollama model and
-writes a structured run folder under ignored `eval/<prompt-id>/<run-id>/`.
-`grade` renders the matching built-in grading prompt for a previous eval run,
-opens a single editor packet containing the prompt plus a paste area, and stores
-the structured grader response back into the run folder.
+Add `hindi eval run`, `hindi eval grade`, and `hindi eval report` for running
+built-in prompt templates against YAML source input, grading eval results, and
+scanning the resulting runs without touching accepted learner output. `run`
+uses the currently running Ollama model and writes a structured run folder under
+ignored `eval/<prompt-id>/<run-id>/`. `grade` renders the matching built-in
+grading prompt for a previous eval run, opens a single editor packet containing
+the prompt plus a paste area, and stores the structured grader response back
+into the run folder. `report` reads those run folders and prints source rows,
+model, timing, grade, verdict, and notes in a colored table.
 
 ## Problem
 
@@ -23,6 +25,7 @@ Rust workflow.
 
 - Provide `hindi eval run <prompt-id> <input-yaml>`.
 - Provide `hindi eval grade <run-id-or-path> [--response <path>]`.
+- Provide `hindi eval report [--no-color]`.
 - Use the single currently running Ollama model from Ollama `/api/ps`; do not
   switch or start models for eval runs.
 - Use built-in prompt IDs such as `sentence/register`, with paired input and
@@ -42,7 +45,7 @@ Rust workflow.
 
 - Do not write or modify `output/`.
 - Do not manage Ollama model lifecycle or add `--model` in v1.
-- Do not implement prompt comparison reports in v1.
+- Do not implement model-to-model comparison analytics in v1.
 - Do not automatically call a remote evaluator model in v1.
 - Do not build a full JSONPath/query language for nested field selection.
 
@@ -50,7 +53,7 @@ Rust workflow.
 
 | ID | Criteria |
 |---|---|
-| AC01 | `hindi eval run <prompt-id> <input-yaml>` and `hindi eval grade <run-id-or-path> [--response <path>]` are parsed and documented in help output. |
+| AC01 | `hindi eval run <prompt-id> <input-yaml>`, `hindi eval grade <run-id-or-path> [--response <path>]`, and `hindi eval report [--no-color]` are parsed and documented in help output. |
 | AC02 | `hindi eval run` requires exactly one running Ollama model from `/api/ps` and prints the selected model. |
 | AC03 | Built-in prompt templates render with Handlebars using `{{#each items}}`, `{{items_yaml}}`, `{{input_yaml}}`, `{{input_path}}`, `{{prompt_id}}`, and `{{run_path}}`. |
 | AC04 | `--fields id,hindi,romanisation,english` selects top-level item fields; when omitted, fields default to `id,hindi,romanisation,english`; missing fields fail clearly. |
@@ -61,6 +64,7 @@ Rust workflow.
 | AC09 | The command never writes accepted output under `output/`. |
 | AC10 | `hindi eval grade` renders the grading prompt for an eval run, opens `grade_packet.md` in `$EDITOR` unless `--response <path>` is provided, accepts/persists pasted or imported grader YAML or JSON, writes `grade_prompt.txt`, `grade_response.txt`, `grade.json`, and updates `summary.txt`. |
 | AC11 | `grade.json` uses the shared grading schema: axis scores for accuracy, completeness, format compliance, consistency, confidence; total; verdict; item flags; summary. |
+| AC12 | `hindi eval report` scans `eval/`, prints source Hindi with romanisation and English, and summarizes prompt ID, model, item IDs, timing, grade, verdict, run ID, and notes. |
 
 ## Architecture Notes
 
@@ -90,7 +94,8 @@ Rust workflow.
 
 ### Unit Tests
 
-- CLI parse/help coverage for `hindi eval run` and `hindi eval grade`.
+- CLI parse/help coverage for `hindi eval run`, `hindi eval grade`, and
+  `hindi eval report`.
 - Template context construction with full YAML and selected fields.
 - Missing selected field error.
 - `--max-items` selection.
@@ -103,11 +108,13 @@ Rust workflow.
   prompt-id hierarchy.
 - Verify output is under `eval/` and not `output/`.
 - Fake editor/import test for `hindi eval grade`.
+- Report rendering test for graded and ungraded eval runs.
 
 ### Smoke Tests
 
 - `cargo run -- eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2`
 - `cargo run -- eval grade sentence/register/<run-id>`
+- `cargo run -- eval report`
 - `make check`
 
 ### Drift / Consistency Checks
@@ -118,10 +125,10 @@ Rust workflow.
 
 ### Not Covered In This Spec
 
-- Human quality scoring and aggregate reports are deferred until we have several
-  eval result files to compare.
+- Model-to-model comparison analytics are deferred until we have several eval
+  result files to compare.
 
 ## Open Questions
 
-None for v1. `--model`, comparison reports, and automatic evaluator API calls
-are deferred deliberately.
+None for v1. `--model`, deeper comparison analytics, and automatic evaluator
+API calls are deferred deliberately.

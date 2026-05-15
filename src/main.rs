@@ -169,6 +169,16 @@ fn main() -> ExitCode {
                 }
             }
         }
+        Ok(cli::Command::EvalReport { color }) => match eval::report_from_current_dir(color) {
+            Ok(report) => {
+                println!("{}", report.render());
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
         Ok(cli::Command::Viewer) => match viewer::run_from_current_dir() {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => {
