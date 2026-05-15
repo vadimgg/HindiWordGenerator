@@ -169,18 +169,20 @@ fn main() -> ExitCode {
                 }
             }
         }
-        Ok(cli::Command::EvalReport { color, verbose }) => {
-            match eval::report_from_current_dir(color, verbose) {
-                Ok(report) => {
-                    println!("{}", report.render());
-                    ExitCode::SUCCESS
-                }
-                Err(error) => {
-                    eprintln!("{error}");
-                    ExitCode::from(1)
-                }
+        Ok(cli::Command::EvalReport {
+            color,
+            verbose,
+            output,
+        }) => match eval::report_from_current_dir(color, verbose, output) {
+            Ok(report) => {
+                println!("{}", report.render());
+                ExitCode::SUCCESS
             }
-        }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
         Ok(cli::Command::Viewer) => match viewer::run_from_current_dir() {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => {

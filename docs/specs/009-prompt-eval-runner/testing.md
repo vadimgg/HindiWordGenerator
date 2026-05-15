@@ -67,6 +67,8 @@
   verdict, summary footer, and notes.
 - Run `hindi eval report --verbose` and confirm run folders and raw score
   fractions are shown.
+- Run `hindi eval report --output failures` and confirm response snippets are
+  shown only for failed runs.
 
 ## Not Covered
 

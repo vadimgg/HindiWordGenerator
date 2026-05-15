@@ -1,3 +1,4 @@
+use crate::cli::EvalReportOutput;
 use crate::ollama::{HttpOllamaClient, ModelClientError, ModelOutput, RunningModel};
 use crate::project::{ProjectRoot, ProjectRootError};
 use handlebars::Handlebars;
@@ -193,6 +194,7 @@ pub struct EvalSummaryReport {
     rows: Vec<EvalSummaryRow>,
     color: bool,
     verbose: bool,
+    output: EvalReportOutput,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -207,6 +209,8 @@ struct EvalSummaryRow {
     verdict: Option<String>,
     summary: Option<String>,
     run_id: String,
+    response: Option<String>,
+    model_label: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -268,13 +272,18 @@ impl EvalSummaryReport {
             }
 
             output.push_str(&format!("\n{}\n", self.subsection_title("Notes")));
+            let mut hidden_info_notes = 0usize;
             for row in ordered_note_rows(&group.rows) {
+                if self.hide_info_note(row) {
+                    hidden_info_notes += 1;
+                    continue;
+                }
                 let summary = row.summary.as_deref().unwrap_or("not graded yet");
                 let label = format!(
                     "{}  {} / {}",
                     note_symbol(row),
                     short_prompt_id(&row.prompt_id),
-                    strip_ollama_prefix(&row.model)
+                    row.display_model()
                 );
                 let colored_label = color_note_label(&label, row, self.color);
                 output.push_str(&format!("  {}\n", colored_label));
@@ -293,6 +302,22 @@ impl EvalSummaryReport {
                         )
                     ));
                 }
+                if self.should_show_output(row) {
+                    output.push_str(&render_model_output(row, self.color));
+                }
+            }
+            if hidden_info_notes > 0 {
+                let hidden_text = format!(
+                    "ℹ  {hidden_info_notes} passing runs have informational notes only; use --verbose to show all notes."
+                );
+                output.push_str(&format!(
+                    "  {}\n",
+                    if self.color {
+                        paint(&hidden_text, "36")
+                    } else {
+                        hidden_text
+                    }
+                ));
             }
 
             if index + 1 < grouped_rows.len() {
@@ -352,7 +377,7 @@ impl EvalSummaryReport {
                 format!(
                     "{} / {} {}",
                     short_prompt_id(&row.prompt_id),
-                    strip_ollama_prefix(&row.model),
+                    row.display_model(),
                     format_ms(row.model_ms)
                 )
             })
@@ -366,6 +391,18 @@ impl EvalSummaryReport {
                 self.color
             )
         )
+    }
+
+    fn should_show_output(&self, row: &EvalSummaryRow) -> bool {
+        match self.output {
+            EvalReportOutput::None => false,
+            EvalReportOutput::Failures => is_fail(row),
+            EvalReportOutput::All => true,
+        }
+    }
+
+    fn hide_info_note(&self, row: &EvalSummaryRow) -> bool {
+        !self.verbose && self.output != EvalReportOutput::All && !is_fail(row) && !is_warning(row)
     }
 
     fn section_title(&self, text: &str) -> String {
@@ -391,6 +428,14 @@ impl EvalSummaryRow {
             .iter()
             .map(|item| item.id.clone())
             .collect()
+    }
+
+    fn display_model(&self) -> String {
+        if self.model_label.is_empty() {
+            strip_ollama_prefix(&self.model).to_string()
+        } else {
+            self.model_label.clone()
+        }
     }
 }
 
@@ -604,15 +649,20 @@ pub fn grade_from_current_dir(
     grade_from(&root, run, response_path)
 }
 
-pub fn report_from_current_dir(color: bool, verbose: bool) -> Result<EvalSummaryReport, EvalError> {
+pub fn report_from_current_dir(
+    color: bool,
+    verbose: bool,
+    output: EvalReportOutput,
+) -> Result<EvalSummaryReport, EvalError> {
     let root = ProjectRoot::discover_from(current_dir()?)?;
-    report_from(&root, color, verbose)
+    report_from(&root, color, verbose, output)
 }
 
 fn report_from(
     root: &ProjectRoot,
     color: bool,
     verbose: bool,
+    output: EvalReportOutput,
 ) -> Result<EvalSummaryReport, EvalError> {
     let eval_root = root.join("eval");
     if !eval_root.is_dir() {
@@ -620,6 +670,7 @@ fn report_from(
             rows: Vec::new(),
             color,
             verbose,
+            output,
         });
     }
 
@@ -637,6 +688,7 @@ fn report_from(
         let meta: EvalMeta = serde_json::from_str(&meta_content)?;
         let grade = read_optional_grade(&run_path)?;
         let source_items = source_items_for_meta(root, &meta);
+        let response = read_optional_response(&run_path)?;
         rows.push(EvalSummaryRow {
             prompt_id: meta.prompt_id,
             model: meta.model,
@@ -650,6 +702,8 @@ fn report_from(
             run_id: relative_to_root(root, &run_path)
                 .to_string_lossy()
                 .to_string(),
+            response,
+            model_label: String::new(),
         });
     }
 
@@ -660,9 +714,10 @@ fn report_from(
     });
 
     Ok(EvalSummaryReport {
-        rows,
+        rows: label_repeated_model_runs(rows),
         color,
         verbose,
+        output,
     })
 }
 
@@ -792,6 +847,18 @@ fn read_optional_grade(run_path: &Path) -> Result<Option<Grade>, EvalError> {
         .map_err(EvalError::Json)
 }
 
+fn read_optional_response(run_path: &Path) -> Result<Option<String>, EvalError> {
+    let path = run_path.join("response.txt");
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(&path).map_err(|source| EvalError::Io {
+        path: path.clone(),
+        source,
+    })?;
+    Ok(Some(content))
+}
+
 fn source_items_for_meta(root: &ProjectRoot, meta: &EvalMeta) -> Vec<EvalSourceItem> {
     let input_path = resolve_input_path(root, &meta.input_path);
     let Ok(content) = fs::read_to_string(&input_path) else {
@@ -838,6 +905,29 @@ fn grouped_eval_rows(rows: &[EvalSummaryRow]) -> Vec<EvalRowGroup<'_>> {
             });
     }
     groups_by_key.into_values().collect()
+}
+
+fn label_repeated_model_runs(mut rows: Vec<EvalSummaryRow>) -> Vec<EvalSummaryRow> {
+    let mut counts: BTreeMap<(String, String), usize> = BTreeMap::new();
+    for row in &rows {
+        *counts
+            .entry((row.prompt_id.clone(), row.model.clone()))
+            .or_default() += 1;
+    }
+    let mut seen: BTreeMap<(String, String), usize> = BTreeMap::new();
+    for row in &mut rows {
+        let key = (row.prompt_id.clone(), row.model.clone());
+        let count = *counts.get(&key).unwrap_or(&1);
+        let base = strip_ollama_prefix(&row.model).to_string();
+        if count > 1 {
+            let entry = seen.entry(key).or_default();
+            *entry += 1;
+            row.model_label = format!("{base} #{}", *entry);
+        } else {
+            row.model_label = base;
+        }
+    }
+    rows
 }
 
 fn item_string(item: &Map<String, Value>, field: &str) -> Option<String> {
@@ -995,7 +1085,7 @@ fn grouped_rows_for_table<'a>(
         });
         for row in prompt_rows {
             let mut cells = vec![
-                format!("  {}", strip_ollama_prefix(&row.model)),
+                format!("  {}", row.display_model()),
                 if verbose {
                     format_grade(row.score.as_ref())
                 } else {
@@ -1141,6 +1231,36 @@ fn wrap_note(text: &str, indent: usize, width: usize) -> String {
         output.push_str(&prefix);
         output.push_str(line.trim_end());
         output.push('\n');
+    }
+    output
+}
+
+fn render_model_output(row: &EvalSummaryRow, color: bool) -> String {
+    let Some(response) = row.response.as_deref() else {
+        return format!("    {}\n", dim_or_plain("model output unavailable", color));
+    };
+    let mut output = format!("    {}\n", dim_or_plain("model output:", color));
+    let cleaned = strip_optional_fence(response).trim();
+    let mut count = 0usize;
+    for line in cleaned.lines() {
+        if count >= 18 {
+            output.push_str(&format!(
+                "      {}\n",
+                dim_or_plain(
+                    "... output truncated; inspect response.txt for full text",
+                    color
+                )
+            ));
+            break;
+        }
+        let trimmed = line.trim_end();
+        if trimmed.is_empty() && output.ends_with("\n\n") {
+            continue;
+        }
+        output.push_str("      ");
+        output.push_str(trimmed);
+        output.push('\n');
+        count += 1;
     }
     output
 }
@@ -1937,7 +2057,9 @@ items:
         .unwrap();
         let root = ProjectRoot::discover_from(&root_path).unwrap();
 
-        let rendered = super::report_from(&root, false, false).unwrap().render();
+        let rendered = super::report_from(&root, false, true, super::EvalReportOutput::None)
+            .unwrap()
+            .render();
 
         assert!(rendered.contains("Hindi    यहाँ"));
         assert!(rendered.contains("Roman    yahā̃"));

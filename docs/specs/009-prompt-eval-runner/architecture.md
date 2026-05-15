@@ -103,14 +103,14 @@ paste area. The command does not call Claude/ChatGPT directly.
 What the user runs:
 
 ```text
-hindi eval report [--no-color] [--verbose]
+hindi eval report [--no-color] [--verbose] [--output none|failures|all]
 ```
 
 Internal sequence:
 
 ```text
 src/cli.rs
-  parse EvalReport { color, verbose }
+  parse EvalReport { color, verbose, output }
 
 src/eval.rs
   discover project root
@@ -124,6 +124,7 @@ src/eval.rs
   hide run folder and raw score detail unless --verbose was passed
   color section headers, scores, times, and verdicts unless --no-color was passed
   render failure notes first, then warnings, then informational notes
+  show response.txt snippets when --output failures or --output all asks for them
 
 src/main.rs
   print EvalSummaryReport

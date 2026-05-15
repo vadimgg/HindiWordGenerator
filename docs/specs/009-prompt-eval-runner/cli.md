@@ -6,7 +6,7 @@
 |---|---|---|---|
 | `hindi eval run <prompt-id> <input-yaml>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
 | `hindi eval grade <run-id-or-path> [--response <path>]` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
-| `hindi eval report [--no-color] [--verbose]` | Scan eval runs and show source rows, grouped test/model results, timings, scores, verdicts, and grader notes. | New command. | Read-only. |
+| `hindi eval report [--no-color] [--verbose] [--output none\|failures\|all]` | Scan eval runs and show source rows, grouped test/model results, timings, scores, verdicts, notes, and optional model output snippets. | New command. | Read-only. |
 
 ## Help Text
 
@@ -16,7 +16,7 @@ Hindi Word Generator
 Usage:
   hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]
   hindi eval grade <run-id-or-path> [--response <path>]
-  hindi eval report [--no-color] [--verbose]
+  hindi eval report [--no-color] [--verbose] [--output none|failures|all]
 
 Examples:
   hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2
@@ -24,6 +24,7 @@ Examples:
   hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b --response /tmp/grade.yaml
   hindi eval report
   hindi eval report --verbose
+  hindi eval report --output failures
 
 Runs built-in prompt templates against YAML input using the one currently
 running Ollama model. Writes diagnostics to
@@ -42,6 +43,7 @@ Options:
                        of opening $EDITOR.
   --no-color           Print eval report without ANSI colors.
   --verbose            Include run folder and raw score detail in eval report.
+  --output <mode>      Show model response snippets: none, failures, or all.
 
 Compatibility aliases:
   hindi eval run --prompt-id <id> --input <path>
@@ -140,10 +142,7 @@ Summary: 4 passed  ·  0 failed  ·  avg 90%  ·  slowest register / gemma4:late
 Notes
   ⚠  register / translategemma:12b
     Register detection is usable; main caveat is markdown fencing.
-  ℹ  source-qa / gemma4:latest
-    Excellent source QA result; only formatting issue is markdown fencing.
-  ℹ  source-qa / translategemma:12b
-    Correctly identifies both source rows as clean.
+  ℹ  2 passing runs have informational notes only; use --verbose to show all notes.
 ```
 
 ## Progress And Log Messages
@@ -188,7 +187,9 @@ Notes
 names, speed bands, score bands, and pass/fail/not-graded verdicts by default.
 Slow model times are red, medium times are yellow, and fast times are green.
 `--no-color` prints the same table without ANSI color codes. `--verbose`
-restores run folders and raw score fractions for debugging.
+restores run folders, raw score fractions, and informational notes for
+debugging. `--output failures` shows response snippets for failed runs;
+`--output all` shows response snippets for every run.
 
 ## UX Review Notes
 
