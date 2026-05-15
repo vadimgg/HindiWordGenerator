@@ -228,8 +228,8 @@ accepted output JSON file; batch size is controlled by config.
 
 Prompt contract:
 
-- Each stage receives structured source rows: `id`, `hindi`, `romanisation`,
-  `english`, and optional `tags`. Title and subtitle are not sent — Rust
+- Each stage call receives one structured source row: `id`, `hindi`,
+  `romanisation`, `english`, and optional `tags`. Title and subtitle are not sent — Rust
   copies them itself and the model has no need for them.
 - Rust copies trusted source fields from YAML/planner data: title, subtitle,
   Hindi, romanisation, English, tags, `source_ref`, content fingerprint, and
@@ -243,6 +243,9 @@ Prompt contract:
   prose, but validation still decides whether the result can be written.
 - Missing, duplicate, or extra source IDs from any stage fail the batch before
   accepted output is written.
+- A generated output file may still contain multiple accepted sentence cards,
+  but model prompts are per sentence to keep local context small and reduce
+  malformed multi-item responses.
 
 If generation fails validation, inspect the run folder named in the error and
 rerun `hindi sentences generate` after fixing the source, prompt, or validator.

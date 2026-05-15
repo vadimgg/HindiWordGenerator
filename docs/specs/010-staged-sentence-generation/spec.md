@@ -22,7 +22,7 @@ good eval evidence into the actual generation pipeline.
 
 - Keep the public command shape stable:
   `hindi sentences generate --max-batches <n>`.
-- Use staged model calls for each planned batch:
+- Use per-sentence staged model calls inside each planned batch:
   register, literal, and word breakdown from existing translation.
 - Use the existing configured `sentence_generation` model for all stages.
 - Reuse or share the built-in prompt text proven by `hindi eval`.
@@ -51,7 +51,7 @@ good eval evidence into the actual generation pipeline.
 | AC01 | `hindi sentences generate --max-batches <n>` still parses and prints the same high-level success/failure sections. |
 | AC02 | Generation plans pending batches from YAML/output at runtime and exits before model calls when the planner reports source/output errors. |
 | AC03 | Generation checks the configured `sentence_generation` model once before stage calls and uses that same model for all stages. |
-| AC04 | For each planned batch, generation runs focused stages for register, literal, and word breakdown keyed by source ID. |
+| AC04 | For each planned source row, generation runs focused stages for register, literal, and word breakdown keyed by source ID. |
 | AC05 | Rust copies trusted fields from YAML/planner data: title, subtitle, Hindi, romanisation, English, tags, `source_ref`, fingerprint, and target path. |
 | AC06 | Stage outputs are merged by source ID; missing, duplicate, or extra item IDs fail the batch before accepted output is written. |
 | AC07 | Merged output creates valid `literal`, `register`, `tokens`, `words`, and optional `anki_tags` fields for every sentence. |

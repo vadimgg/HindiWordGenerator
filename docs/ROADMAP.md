@@ -132,9 +132,9 @@ Acceptance:
 - Calls the configured sentence model through focused enrichment stages:
   register, literal, and word breakdown from the existing translation.
 - Rust copies source fields and lineage from YAML/planner data.
-- Sends structured source rows to each stage and expects stage output keyed by
-  source ID; extraction may tolerate markdown fences or leading/trailing prose
-  before validation.
+- Sends one structured source row per stage call and expects stage output keyed
+  by source ID; extraction may tolerate markdown fences or leading/trailing
+  prose before validation.
 - Fails the batch before writing accepted output if any stage has missing,
   duplicate, or extra source IDs.
 - Validates output before writing.

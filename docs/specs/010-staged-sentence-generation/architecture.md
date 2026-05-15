@@ -71,13 +71,42 @@ src/sentence_generate.rs
   check configured model readiness once
   load/resolve staged prompt definitions
   for each planned batch:
-    render register prompt from trusted planner rows
+    for each source row:
+      render register prompt from one trusted planner row
+      call model
+      parse register response keyed by source id
+      render literal prompt from one trusted planner row
+      call model
+      parse literal response keyed by source id
+      render word-breakdown prompt from one trusted planner row
+      call model
+      parse word-breakdown response keyed by source id
+    merge all per-row stages by source id
+    build candidate sentence batch with Rust-owned source fields/source_ref
+    validate candidate
+    if validation passes:
+      write accepted output atomically
+      write accepted run report with stage metadata
+    if any stage/merge/validation/write fails:
+      write failed run report with stage metadata and errors
+      return failure without writing accepted output for that batch
+```
+
+The output batch remains the accepted write unit. The model prompt unit is one
+sentence. This keeps the local context small and avoids asking the model to
+return a multi-item word breakdown.
+
+Earlier version, intentionally not used:
+
+```text
+  for each planned batch:
+    render register prompt from all trusted planner rows
     call model
     parse register response keyed by source id
-    render literal prompt from trusted planner rows
+    render literal prompt from all trusted planner rows
     call model
     parse literal response keyed by source id
-    render word-breakdown prompt from trusted planner rows
+    render word-breakdown prompt from all trusted planner rows
     call model
     parse word-breakdown response keyed by source id
     merge all stages by source id

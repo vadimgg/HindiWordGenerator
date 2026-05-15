@@ -11,7 +11,9 @@ use crate::sentence_enrichment::{
     render_stage_prompt, StagedEnrichment, LITERAL_STAGE_ID, REGISTER_STAGE_ID,
     WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID,
 };
-use crate::sentence_plan::{generation_plan, PlannedSentenceBatch, SentencePlanError};
+use crate::sentence_plan::{
+    generation_plan, PlannedSentenceBatch, PlannedSentenceRow, SentencePlanError,
+};
 use crate::sentence_validate::{validate_sentence_batch, ExpectedSource};
 use crate::source_identity::content_fingerprint;
 use std::io;
@@ -169,77 +171,16 @@ pub fn generate_from<C: SentenceModelClient>(
         let target = root.join(&batch.target_path);
         let mut stages = Vec::new();
 
-        let (register, stage) = run_stage(
+        let staged = match run_staged_enrichment_per_sentence(
             client,
             &model,
             readiness.model_digest.as_deref(),
             batch_number,
             planned_batches,
-            REGISTER_STAGE_ID,
             &batch,
-            parse_register_stage,
-        );
-        stages.push(stage);
-        let register = match register {
-            Ok(records) => records,
-            Err(error) => {
-                return failed_batch_outcome(
-                    root,
-                    &batch,
-                    &model.original,
-                    readiness.model_digest.clone(),
-                    started_at,
-                    planned_batches,
-                    accepted,
-                    run_reports,
-                    stages,
-                    error,
-                );
-            }
-        };
-
-        let (literal, stage) = run_stage(
-            client,
-            &model,
-            readiness.model_digest.as_deref(),
-            batch_number,
-            planned_batches,
-            LITERAL_STAGE_ID,
-            &batch,
-            parse_literal_stage,
-        );
-        stages.push(stage);
-        let literal = match literal {
-            Ok(records) => records,
-            Err(error) => {
-                return failed_batch_outcome(
-                    root,
-                    &batch,
-                    &model.original,
-                    readiness.model_digest.clone(),
-                    started_at,
-                    planned_batches,
-                    accepted,
-                    run_reports,
-                    stages,
-                    error,
-                );
-            }
-        };
-
-        let (word_breakdown, stage) = run_stage(
-            client,
-            &model,
-            readiness.model_digest.as_deref(),
-            batch_number,
-            planned_batches,
-            WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID,
-            &batch,
-            parse_word_breakdown_stage,
-        );
-        stages.push(stage);
-        let word_breakdown = match word_breakdown {
-            Ok(records) => records,
+            &mut stages,
+        ) {
+            Ok(staged) => staged,
             Err(error) => {
                 return failed_batch_outcome(
                     root,
@@ -260,36 +201,29 @@ pub fn generate_from<C: SentenceModelClient>(
         progress(&format!(
             "batch {batch_number}/{planned_batches}: validating merged response"
         ));
-        let attempt = merge_staged_enrichment(
-            &batch,
-            StagedEnrichment {
-                register,
-                literal,
-                word_breakdown,
-            },
-        )
-        .map_err(|error| error.to_string())
-        .and_then(|candidate| {
-            let expected = expected_sources(&batch);
-            let validation = validate_sentence_batch(&candidate, &expected);
-            if !validation.is_valid() {
-                return Err(validation.errors().join("\n"));
-            }
-            progress(&format!(
-                "batch {batch_number}/{planned_batches}: validation passed in {}",
-                format_elapsed(validate_started.elapsed())
-            ));
-            let write_started = Instant::now();
-            let write =
-                write_sentence_batch(&target, &candidate).map_err(|error| error.to_string());
-            if write.is_ok() {
+        let attempt = merge_staged_enrichment(&batch, staged)
+            .map_err(|error| error.to_string())
+            .and_then(|candidate| {
+                let expected = expected_sources(&batch);
+                let validation = validate_sentence_batch(&candidate, &expected);
+                if !validation.is_valid() {
+                    return Err(validation.errors().join("\n"));
+                }
                 progress(&format!(
-                    "batch {batch_number}/{planned_batches}: accepted output written in {}",
-                    format_elapsed(write_started.elapsed())
+                    "batch {batch_number}/{planned_batches}: validation passed in {}",
+                    format_elapsed(validate_started.elapsed())
                 ));
-            }
-            write
-        });
+                let write_started = Instant::now();
+                let write =
+                    write_sentence_batch(&target, &candidate).map_err(|error| error.to_string());
+                if write.is_ok() {
+                    progress(&format!(
+                        "batch {batch_number}/{planned_batches}: accepted output written in {}",
+                        format_elapsed(write_started.elapsed())
+                    ));
+                }
+                write
+            });
 
         match attempt {
             Ok(write) => {
@@ -420,6 +354,78 @@ fn expected_sources(batch: &PlannedSentenceBatch) -> Vec<ExpectedSource> {
         .collect()
 }
 
+type StagedRunResult = Result<StagedEnrichment, String>;
+
+fn run_staged_enrichment_per_sentence<C: SentenceModelClient>(
+    client: &C,
+    model: &ModelSpec,
+    model_digest: Option<&str>,
+    batch_number: usize,
+    planned_batches: usize,
+    batch: &PlannedSentenceBatch,
+    stages: &mut Vec<SentenceStageReport>,
+) -> StagedRunResult {
+    let mut register = Vec::new();
+    let mut literal = Vec::new();
+    let mut word_breakdown = Vec::new();
+
+    for (row_index, row) in batch.rows.iter().enumerate() {
+        let row_number = row_index + 1;
+        let row_total = batch.rows.len();
+
+        let (records, stage) = run_stage(
+            client,
+            model,
+            model_digest,
+            batch_number,
+            planned_batches,
+            row_number,
+            row_total,
+            REGISTER_STAGE_ID,
+            row,
+            parse_register_stage,
+        );
+        stages.push(stage);
+        register.extend(records?);
+
+        let (records, stage) = run_stage(
+            client,
+            model,
+            model_digest,
+            batch_number,
+            planned_batches,
+            row_number,
+            row_total,
+            LITERAL_STAGE_ID,
+            row,
+            parse_literal_stage,
+        );
+        stages.push(stage);
+        literal.extend(records?);
+
+        let (records, stage) = run_stage(
+            client,
+            model,
+            model_digest,
+            batch_number,
+            planned_batches,
+            row_number,
+            row_total,
+            WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID,
+            row,
+            parse_word_breakdown_stage,
+        );
+        stages.push(stage);
+        word_breakdown.extend(records?);
+    }
+
+    Ok(StagedEnrichment {
+        register,
+        literal,
+        word_breakdown,
+    })
+}
+
 #[allow(clippy::too_many_arguments)]
 fn run_stage<C, T, F>(
     client: &C,
@@ -427,8 +433,10 @@ fn run_stage<C, T, F>(
     model_digest: Option<&str>,
     batch_number: usize,
     planned_batches: usize,
+    row_number: usize,
+    row_total: usize,
     stage_id: &str,
-    batch: &PlannedSentenceBatch,
+    row: &PlannedSentenceRow,
     parser: F,
 ) -> (Result<Vec<T>, String>, SentenceStageReport)
 where
@@ -436,7 +444,7 @@ where
     F: Fn(&str) -> Result<Vec<T>, crate::sentence_enrichment::EnrichmentError>,
 {
     let started = Instant::now();
-    let rendered = match render_stage_prompt(stage_id, &batch.rows) {
+    let rendered = match render_stage_prompt(stage_id, std::slice::from_ref(row)) {
         Ok(rendered) => rendered,
         Err(error) => {
             let error = error.to_string();
@@ -457,8 +465,8 @@ where
         }
     };
     progress(&format!(
-        "batch {batch_number}/{planned_batches}: stage {stage_id} sending {} item(s) to model",
-        batch.rows.len()
+        "batch {batch_number}/{planned_batches}: item {row_number}/{row_total} ({}) stage {stage_id} sending 1 item to model",
+        row.id
     ));
     let mut raw_response = None;
     let result = client
@@ -637,11 +645,15 @@ mod tests {
     use std::collections::VecDeque;
     use std::fs;
     use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
     struct FakeClient {
         ready: bool,
         outputs: RefCell<VecDeque<String>>,
+        prompts: RefCell<Vec<String>>,
     }
 
     impl SentenceModelClient for FakeClient {
@@ -657,13 +669,14 @@ mod tests {
         fn generate(
             &self,
             _model: &ModelSpec,
-            _prompt: &str,
+            prompt: &str,
         ) -> Result<ModelOutput, crate::ollama::ModelClientError> {
             let text = self
                 .outputs
                 .borrow_mut()
                 .pop_front()
                 .ok_or(crate::ollama::ModelClientError::MissingField("fake output"))?;
+            self.prompts.borrow_mut().push(prompt.to_string());
             Ok(ModelOutput { text })
         }
     }
@@ -693,12 +706,36 @@ mod tests {
         meaning: "here"
 "#
                 .to_string(),
+                r#"results:
+  - id: "0002"
+    register: standard
+"#
+                .to_string(),
+                r#"results:
+  - id: "0002"
+    literal: "there"
+"#
+                .to_string(),
+                r#"results:
+  - id: "0002"
+    words:
+      - hindi: "वहाँ"
+        roman: "vahā̃"
+        meaning: "there"
+"#
+                .to_string(),
             ])),
+            prompts: RefCell::new(Vec::new()),
         };
 
         let outcome = generate_from(&project, 1, &client).unwrap();
 
         assert!(outcome.success);
+        assert_eq!(client.prompts.borrow().len(), 6);
+        assert!(client.prompts.borrow()[0].contains("hindi: \"यहाँ\""));
+        assert!(!client.prompts.borrow()[0].contains("hindi: \"वहाँ\""));
+        assert!(client.prompts.borrow()[3].contains("hindi: \"वहाँ\""));
+        assert!(!client.prompts.borrow()[3].contains("hindi: \"यहाँ\""));
         assert_eq!(outcome.accepted.len(), 1);
         assert!(root
             .join("output/sentences/example_batch_01.json")
@@ -715,6 +752,7 @@ mod tests {
         .unwrap();
         assert!(report.contains("\"stages\""));
         assert!(report.contains("sentence/register"));
+        assert_eq!(report.matches("\"stage_id\"").count(), 6);
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -725,6 +763,7 @@ mod tests {
         let client = FakeClient {
             ready: false,
             outputs: RefCell::new(VecDeque::new()),
+            prompts: RefCell::new(Vec::new()),
         };
 
         let outcome = generate_from(&project, 1, &client).unwrap();
@@ -756,7 +795,22 @@ mod tests {
         meaning: "here"
 "#
                 .to_string(),
+                r#"results: []"#.to_string(),
+                r#"results:
+  - id: "0002"
+    literal: "there"
+"#
+                .to_string(),
+                r#"results:
+  - id: "0002"
+    words:
+      - hindi: "वहाँ"
+        roman: "vahā̃"
+        meaning: "there"
+"#
+                .to_string(),
             ])),
+            prompts: RefCell::new(Vec::new()),
         };
 
         let outcome = generate_from(&project, 1, &client).unwrap();
@@ -781,7 +835,7 @@ mod tests {
         fs::write(root.join("docs/ROADMAP.md"), "").unwrap();
         fs::write(
             root.join("input/sentences/example.yaml"),
-            "title: Test\nsubtitle: Unit\nitems:\n  - id: \"0001\"\n    hindi: \"यहाँ\"\n    romanisation: \"yahā̃\"\n    english: \"Here.\"\n",
+            "title: Test\nsubtitle: Unit\nitems:\n  - id: \"0001\"\n    hindi: \"यहाँ\"\n    romanisation: \"yahā̃\"\n    english: \"Here.\"\n  - id: \"0002\"\n    hindi: \"वहाँ\"\n    romanisation: \"vahā̃\"\n    english: \"There.\"\n",
         )
         .unwrap();
         root
@@ -792,6 +846,7 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        std::env::temp_dir().join(format!("{label}-{}-{nanos}", std::process::id()))
+        let count = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+        std::env::temp_dir().join(format!("{label}-{}-{nanos}-{count}", std::process::id()))
     }
 }
