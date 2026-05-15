@@ -1,0 +1,9 @@
+{
+  "id": "002",
+  "slug": "m1-5-yaml-id-migration",
+  "title": "M1.5 YAML ID Migration",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/002-m1-5-yaml-id-migration",
+  "created_at": "2026-05-14T18:10:59.341200+00:00"
+}

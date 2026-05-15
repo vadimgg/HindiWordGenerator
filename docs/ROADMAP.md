@@ -10,8 +10,8 @@ This is the active implementation plan. Older detailed planning drafts live in
 | Python archived | Done |
 | YAML source input | Done |
 | Active Rust docs simplified | Done |
-| Rust binary crate | Pending |
-| YAML item IDs migrated | Pending |
+| Rust binary crate | Done |
+| YAML item IDs migrated | Done |
 | Sentence planner | Pending |
 | Local sentence generation | Pending |
 | Audio parity | Pending |
