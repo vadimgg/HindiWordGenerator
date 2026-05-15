@@ -1,0 +1,9 @@
+{
+  "id": "004",
+  "slug": "m3-validator-writer",
+  "title": "M3 Validator And Writer",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/004-m3-validator-writer",
+  "created_at": "2026-05-15T03:00:15.486193+00:00"
+}
