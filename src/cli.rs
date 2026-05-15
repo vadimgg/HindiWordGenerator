@@ -8,6 +8,7 @@ pub enum Command {
     SourceIdsMigrate { dry_run: bool },
     SentencesHelp,
     SentencesPlan { max_batches: usize },
+    SentencesGenerate { max_batches: usize },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -77,11 +78,21 @@ where
                 .map(|max_batches| Command::SentencesPlan { max_batches })
                 .ok_or_else(|| CliError::new("--max-batches must be a positive integer."))
         }
+        [command, action, flag, value]
+            if command == "sentences" && action == "generate" && flag == "--max-batches" =>
+        {
+            parse_positive_usize(value)
+                .map(|max_batches| Command::SentencesGenerate { max_batches })
+                .ok_or_else(|| CliError::new("--max-batches must be a positive integer."))
+        }
         [command, action] if command == "sentences" && action == "plan" => {
             Err(CliError::new("Missing required option: --max-batches <n>"))
         }
+        [command, action] if command == "sentences" && action == "generate" => {
+            Err(CliError::new("Missing required option: --max-batches <n>"))
+        }
         [command, ..] if command == "sentences" => Err(CliError::new(
-            "Usage: hindi sentences plan --max-batches <n>",
+            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n>",
         )),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
@@ -97,7 +108,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan pending sentence batches"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan or generate pending sentence batches"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -109,7 +120,7 @@ pub fn source_ids_help_text() -> &'static str {
 }
 
 pub fn sentences_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n\nCommands:\n  plan    Preview pending sentence batches without writing output"
+    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n\nCommands:\n  plan       Preview pending sentence batches without writing output\n  generate   Generate pending sentence batches with the configured local model"
 }
 
 #[cfg(test)]
@@ -151,6 +162,10 @@ mod tests {
         assert_eq!(
             parse(["sentences", "plan", "--max-batches", "2"]).unwrap(),
             Command::SentencesPlan { max_batches: 2 }
+        );
+        assert_eq!(
+            parse(["sentences", "generate", "--max-batches", "2"]).unwrap(),
+            Command::SentencesGenerate { max_batches: 2 }
         );
     }
 

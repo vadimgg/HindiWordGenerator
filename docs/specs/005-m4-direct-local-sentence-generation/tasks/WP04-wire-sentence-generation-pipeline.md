@@ -2,7 +2,7 @@
 id: WP04
 title: Wire sentence generation pipeline
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP03"]
 acceptance_refs: ["AC01", "AC02", "AC03", "AC04", "AC15", "AC16", "AC17", "AC21", "AC22"]
 extra_skills: []

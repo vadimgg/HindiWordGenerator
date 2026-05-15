@@ -10,6 +10,10 @@ pub fn source_fingerprint(hindi: &str, romanisation: &str, english: &str) -> Str
     format!("sha256:{}", sha256_hex(joined.as_bytes()))
 }
 
+pub fn content_fingerprint(bytes: &[u8]) -> String {
+    format!("sha256:{}", sha256_hex(bytes))
+}
+
 fn normalize_source_field(value: &str) -> String {
     value
         .nfc()

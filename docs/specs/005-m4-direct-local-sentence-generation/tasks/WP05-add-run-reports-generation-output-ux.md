@@ -2,7 +2,7 @@
 id: WP05
 title: Add run reports and generation output UX
 agent_type: cli-ux-reviewer
-status: planned
+status: done
 dependencies: ["WP04"]
 acceptance_refs: ["AC18", "AC19", "AC20"]
 extra_skills: []

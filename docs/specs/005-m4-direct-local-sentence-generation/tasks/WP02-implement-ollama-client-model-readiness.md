@@ -2,7 +2,7 @@
 id: WP02
 title: Implement Ollama client and model readiness
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP01"]
 acceptance_refs: ["AC05", "AC06", "AC07", "AC08", "AC09"]
 extra_skills: []

@@ -2,7 +2,7 @@
 id: WP01
 title: Review M4 generation contract
 agent_type: plan-reviewer
-status: planned
+status: done
 dependencies: []
 acceptance_refs: ["AC01", "AC02", "AC03", "AC04", "AC05", "AC06", "AC07", "AC08", "AC09", "AC10", "AC11", "AC12", "AC13", "AC14", "AC15", "AC16", "AC17", "AC18", "AC19", "AC20", "AC21", "AC22"]
 extra_skills: []

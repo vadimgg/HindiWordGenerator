@@ -2,7 +2,7 @@
 id: WP03
 title: Build enrichment prompt and response extraction
 agent_type: hindi-prompt-tuner
-status: planned
+status: done
 dependencies: ["WP02"]
 acceptance_refs: ["AC10", "AC11", "AC12", "AC13", "AC14"]
 extra_skills: []
