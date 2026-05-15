@@ -223,26 +223,28 @@ fn plan_sentence_audio(root: &ProjectRoot) -> Result<SentenceAudioPlan, Sentence
         let mut entries = Vec::new();
         for (index, sentence) in sentences.iter().enumerate() {
             let index = index + 1;
-            if sentence
-                .get("audio")
-                .and_then(Value::as_str)
-                .is_some_and(|value| !value.trim().is_empty())
-            {
-                entries.push(AudioEntryPlan {
-                    index,
-                    hindi: String::new(),
-                    audio_path: PathBuf::new(),
-                    needs_synthesis: false,
-                    needs_patch: false,
-                    skipped_existing: true,
-                });
-                continue;
-            }
             let hindi = sentence
                 .get("hindi")
                 .and_then(Value::as_str)
                 .unwrap_or_default()
                 .to_string();
+            if let Some(audio_path) = sentence
+                .get("audio")
+                .and_then(Value::as_str)
+                .filter(|value| !value.trim().is_empty())
+                .map(PathBuf::from)
+            {
+                let needs_synthesis = !root.join(&audio_path).is_file();
+                entries.push(AudioEntryPlan {
+                    index,
+                    hindi,
+                    audio_path,
+                    needs_synthesis,
+                    needs_patch: false,
+                    skipped_existing: !needs_synthesis,
+                });
+                continue;
+            }
             let hint = sentence
                 .get("romanisation")
                 .or_else(|| sentence.get("english"))
@@ -458,6 +460,7 @@ fn ascii_chars(ch: char) -> Vec<char> {
         'ā' | 'á' | 'à' | 'â' | 'ã' | 'ä' | 'å' | 'Ā' => vec!['a'],
         'ī' | 'ĩ' | 'í' | 'ì' | 'î' | 'ï' | 'Ī' | 'Ĩ' => vec!['i'],
         'ū' | 'ú' | 'ù' | 'û' | 'ü' | 'Ū' => vec!['u'],
+        'ō' | 'õ' | 'ó' | 'ò' | 'ô' | 'ö' | 'Ō' | 'Õ' => vec!['o'],
         'ṛ' | 'Ṛ' => vec!['r'],
         'ṭ' | 'Ṭ' => vec!['t'],
         'ḍ' | 'Ḍ' => vec!['d'],
@@ -500,6 +503,7 @@ mod tests {
     #[test]
     fn slug_is_ascii_safe() {
         assert_eq!(slug("kyā āp Kamalā jī haĩ?"), "kya_ap_kamala_ji_hai");
+        assert_eq!(slug("kyõ?"), "kyo");
     }
 
     #[test]
@@ -512,6 +516,26 @@ mod tests {
 
         assert_eq!(plan.scanned_cards(), 2);
         assert_eq!(plan.skipped_existing(), 1);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn existing_audio_field_with_missing_file_regenerates_without_patch() {
+        let root = fixture_root();
+        write_batch(&root, true);
+        fs::remove_file(root.join("audio/sentences/example_batch_01/02_existing.mp3")).unwrap();
+        let project = ProjectRoot::discover_from(&root).unwrap();
+
+        let outcome = audio_from(&project, &FakeTts { fail: false }).unwrap();
+
+        assert_eq!(outcome.generated_mp3s.len(), 2);
+        assert_eq!(outcome.patched_cards, 1);
+        let after =
+            fs::read_to_string(root.join("output/sentences/example_batch_01.json")).unwrap();
+        assert!(after.contains("audio/sentences/example_batch_01/02_existing.mp3"));
+        assert!(root
+            .join("audio/sentences/example_batch_01/02_existing.mp3")
+            .is_file());
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -563,6 +587,12 @@ mod tests {
 
     fn write_batch(root: &Path, existing_audio: bool) {
         let second_audio = if existing_audio {
+            fs::create_dir_all(root.join("audio/sentences/example_batch_01")).unwrap();
+            fs::write(
+                root.join("audio/sentences/example_batch_01/02_existing.mp3"),
+                b"existing mp3",
+            )
+            .unwrap();
             r#""audio":"audio/sentences/example_batch_01/02_existing.mp3","#
         } else {
             ""

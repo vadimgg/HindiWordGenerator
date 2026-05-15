@@ -15,7 +15,7 @@ This is the active implementation plan. Older detailed planning drafts live in
 | Sentence planner | Done |
 | Validator and writer | Done |
 | Local sentence generation | Pending |
-| Audio parity | Pending |
+| Audio parity | Done |
 | Viewer/export parity | Pending |
 
 ## M1: Rust CLI Skeleton
@@ -163,6 +163,10 @@ Acceptance:
 ## M5: Audio Parity
 
 Goal: backfill sentence audio without regenerating cards.
+
+Status: Done. Rust can synthesize missing sentence MP3s with the current
+Google/gTTS-backed path, patch accepted JSON with relative audio paths, and
+repair missing MP3 files when an audio field already exists.
 
 Command:
 
