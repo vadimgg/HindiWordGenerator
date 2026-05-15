@@ -1,6 +1,6 @@
 ---
 id: WP03
-title: Seed sentence eval prompts and smoke test
+title: Seed sentence eval prompts, grading prompts, and smoke test
 agent_type: rust-engineer
 status: planned
 dependencies: [WP01, WP02]
@@ -10,7 +10,8 @@ read_scope:
   - docs/ROMANISATION.md
   - generation_prompt_sentences_enrichment.txt
 write_scope:
-  - prompts/sentences/
+  - src/eval_prompts/
+  - src/eval.rs
 protected_scope: []
 validation:
   - make check
@@ -25,16 +26,19 @@ canceled_at: null
 
 ## Goal
 
-Add reusable sentence prompt templates for the sub-tasks we want to compare and
-run one live eval smoke when a single Ollama model is available.
+Add paired built-in sentence input/grading prompt templates for the sub-tasks we
+want to compare and run one live eval smoke when a single Ollama model is
+available.
 
 ## Done When
 
-- Prompt templates exist for source QA, English translation, literal
+- Paired input/grading prompt templates exist for source QA, English translation, literal
   translation, register, word breakdown, word breakdown from existing
   translation, and full enrichment.
 - Templates use `{{#each items}}` and include Hindi with romanisation directly
   underneath wherever Hindi appears.
+- `hindi eval grade --run <eval-folder>` opens a grading prompt and records a
+  structured response.
 - `make check` passes.
 - One live `hindi eval` smoke result is recorded in the final handoff, or the
   reason it was skipped is recorded.

@@ -30,16 +30,19 @@ canceled_at: null
 
 ## Goal
 
-Add the `hindi eval` command shape and pure template-context machinery. This
-work package does not need to contact Ollama yet; it should prove YAML input,
-field selection, `--max-items`, and Handlebars rendering work.
+Add the `hindi eval input` / `hindi eval grade` command shapes plus pure
+template-context machinery. This work package does not need to contact Ollama
+yet; it should prove YAML input, prompt ID lookup, field selection,
+`--max-items`, and Handlebars rendering work.
 
 ## Done When
 
-- CLI parses `hindi eval --input <path> --prompt <path> [--fields <list>] [--max-items <n>]`.
+- CLI parses `hindi eval input --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]`.
+- CLI parses `hindi eval grade --run <eval-folder>`.
 - Help text documents the command and does not mention `--model`.
 - Eval context exposes `input_yaml`, `items_yaml`, structured `items`,
-  `input_path`, and `prompt_path`.
+  `input_path`, `prompt_id`, and `run_path`.
+- Prompt IDs resolve to paired input/grading templates.
 - Missing selected fields fail clearly.
 - `cargo test cli` and `cargo test eval` pass.
 
@@ -51,5 +54,6 @@ field selection, `--max-items`, and Handlebars rendering work.
 
 ## Handoff Notes
 
-Use Handlebars for runtime prompt templates. The prompt examples should prefer
-`{{#each items}}` so one-item and many-item prompts use the same structure.
+Use Handlebars for built-in runtime prompt templates. The prompt examples should
+prefer `{{#each items}}` so one-item and many-item prompts use the same
+structure.

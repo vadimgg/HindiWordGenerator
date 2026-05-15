@@ -28,8 +28,9 @@ canceled_at: null
 
 ## Goal
 
-Connect `hindi eval` to the one currently running Ollama model and persist each
-run under ignored `eval/<run-id>/` without touching accepted learner output.
+Connect `hindi eval input` to the one currently running Ollama model and persist
+each run under ignored `eval/<run-id>/` without touching accepted learner
+output.
 
 ## Done When
 
