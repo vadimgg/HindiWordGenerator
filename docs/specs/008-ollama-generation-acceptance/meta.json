@@ -1,0 +1,9 @@
+{
+  "id": "008",
+  "slug": "ollama-generation-acceptance",
+  "title": "ollama generation acceptance",
+  "kind": "code",
+  "target_branch": "main",
+  "spec_branch": "spec/008-ollama-generation-acceptance",
+  "created_at": "2026-05-15T08:55:00.847310+00:00"
+}
