@@ -18,10 +18,26 @@ pub struct SentenceRunReport {
     pub model_digest: Option<String>,
     pub prompt_path: String,
     pub prompt_fingerprint: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stages: Vec<SentenceStageReport>,
     pub started_at_unix: u64,
     pub finished_at_unix: u64,
     pub validation: ValidationSummary,
     pub writes: WriteSummary,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SentenceStageReport {
+    pub stage_id: String,
+    pub prompt_version: String,
+    pub prompt_fingerprint: String,
+    pub model: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_digest: Option<String>,
+    pub duration_ms: u128,
+    pub ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

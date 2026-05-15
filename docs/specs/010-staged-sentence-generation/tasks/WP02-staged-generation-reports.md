@@ -2,7 +2,7 @@
 id: WP02
 title: Wire staged generation and run reports
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP01"]
 acceptance_refs: ["AC01", "AC02", "AC03", "AC08", "AC09", "AC10", "AC11", "AC12"]
 extra_skills: []
