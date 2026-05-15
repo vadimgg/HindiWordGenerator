@@ -1,7 +1,12 @@
 mod accepted_writer;
 mod cli;
+mod config;
 mod doctor;
+mod ollama;
 mod project;
+mod run_report;
+mod sentence_enrichment;
+mod sentence_generate;
 mod sentence_plan;
 mod sentence_schema;
 mod sentence_validate;
@@ -82,6 +87,22 @@ fn main() -> ExitCode {
                         ExitCode::from(1)
                     } else {
                         ExitCode::SUCCESS
+                    }
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Ok(cli::Command::SentencesGenerate { max_batches }) => {
+            match sentence_generate::generate_from_current_dir(max_batches) {
+                Ok(report) => {
+                    println!("{}", report.render());
+                    if report.success {
+                        ExitCode::SUCCESS
+                    } else {
+                        ExitCode::from(1)
                     }
                 }
                 Err(error) => {

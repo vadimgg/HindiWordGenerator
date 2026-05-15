@@ -55,6 +55,8 @@ pub struct SentencePlan {
 struct SourceFile {
     relative_path: PathBuf,
     stem: String,
+    title: Option<String>,
+    subtitle: Option<String>,
     items: Vec<SourceRow>,
 }
 
@@ -64,6 +66,7 @@ struct SourceRow {
     hindi: String,
     romanisation: String,
     english: String,
+    tags: Vec<String>,
     fingerprint: String,
 }
 
@@ -84,6 +87,30 @@ pub fn plan_from_current_dir(max_batches: usize) -> Result<SentencePlan, Sentenc
     plan(&root, max_batches)
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SentenceGenerationPlan {
+    pub batches: Vec<PlannedSentenceBatch>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlannedSentenceBatch {
+    pub source_file: PathBuf,
+    pub title: Option<String>,
+    pub subtitle: Option<String>,
+    pub target_path: PathBuf,
+    pub rows: Vec<PlannedSentenceRow>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlannedSentenceRow {
+    pub id: String,
+    pub hindi: String,
+    pub romanisation: String,
+    pub english: String,
+    pub tags: Vec<String>,
+    pub fingerprint: String,
+}
+
 fn current_dir() -> Result<PathBuf, SentencePlanError> {
     std::env::current_dir().map_err(|source| SentencePlanError::Io {
         path: PathBuf::from("."),
@@ -101,6 +128,23 @@ fn plan(root: &ProjectRoot, max_batches: usize) -> Result<SentencePlan, Sentence
         accepted_cards,
         max_batches,
     ))
+}
+
+pub fn generation_plan(
+    root: &ProjectRoot,
+    max_batches: usize,
+) -> Result<(SentencePlan, SentenceGenerationPlan), SentencePlanError> {
+    let source_files = load_source_files(root)?;
+    let output_paths = collect_json_paths(root)?;
+    let accepted_cards = load_accepted_cards(root, &output_paths)?;
+    let summary = build_plan(
+        source_files.clone(),
+        output_paths.clone(),
+        accepted_cards.clone(),
+        max_batches,
+    );
+    let generation = build_generation_plan(source_files, output_paths, accepted_cards, max_batches);
+    Ok((summary, generation))
 }
 
 impl SentencePlan {
@@ -148,7 +192,7 @@ impl SentencePlan {
             }
             output.push_str("\nNext\n  Fix source/output issues, then rerun the planner.");
         } else {
-            output.push_str("\nNext\n  M4 adds: hindi sentences generate --max-batches 1");
+            output.push_str("\nNext\n  hindi sentences generate --max-batches 1");
         }
 
         output
@@ -289,6 +333,99 @@ fn build_plan(
     }
 }
 
+fn build_generation_plan(
+    source_files: Vec<SourceFile>,
+    output_paths: Vec<PathBuf>,
+    accepted_cards: Vec<AcceptedCard>,
+    max_batches: usize,
+) -> SentenceGenerationPlan {
+    let done_keys = done_keys(&source_files, &accepted_cards);
+    let mut remaining_batches = max_batches;
+    let mut planned_files = Vec::new();
+    let mut batches = Vec::new();
+
+    for source_file in source_files {
+        if remaining_batches == 0 {
+            break;
+        }
+        let pending_rows = source_file
+            .items
+            .iter()
+            .filter(|row| {
+                !done_keys.contains(&(
+                    source_file.relative_path.to_string_lossy().to_string(),
+                    row.id.clone(),
+                ))
+            })
+            .collect::<Vec<_>>();
+
+        for chunk in pending_rows.chunks(DEFAULT_BATCH_SIZE) {
+            if remaining_batches == 0 {
+                break;
+            }
+            let target_path = next_batch_path(
+                &source_file.stem,
+                &output_paths,
+                planned_files_for_stem(&planned_files, &source_file.stem),
+            );
+            planned_files.push(target_path.clone());
+            batches.push(PlannedSentenceBatch {
+                source_file: source_file.relative_path.clone(),
+                title: source_file.title.clone(),
+                subtitle: source_file.subtitle.clone(),
+                target_path,
+                rows: chunk
+                    .iter()
+                    .map(|row| PlannedSentenceRow {
+                        id: row.id.clone(),
+                        hindi: row.hindi.clone(),
+                        romanisation: row.romanisation.clone(),
+                        english: row.english.clone(),
+                        tags: row.tags.clone(),
+                        fingerprint: row.fingerprint.clone(),
+                    })
+                    .collect(),
+            });
+            remaining_batches -= 1;
+        }
+    }
+
+    SentenceGenerationPlan { batches }
+}
+
+fn done_keys(
+    source_files: &[SourceFile],
+    accepted_cards: &[AcceptedCard],
+) -> BTreeSet<(String, String)> {
+    let mut source_index = BTreeMap::new();
+    for source_file in source_files {
+        for row in &source_file.items {
+            source_index.insert(
+                (
+                    source_file.relative_path.to_string_lossy().to_string(),
+                    row.id.clone(),
+                ),
+                row.fingerprint.clone(),
+            );
+        }
+    }
+
+    let mut done = BTreeSet::new();
+    for card in accepted_cards {
+        let Some(source_ref) = &card.source_ref else {
+            continue;
+        };
+        let key = (source_ref.file.clone(), source_ref.item_id.clone());
+        if source_index
+            .get(&key)
+            .is_some_and(|current| current == &source_ref.fingerprint)
+        {
+            done.insert(key);
+        }
+    }
+    done
+}
+
 fn next_batch_path(stem: &str, existing: &[PathBuf], offset: usize) -> PathBuf {
     let mut existing_numbers = BTreeSet::new();
     let prefix = format!("{stem}_batch_");
@@ -364,13 +501,25 @@ fn load_source_files(root: &ProjectRoot) -> Result<Vec<SourceFile>, SentencePlan
             .and_then(|value| value.to_str())
             .unwrap_or_default()
             .to_string();
+        let title = top_level_field(&content, "title");
+        let subtitle = top_level_field(&content, "subtitle");
         files.push(SourceFile {
             relative_path,
             stem,
+            title,
+            subtitle,
             items: parse_source_rows(&content),
         });
     }
     Ok(files)
+}
+
+fn top_level_field(content: &str, name: &str) -> Option<String> {
+    let prefix = format!("{name}: ");
+    content.lines().find_map(|line| {
+        line.strip_prefix(&prefix)
+            .map(|value| unquote(value.trim()).to_string())
+    })
 }
 
 fn parse_source_rows(content: &str) -> Vec<SourceRow> {
@@ -395,12 +544,14 @@ fn parse_source_rows(content: &str) -> Vec<SourceRow> {
         let hindi = field(block, "hindi").unwrap_or_default();
         let romanisation = field(block, "romanisation").unwrap_or_default();
         let english = field(block, "english").unwrap_or_default();
+        let tags = list_field(block, "tags");
         let fingerprint = source_fingerprint(&hindi, &romanisation, &english);
         rows.push(SourceRow {
             id,
             hindi,
             romanisation,
             english,
+            tags,
             fingerprint,
         });
     }
@@ -421,6 +572,21 @@ fn field(block: &[&str], name: &str) -> Option<String> {
         }
     }
     None
+}
+
+fn list_field(block: &[&str], name: &str) -> Vec<String> {
+    let field_prefix = format!("    {name}:");
+    let Some(start) = block.iter().position(|line| *line == field_prefix) else {
+        return Vec::new();
+    };
+    block[start + 1..]
+        .iter()
+        .take_while(|line| line.starts_with("      - "))
+        .filter_map(|line| {
+            line.strip_prefix("      - ")
+                .map(|value| unquote(value.trim()).to_string())
+        })
+        .collect()
 }
 
 fn unquote(value: &str) -> &str {
@@ -699,12 +865,15 @@ mod tests {
         let source = SourceFile {
             relative_path: PathBuf::from("input/sentences/example.yaml"),
             stem: "example".to_string(),
+            title: Some("Example".to_string()),
+            subtitle: Some("Chapter".to_string()),
             items: (1..=12)
                 .map(|index| super::SourceRow {
                     id: format!("{index:04}"),
                     hindi: String::new(),
                     romanisation: String::new(),
                     english: String::new(),
+                    tags: Vec::new(),
                     fingerprint: format!("fp-{index}"),
                 })
                 .collect(),
@@ -741,11 +910,14 @@ mod tests {
         SourceFile {
             relative_path: PathBuf::from("input/sentences/example.yaml"),
             stem: "example".to_string(),
+            title: Some("Example".to_string()),
+            subtitle: Some("Chapter".to_string()),
             items: vec![super::SourceRow {
                 id: id.to_string(),
                 hindi: String::new(),
                 romanisation: String::new(),
                 english: String::new(),
+                tags: Vec::new(),
                 fingerprint: fingerprint.to_string(),
             }],
         }
