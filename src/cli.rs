@@ -6,14 +6,33 @@ pub enum Command {
     Viewer,
     ViewerHelp,
     ExportHelp,
-    Export { source: String, topic: String },
+    Export {
+        source: String,
+        topic: String,
+    },
     SourceIdsHelp,
     SourceIdsCheck,
-    SourceIdsMigrate { dry_run: bool },
+    SourceIdsMigrate {
+        dry_run: bool,
+    },
     SentencesHelp,
-    SentencesPlan { max_batches: usize },
-    SentencesGenerate { max_batches: usize },
+    SentencesPlan {
+        max_batches: usize,
+    },
+    SentencesGenerate {
+        max_batches: usize,
+    },
     SentencesAudio,
+    EvalHelp,
+    EvalRun {
+        input: String,
+        prompt_id: String,
+        fields: Option<String>,
+        max_items: Option<usize>,
+    },
+    EvalGrade {
+        run: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,8 +143,77 @@ where
         [command, ..] if command == "sentences" => Err(CliError::new(
             "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio",
         )),
+        [command, flag] if command == "eval" && is_help_flag(flag) => Ok(Command::EvalHelp),
+        [command, action, ..] if command == "eval" && action == "run" => parse_eval_run(&args[2..]),
+        [command, action, flag, value]
+            if command == "eval" && action == "grade" && flag == "--run" =>
+        {
+            Ok(Command::EvalGrade { run: value.clone() })
+        }
+        [command, action, ..] if command == "eval" && action == "grade" => {
+            Err(CliError::new("Usage: hindi eval grade --run <run-id-or-path>"))
+        }
+        [command, ..] if command == "eval" => Err(CliError::new(
+            "Usage: hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n       hindi eval grade --run <run-id-or-path>",
+        )),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
+}
+
+fn parse_eval_run(args: &[String]) -> Result<Command, CliError> {
+    let mut input = None;
+    let mut prompt_id = None;
+    let mut fields = None;
+    let mut max_items = None;
+    let mut index = 0usize;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--input" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --input."));
+                };
+                input = Some(value.clone());
+            }
+            "--prompt-id" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --prompt-id."));
+                };
+                prompt_id = Some(value.clone());
+            }
+            "--fields" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --fields."));
+                };
+                fields = Some(value.clone());
+            }
+            "--max-items" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --max-items."));
+                };
+                max_items = Some(
+                    parse_positive_usize(value)
+                        .ok_or_else(|| CliError::new("--max-items must be a positive integer."))?,
+                );
+            }
+            value => {
+                return Err(CliError::new(format!(
+                    "Unknown eval run option: {value}\n\nUsage: hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]"
+                )));
+            }
+        }
+        index += 1;
+    }
+    Ok(Command::EvalRun {
+        input: input.ok_or_else(|| CliError::new("Missing required option: --input <path>"))?,
+        prompt_id: prompt_id
+            .ok_or_else(|| CliError::new("Missing required option: --prompt-id <id>"))?,
+        fields,
+        max_items,
+    })
 }
 
 fn parse_positive_usize(value: &str) -> Option<usize> {
@@ -138,7 +226,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n  hindi eval grade --run <run-id-or-path>\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  eval         Run and grade prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -159,6 +247,10 @@ pub fn source_ids_help_text() -> &'static str {
 
 pub fn sentences_help_text() -> &'static str {
     "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n\nCommands:\n  plan       Preview pending sentence batches without writing output\n  generate   Generate pending sentence batches with the configured local model\n  audio      Backfill missing audio for accepted sentence batches"
+}
+
+pub fn eval_help_text() -> &'static str {
+    "Hindi Word Generator\n\nUsage:\n  hindi eval run --input <path> --prompt-id <id> [--fields <list>] [--max-items <n>]\n  hindi eval grade --run <run-id-or-path>\n\nRuns built-in prompt templates against YAML input using the one currently running Ollama model. Writes diagnostics to eval/<prompt-category>/<prompt-name>/<run-id>/ and never writes accepted output.\n\nOptions:\n  --input <path>       YAML source file\n  --prompt-id <id>     Built-in prompt id, e.g. sentence/register\n  --fields <list>      Comma-separated top-level item fields\n                       Default: id,hindi,romanisation,english\n  --max-items <n>      Limit selected items before rendering\n  --run <run-id-or-path>\n                       Eval run folder or prompt-scoped run id to grade"
 }
 
 #[cfg(test)]
@@ -211,6 +303,80 @@ mod tests {
             parse(["sentences", "audio"]).unwrap(),
             Command::SentencesAudio
         );
+    }
+
+    #[test]
+    fn exposes_eval_commands() {
+        assert_eq!(parse(["eval", "--help"]).unwrap(), Command::EvalHelp);
+        assert_eq!(
+            parse([
+                "eval",
+                "run",
+                "--input",
+                "input/sentences/sample.yaml",
+                "--prompt-id",
+                "sentence/register"
+            ])
+            .unwrap(),
+            Command::EvalRun {
+                input: "input/sentences/sample.yaml".to_string(),
+                prompt_id: "sentence/register".to_string(),
+                fields: None,
+                max_items: None,
+            }
+        );
+        assert_eq!(
+            parse([
+                "eval",
+                "run",
+                "--input",
+                "input/sentences/sample.yaml",
+                "--prompt-id",
+                "sentence/register",
+                "--fields",
+                "id,hindi",
+                "--max-items",
+                "2"
+            ])
+            .unwrap(),
+            Command::EvalRun {
+                input: "input/sentences/sample.yaml".to_string(),
+                prompt_id: "sentence/register".to_string(),
+                fields: Some("id,hindi".to_string()),
+                max_items: Some(2),
+            }
+        );
+        assert_eq!(
+            parse(["eval", "grade", "--run", "sentence/register/run1"]).unwrap(),
+            Command::EvalGrade {
+                run: "sentence/register/run1".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn eval_run_requires_input_and_prompt_id() {
+        let error = parse(["eval", "run"]).unwrap_err().to_string();
+        assert!(error.contains("--input"));
+
+        let error = parse(["eval", "run", "--input", "x.yaml"])
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("--prompt-id"));
+
+        let error = parse([
+            "eval",
+            "run",
+            "--input",
+            "x.yaml",
+            "--prompt-id",
+            "p",
+            "--max-items",
+            "0",
+        ])
+        .unwrap_err()
+        .to_string();
+        assert!(error.contains("positive integer"));
     }
 
     #[test]

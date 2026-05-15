@@ -1,0 +1,17 @@
+task: sentence_register_detection
+instructions: |
+  For each item, identify the sentence register as exactly one of:
+  informal, standard, formal.
+
+  Return YAML only:
+  results:
+    - id: "0001"
+      register: standard
+      rationale: "Short reason."
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+    english: "{{english}}"
+{{/each}}

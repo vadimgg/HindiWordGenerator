@@ -2,7 +2,7 @@
 id: WP01
 title: Add eval CLI and template context
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: []
 acceptance_refs: [AC01, AC03, AC04, AC05]
 extra_skills: []

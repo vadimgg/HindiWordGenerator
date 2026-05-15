@@ -2,7 +2,7 @@
 id: WP03
 title: Seed sentence eval prompts, grading prompts, and smoke test
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP01, WP02]
 acceptance_refs: [AC08, AC10, AC11]
 extra_skills: []

@@ -2,7 +2,7 @@
 id: WP02
 title: Run eval through Ollama and write artifacts
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP01]
 acceptance_refs: [AC02, AC06, AC07, AC09]
 extra_skills: []

@@ -2,6 +2,7 @@ mod accepted_writer;
 mod cli;
 mod config;
 mod doctor;
+mod eval;
 mod export;
 mod ollama;
 mod project;
@@ -131,6 +132,35 @@ fn main() -> ExitCode {
                 } else {
                     ExitCode::from(1)
                 }
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
+        Ok(cli::Command::EvalHelp) => {
+            println!("{}", cli::eval_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::EvalRun {
+            input,
+            prompt_id,
+            fields,
+            max_items,
+        }) => match eval::run_from_current_dir(&input, &prompt_id, fields.as_deref(), max_items) {
+            Ok(report) => {
+                println!("{}", report.render());
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
+        Ok(cli::Command::EvalGrade { run }) => match eval::grade_from_current_dir(&run) {
+            Ok(report) => {
+                println!("{}", report.render());
+                ExitCode::SUCCESS
             }
             Err(error) => {
                 eprintln!("{error}");

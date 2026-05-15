@@ -1,0 +1,16 @@
+task: sentence_literal_translation
+instructions: |
+  Give a close literal English rendering for each sentence. The literal should
+  reveal Hindi structure while staying understandable.
+
+  Return YAML only:
+  results:
+    - id: "0001"
+      literal: "..."
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+    english: "{{english}}"
+{{/each}}

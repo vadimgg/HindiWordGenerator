@@ -1,0 +1,15 @@
+task: sentence_english_translation
+instructions: |
+  Translate each Hindi sentence into natural English. Preserve meaning and
+  politeness markers such as ji where relevant.
+
+  Return YAML only:
+  results:
+    - id: "0001"
+      english: "..."
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+{{/each}}

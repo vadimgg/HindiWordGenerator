@@ -1,0 +1,19 @@
+task: sentence_word_breakdown_from_existing_translation
+instructions: |
+  Use the given English translation to help map the Hindi sentence into a
+  word-by-word learner breakdown. Do not invent words that are not present.
+
+  Return YAML only:
+  results:
+    - id: "0001"
+      words:
+        - hindi: "..."
+          roman: "..."
+          meaning: "..."
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+    english: "{{english}}"
+{{/each}}

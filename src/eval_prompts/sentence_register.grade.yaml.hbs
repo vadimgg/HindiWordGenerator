@@ -1,0 +1,34 @@
+You are grading a Hindi sentence register detection eval run.
+
+Run:
+  run_id: "{{run_id}}"
+  prompt_id: "{{prompt_id}}"
+  model: "{{model}}"
+  input_path: "{{input_path}}"
+  item_count: {{item_count}}
+
+Model response:
+```text
+{{response}}
+```
+
+Grade the result with this shared 1-4 axis scale:
+- 1 = broken
+- 2 = weak
+- 3 = acceptable
+- 4 = good
+
+Return YAML or JSON matching this schema:
+run_id: "{{run_id}}"
+grader: human
+graded_at: "unix:<replace>"
+scores:
+  accuracy: { score: 1, max: 4, note: "" }
+  completeness: { score: 1, max: 4, note: "" }
+  format_compliance: { score: 1, max: 4, note: "" }
+  consistency: { score: 1, max: 4, note: "" }
+  confidence: { score: 1, max: 4, note: "" }
+total: { score: 5, max: 20, pct: 25 }
+verdict: fail
+item_flags: []
+summary: ""
