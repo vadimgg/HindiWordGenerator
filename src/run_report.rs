@@ -38,6 +38,8 @@ pub struct SentenceStageReport {
     pub ok: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raw_response: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

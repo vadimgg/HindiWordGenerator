@@ -451,6 +451,7 @@ where
                     started,
                     false,
                     Some(error),
+                    None,
                 ),
             );
         }
@@ -459,10 +460,14 @@ where
         "batch {batch_number}/{planned_batches}: stage {stage_id} sending {} item(s) to model",
         batch.rows.len()
     ));
+    let mut raw_response = None;
     let result = client
         .generate(model, &rendered.prompt)
         .map_err(|error| error.to_string())
-        .and_then(|output| parser(&output.text).map_err(|error| error.to_string()));
+        .and_then(|output| {
+            raw_response = Some(output.text.clone());
+            parser(&output.text).map_err(|error| error.to_string())
+        });
     let ok = result.is_ok();
     let error = result.as_ref().err().cloned();
     let elapsed = started.elapsed();
@@ -488,6 +493,7 @@ where
             started,
             ok,
             error,
+            raw_response,
         ),
     )
 }
@@ -502,6 +508,7 @@ fn stage_report(
     started: Instant,
     ok: bool,
     error: Option<String>,
+    raw_response: Option<String>,
 ) -> SentenceStageReport {
     SentenceStageReport {
         stage_id: stage_id.to_string(),
@@ -512,6 +519,7 @@ fn stage_report(
         duration_ms: started.elapsed().as_millis(),
         ok,
         error,
+        raw_response,
     }
 }
 
@@ -572,6 +580,12 @@ fn report_for(
     accepted: Vec<PathBuf>,
     skipped: Vec<PathBuf>,
 ) -> SentenceRunReport {
+    let mut stages = stages;
+    if valid {
+        for stage in &mut stages {
+            stage.raw_response = None;
+        }
+    }
     let prompt_fingerprint = aggregate_stage_fingerprint(&stages);
     SentenceRunReport {
         command: "hindi sentences generate".to_string(),

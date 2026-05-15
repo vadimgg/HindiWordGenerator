@@ -5,11 +5,20 @@ instructions: |
 
   Hard rule: words are word entries only. Do not include spaces or punctuation
   as entries, and do not attach punctuation to Hindi or roman strings.
+  Question marks, commas, periods, danda, dashes, parentheses, and quote marks
+  are punctuation. They must never appear as their own word entries.
+
+  Roman output must contain only the romanised word text. Do not include
+  punctuation in roman strings. For example, use `kyā`, never `kyā?`; use
+  `hai`, never `hai.`
 
   Bad:
     - hindi: "हैं?"
       roman: "haĩ?"
       meaning: "are?"
+    - hindi: "?"
+      roman: "?"
+      meaning: "question mark"
     - hindi: "–"
       roman: "-"
       meaning: "dash"
@@ -18,6 +27,9 @@ instructions: |
     - hindi: "हैं"
       roman: "haĩ"
       meaning: "are"
+    - hindi: "क्या"
+      roman: "kyā"
+      meaning: "what"
 
   Return raw YAML only. Do not wrap the response in markdown fences. Do not add
   prose before or after the YAML.

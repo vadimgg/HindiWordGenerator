@@ -267,7 +267,7 @@ fn generation_stage_prompt_templates() -> Vec<StagePromptTemplate> {
         },
         StagePromptTemplate {
             id: WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID,
-            version: "v2",
+            version: "v3",
             template: include_str!(
                 "eval_prompts/sentence_word_breakdown_from_translation.yaml.hbs"
             ),
@@ -371,7 +371,12 @@ fn word_breakdown_to_tokens_and_words(
 ) -> (Vec<SentenceToken>, Vec<SentenceWord>, Vec<String>) {
     let mut tokens = Vec::new();
     let mut words = Vec::new();
-    for (index, mut word) in breakdown.words.into_iter().enumerate() {
+    for (index, mut word) in breakdown
+        .words
+        .into_iter()
+        .filter(|word| !is_punctuation_only_word(word))
+        .enumerate()
+    {
         let word_id = word.id.clone().unwrap_or_else(|| format!("w{}", index + 1));
         word.id = Some(word_id.clone());
         word.kind = word.kind.or_else(|| Some("word".to_string()));
@@ -385,6 +390,40 @@ fn word_breakdown_to_tokens_and_words(
         words.push(word);
     }
     (tokens, words, breakdown.anki_tags)
+}
+
+fn is_punctuation_only_word(word: &SentenceWord) -> bool {
+    let hindi = word.hindi.as_deref().unwrap_or_default().trim();
+    let roman = word.roman.as_deref().unwrap_or_default().trim();
+    !hindi.is_empty()
+        && !roman.is_empty()
+        && hindi.chars().all(is_punctuation_char)
+        && roman.chars().all(is_punctuation_char)
+}
+
+fn is_punctuation_char(ch: char) -> bool {
+    ch.is_whitespace()
+        || matches!(
+            ch,
+            ',' | '.'
+                | '?'
+                | '!'
+                | ';'
+                | ':'
+                | '-'
+                | '–'
+                | '—'
+                | '।'
+                | '॥'
+                | '('
+                | ')'
+                | '['
+                | ']'
+                | '"'
+                | '“'
+                | '”'
+                | '\''
+        )
 }
 
 fn extract_json_object(response_text: &str) -> Option<&str> {
@@ -543,6 +582,47 @@ results:
             merged.sentences[0].source_ref.as_ref().unwrap().file,
             "input/sentences/example.yaml"
         );
+    }
+
+    #[test]
+    fn staged_merge_drops_punctuation_only_word_entries() {
+        let batch = batch(vec![row("0001")]);
+        let staged = StagedEnrichment {
+            register: vec![register("0001")],
+            literal: vec![literal("0001")],
+            word_breakdown: vec![WordBreakdownStageRecord {
+                id: "0001".to_string(),
+                words: vec![
+                    SentenceWord {
+                        id: None,
+                        hindi: Some("यहाँ".to_string()),
+                        roman: Some("yahā̃".to_string()),
+                        meaning: Some("here".to_string()),
+                        kind: None,
+                        gender: None,
+                        number: None,
+                        note: None,
+                    },
+                    SentenceWord {
+                        id: None,
+                        hindi: Some("?".to_string()),
+                        roman: Some("?".to_string()),
+                        meaning: Some("question mark".to_string()),
+                        kind: None,
+                        gender: None,
+                        number: None,
+                        note: None,
+                    },
+                ],
+                anki_tags: Vec::new(),
+            }],
+        };
+
+        let merged = merge_staged_enrichment(&batch, staged).unwrap();
+
+        assert_eq!(merged.sentences[0].words.len(), 1);
+        assert_eq!(merged.sentences[0].tokens.len(), 1);
+        assert_eq!(merged.sentences[0].words[0].hindi.as_deref(), Some("यहाँ"));
     }
 
     #[test]
