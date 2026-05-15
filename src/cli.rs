@@ -1,8 +1,12 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Help,
     Doctor,
     DoctorHelp,
+    Viewer,
+    ViewerHelp,
+    ExportHelp,
+    Export { source: String, topic: String },
     SourceIdsHelp,
     SourceIdsCheck,
     SourceIdsMigrate { dry_run: bool },
@@ -43,6 +47,28 @@ where
         [flag] if is_help_flag(flag) => Ok(Command::Help),
         [command] if command == "doctor" => Ok(Command::Doctor),
         [command, flag] if command == "doctor" && is_help_flag(flag) => Ok(Command::DoctorHelp),
+        [command] if command == "viewer" => Ok(Command::Viewer),
+        [command, flag] if command == "viewer" && is_help_flag(flag) => Ok(Command::ViewerHelp),
+        [command, flag] if command == "export" && is_help_flag(flag) => Ok(Command::ExportHelp),
+        [command, source_flag, source, topic_flag, topic]
+            if command == "export" && source_flag == "--source" && topic_flag == "--topic" =>
+        {
+            Ok(Command::Export {
+                source: source.clone(),
+                topic: topic.clone(),
+            })
+        }
+        [command, topic_flag, topic, source_flag, source]
+            if command == "export" && source_flag == "--source" && topic_flag == "--topic" =>
+        {
+            Ok(Command::Export {
+                source: source.clone(),
+                topic: topic.clone(),
+            })
+        }
+        [command, ..] if command == "export" => Err(CliError::new(
+            "Usage: hindi export --source <title> --topic <subtitle>",
+        )),
         [command, subcommand, flag]
             if command == "source" && subcommand == "ids" && is_help_flag(flag) =>
         {
@@ -112,11 +138,19 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
 }
 
 pub fn doctor_help_text() -> &'static str {
     "Hindi Word Generator\n\nUsage:\n  hindi doctor\n\nChecks:\n  project root\n  input/output/audio folders\n  sentence prompt files\n  optional hindi.toml\n  Ollama service reachability\n\nThis command is read-only and writes no learner data."
+}
+
+pub fn viewer_help_text() -> &'static str {
+    "Hindi Word Generator\n\nUsage:\n  hindi viewer\n\nServes the Astro viewer from viewer/ and prints the local URL."
+}
+
+pub fn export_help_text() -> &'static str {
+    "Hindi Word Generator\n\nUsage:\n  hindi export --source <title> --topic <subtitle>\n\nOptions:\n  --source   Match accepted sentence batch title\n  --topic    Match accepted sentence batch subtitle"
 }
 
 pub fn source_ids_help_text() -> &'static str {
@@ -135,6 +169,8 @@ mod tests {
     fn exposes_doctor_command() {
         assert_eq!(parse(["doctor"]).unwrap(), Command::Doctor);
         assert_eq!(parse(["doctor", "--help"]).unwrap(), Command::DoctorHelp);
+        assert_eq!(parse(["viewer"]).unwrap(), Command::Viewer);
+        assert_eq!(parse(["viewer", "--help"]).unwrap(), Command::ViewerHelp);
     }
 
     #[test]
@@ -175,6 +211,29 @@ mod tests {
             parse(["sentences", "audio"]).unwrap(),
             Command::SentencesAudio
         );
+    }
+
+    #[test]
+    fn exposes_export_command() {
+        assert_eq!(
+            parse([
+                "export",
+                "--source",
+                "Complete Hindi",
+                "--topic",
+                "Chapter 02"
+            ])
+            .unwrap(),
+            Command::Export {
+                source: "Complete Hindi".to_string(),
+                topic: "Chapter 02".to_string()
+            }
+        );
+        assert_eq!(parse(["export", "--help"]).unwrap(), Command::ExportHelp);
+        assert!(parse(["export"])
+            .unwrap_err()
+            .to_string()
+            .contains("Usage:"));
     }
 
     #[test]
