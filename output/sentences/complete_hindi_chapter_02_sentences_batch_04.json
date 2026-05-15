@@ -1,0 +1,390 @@
+{
+  "title": "Complete Hindi",
+  "subtitle": "Chapter 02",
+  "sentences": [
+    {
+      "hindi": "और आप कैसे हैं?",
+      "romanisation": "aur āp kaise haĩ?",
+      "english": "And how are you?",
+      "literal": "and you how are?",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0016",
+        "fingerprint": "sha256:6e508a1ee27b5ef05da04524bd00a763c3ad2975b40af6c178ac754beffaae3c"
+      },
+      "tokens": [
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "आप",
+          "roman": "āp",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "kind": "word",
+          "word_id": "w4"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "और",
+          "roman": "aur",
+          "meaning": "and",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "आप",
+          "roman": "āp",
+          "meaning": "you",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "meaning": "how",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "मैं भी अच्छा हूँ, शुक्रिया।",
+      "romanisation": "maĩ bhī acchā hū̃, śukriyā.",
+      "english": "I'm well too, thank you.",
+      "literal": "I also good am, thank you.",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0017",
+        "fingerprint": "sha256:639308e92455e92efe4200f079385fd962350c9c6dc0dacb3ce7c9442c6de315"
+      },
+      "tokens": [
+        {
+          "hindi": "मैं",
+          "roman": "maĩ",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "भी",
+          "roman": "bhī",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "हूँ",
+          "roman": "hū̃",
+          "kind": "word",
+          "word_id": "w4"
+        },
+        {
+          "hindi": "शुक्रिया",
+          "roman": "śukriyā",
+          "kind": "word",
+          "word_id": "w5"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "मैं",
+          "roman": "maĩ",
+          "meaning": "I",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "भी",
+          "roman": "bhī",
+          "meaning": "also, too",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "meaning": "good",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "हूँ",
+          "roman": "hū̃",
+          "meaning": "am",
+          "kind": "word"
+        },
+        {
+          "id": "w5",
+          "hindi": "शुक्रिया",
+          "roman": "śukriyā",
+          "meaning": "thank you",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "ऋषि और संगीता कैसे हैं?",
+      "romanisation": "Ṛṣi aur Sangītā kaise haĩ?",
+      "english": "How are Rishi and Sangeeta?",
+      "literal": "Rishi and Sangeeta how are?",
+      "register": "informal",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0018",
+        "fingerprint": "sha256:6e6fbb2c0ab09047ab789214273411a9ad04d29cce0fce419954f78bc12b8a18"
+      },
+      "tokens": [
+        {
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "kind": "word",
+          "word_id": "w4"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "kind": "word",
+          "word_id": "w5"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "meaning": "Rishi",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "और",
+          "roman": "aur",
+          "meaning": "and",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "meaning": "Sangeeta",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "कैसे",
+          "roman": "kaise",
+          "meaning": "how",
+          "kind": "word"
+        },
+        {
+          "id": "w5",
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "ऋषि अच्छा है, लेकिन संगीता अच्छी नहीं है।",
+      "romanisation": "Ṛṣi acchā hai, lekin Sangītā acchī nahī̃ hai.",
+      "english": "Rishi is well, but Sangeeta isn't all right.",
+      "literal": "Rishi good is, but Sangeeta well not is.",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0019",
+        "fingerprint": "sha256:cf395daba3fe47d2532645373e9b5cded701a5ff7b99f09163f25720d5e3aed9"
+      },
+      "tokens": [
+        {
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "kind": "word",
+          "word_id": "w4"
+        },
+        {
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "kind": "word",
+          "word_id": "w5"
+        },
+        {
+          "hindi": "अच्छी",
+          "roman": "acchī",
+          "kind": "word",
+          "word_id": "w6"
+        },
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "kind": "word",
+          "word_id": "w7"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_id": "w8"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "ऋषि",
+          "roman": "Ṛṣi",
+          "meaning": "Rishi",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "अच्छा",
+          "roman": "acchā",
+          "meaning": "good",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "meaning": "but",
+          "kind": "word"
+        },
+        {
+          "id": "w5",
+          "hindi": "संगीता",
+          "roman": "Sangītā",
+          "meaning": "Sangeeta",
+          "kind": "word"
+        },
+        {
+          "id": "w6",
+          "hindi": "अच्छी",
+          "roman": "acchī",
+          "meaning": "good",
+          "kind": "word"
+        },
+        {
+          "id": "w7",
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "meaning": "not",
+          "kind": "word"
+        },
+        {
+          "id": "w8",
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "क्यों?",
+      "romanisation": "kyõ?",
+      "english": "Why?",
+      "literal": "Why?",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0020",
+        "fingerprint": "sha256:53a38cc840b34df5dfd0ffe5977920f296536720cc23157ac8801a0f989c71f6"
+      },
+      "tokens": [
+        {
+          "hindi": "क्यों",
+          "roman": "kyõ",
+          "kind": "word",
+          "word_id": "w1"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "क्यों",
+          "roman": "kyõ",
+          "meaning": "why",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    }
+  ]
+}
