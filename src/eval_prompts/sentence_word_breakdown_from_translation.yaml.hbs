@@ -1,0 +1,38 @@
+task: sentence_word_breakdown_from_existing_translation
+instructions: |
+  Use the given English translation to help map the Hindi sentence into a
+  word-by-word learner breakdown. Do not invent words that are not present.
+
+  Hard rule: words are word entries only. Do not include spaces or punctuation
+  as entries, and do not attach punctuation to Hindi or roman strings.
+
+  Bad:
+    - hindi: "हैं?"
+      roman: "haĩ?"
+      meaning: "are?"
+    - hindi: "–"
+      roman: "-"
+      meaning: "dash"
+
+  Good:
+    - hindi: "हैं"
+      roman: "haĩ"
+      meaning: "are"
+
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
+  results:
+    - id: "0001"
+      words:
+        - hindi: "..."
+          roman: "..."
+          meaning: "..."
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+    english: "{{english}}"
+{{/each}}

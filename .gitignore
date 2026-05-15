@@ -14,6 +14,7 @@ target/
 viewer/node_modules/
 viewer/dist/
 runs/
+eval/
 
 demos-read-only/
 reference/

@@ -1,0 +1,22 @@
+task: sentence_source_qa
+instructions: |
+  Review each source row for Hindi, romanisation, and English alignment issues.
+  Look for duplicated wording, wrong English meaning, romanisation mismatch, or
+  obvious unnatural source text.
+
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
+  results:
+    - id: "0001"
+      status: ok
+      issues: []
+      suggested_correction: null
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+    english: "{{english}}"
+{{/each}}

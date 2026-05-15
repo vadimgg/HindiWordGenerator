@@ -1,0 +1,48 @@
+task: sentence_register_detection
+instructions: |
+  For each item, identify the sentence register as exactly one of:
+  informal, standard, formal.
+
+  Use the Hindi and romanisation, not only the English translation.
+
+  Register guide:
+  - informal: casual/intimate speech with tum/tu forms, close friends/family,
+    teasing, slang, or deliberately casual particles.
+  - standard: neutral everyday speech, including polite-but-normal speech with
+    āp/āpkā, respectful names, or ordinary classroom/workplace questions.
+  - formal: highly respectful, official, ceremonial, deferential, or distant
+    speech; strong honorific style or public/official address.
+
+  Important: direct address is not automatically informal. Polite forms such as
+  बताइए / batāie, कीजिए / kījie, आइए / āie, आप / āp, आपका / āpkā, and
+  honorific/plural agreement usually mean standard or formal, not informal.
+
+  Examples:
+    - "प्रकाश, बताइए, आपका मेहमान प्रताप – वह क्या करता है?"
+      "Prakāś, batāie, āpkā mehmān Pratāp – vah kyā kartā hai?"
+      register: standard
+      reason: polite imperative and āpkā; conversational but respectful
+    - "कैसे हो प्रताप?"
+      "kaise ho Pratāp?"
+      register: informal
+      reason: ho form implies tum-level familiar address
+    - "शर्मा जी गोश्त नहीं खाते।"
+      "Śarmā jī gośt nahī̃ khāte."
+      register: standard
+      reason: respectful ji, but ordinary factual sentence
+
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
+  results:
+    - id: "0001"
+      register: standard
+      rationale: "Short reason."
+items:
+{{#each items}}
+  - id: "{{id}}"
+    hindi: "{{hindi}}"
+    romanisation: "{{romanisation}}"
+    english: "{{english}}"
+{{/each}}

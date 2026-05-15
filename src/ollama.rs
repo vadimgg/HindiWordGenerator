@@ -24,6 +24,12 @@ pub struct ModelOutput {
     pub text: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RunningModel {
+    pub name: String,
+    pub digest: Option<String>,
+}
+
 #[derive(Debug)]
 pub enum ModelClientError {
     UnsupportedProvider(String),
@@ -54,6 +60,20 @@ impl std::fmt::Display for ModelClientError {
 }
 
 pub struct HttpOllamaClient;
+
+impl HttpOllamaClient {
+    pub fn running_models(&self) -> Result<Vec<RunningModel>, ModelClientError> {
+        running_models()
+    }
+
+    pub fn generate_model(
+        &self,
+        model: &str,
+        prompt: &str,
+    ) -> Result<ModelOutput, ModelClientError> {
+        generate_with_model(model, prompt)
+    }
+}
 
 impl SentenceModelClient for HttpOllamaClient {
     fn check_model(&self, model: &ModelSpec) -> ModelReadiness {
@@ -97,28 +117,68 @@ impl SentenceModelClient for HttpOllamaClient {
                 model.provider.clone(),
             ));
         }
-        let body = json!({
-            "model": model.model,
-            "prompt": prompt,
-            "stream": false,
-        })
-        .to_string();
-        let response = http_request("POST", "/api/generate", Some(&body))?;
-        if response.status != 200 {
-            return Err(ModelClientError::Status {
-                status: response.status,
-                body: response.body,
-            });
-        }
-        let value: serde_json::Value =
-            serde_json::from_str(&response.body).map_err(ModelClientError::Json)?;
-        let text = value
-            .get("response")
-            .and_then(|value| value.as_str())
-            .ok_or(ModelClientError::MissingField("response"))?
-            .to_string();
-        Ok(ModelOutput { text })
+        generate_with_model(&model.model, prompt)
     }
+}
+
+fn running_models() -> Result<Vec<RunningModel>, ModelClientError> {
+    let response = http_request("GET", "/api/ps", None)?;
+    if response.status != 200 {
+        return Err(ModelClientError::Status {
+            status: response.status,
+            body: response.body,
+        });
+    }
+    parse_running_models(&response.body)
+}
+
+fn parse_running_models(body: &str) -> Result<Vec<RunningModel>, ModelClientError> {
+    let value: serde_json::Value = serde_json::from_str(body).map_err(ModelClientError::Json)?;
+    let models = value
+        .get("models")
+        .and_then(|value| value.as_array())
+        .ok_or(ModelClientError::MissingField("models"))?;
+    Ok(models
+        .iter()
+        .filter_map(|model| {
+            let name = model
+                .get("name")
+                .or_else(|| model.get("model"))
+                .and_then(|value| value.as_str())?;
+            let digest = model
+                .get("digest")
+                .and_then(|value| value.as_str())
+                .map(ToString::to_string);
+            Some(RunningModel {
+                name: name.to_string(),
+                digest,
+            })
+        })
+        .collect())
+}
+
+fn generate_with_model(model: &str, prompt: &str) -> Result<ModelOutput, ModelClientError> {
+    let body = json!({
+        "model": model,
+        "prompt": prompt,
+        "stream": false,
+    })
+    .to_string();
+    let response = http_request("POST", "/api/generate", Some(&body))?;
+    if response.status != 200 {
+        return Err(ModelClientError::Status {
+            status: response.status,
+            body: response.body,
+        });
+    }
+    let value: serde_json::Value =
+        serde_json::from_str(&response.body).map_err(ModelClientError::Json)?;
+    let text = value
+        .get("response")
+        .and_then(|value| value.as_str())
+        .ok_or(ModelClientError::MissingField("response"))?
+        .to_string();
+    Ok(ModelOutput { text })
 }
 
 fn show_model(model: &ModelSpec) -> Result<Option<String>, ModelClientError> {
@@ -240,7 +300,7 @@ fn find_crlf(bytes: &[u8], start: usize) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_http_response;
+    use super::{parse_http_response, parse_running_models};
 
     #[test]
     fn parses_http_response_status_and_body() {
@@ -260,5 +320,17 @@ mod tests {
 
         assert_eq!(response.status, 200);
         assert_eq!(response.body, "{\"ok\":1}");
+    }
+
+    #[test]
+    fn parses_running_models_from_api_ps() {
+        let models = parse_running_models(
+            r#"{"models":[{"name":"translategemma:12b","digest":"sha256:abc"}]}"#,
+        )
+        .unwrap();
+
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].name, "translategemma:12b");
+        assert_eq!(models[0].digest.as_deref(), Some("sha256:abc"));
     }
 }
