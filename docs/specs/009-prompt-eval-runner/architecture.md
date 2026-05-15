@@ -103,18 +103,20 @@ paste area. The command does not call Claude/ChatGPT directly.
 What the user runs:
 
 ```text
-hindi eval report [--no-color] [--verbose] [--output none|failures|all]
+hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]
 ```
 
 Internal sequence:
 
 ```text
 src/cli.rs
-  parse EvalReport { color, verbose, output }
+  parse EvalReport { color, verbose, history, output }
 
 src/eval.rs
   discover project root
   recursively scan eval/ for meta.json files
+  compare meta.prompt_fingerprint with the current built-in prompt fingerprint
+  hide older/legacy prompt runs unless --history was passed
   load optional grade.json beside each meta.json
   load source YAML referenced by meta.input_path when available
   collect displayed source rows by item id
@@ -132,6 +134,8 @@ src/main.rs
 
 The report is read-only. It treats `meta.json` and optional `grade.json` as
 structured authority and uses source YAML only for human display context.
+The default view answers "how did the current prompt do?" `--history` answers
+"how has this prompt family changed over time?"
 
 ## Part 4 - Shared Abstractions
 
@@ -353,7 +357,7 @@ treat it as structured authority.
 |---|---|---|---|
 | `eval/<prompt-id>/<run-id>/prompt.txt` | `hindi eval run` | humans, `hindi eval grade` | Exact rendered prompt sent to Ollama. |
 | `eval/<prompt-id>/<run-id>/response.txt` | `hindi eval run` | humans, `hindi eval grade` | Raw model response, never parsed as authority. |
-| `eval/<prompt-id>/<run-id>/meta.json` | `hindi eval run` | humans, `hindi eval grade`, `hindi eval report` | Run provenance: prompt ID, model, timing, input path, fields, item count, artifact paths. |
+| `eval/<prompt-id>/<run-id>/meta.json` | `hindi eval run` | humans, `hindi eval grade`, `hindi eval report` | Run provenance: prompt ID, prompt version, prompt fingerprint, model, timing, input path, fields, item count, artifact paths. |
 | `eval/<prompt-id>/<run-id>/summary.txt` | `hindi eval run`, `hindi eval grade` | humans | Human-readable digest; regenerated from run/grade state. |
 | `eval/<prompt-id>/<run-id>/grade_prompt.txt` | `hindi eval grade` | humans | Exact grading prompt text. |
 | `eval/<prompt-id>/<run-id>/grade_packet.md` | `hindi eval grade`, user editor | humans, `hindi eval grade` | Editor handoff file with prompt and paste area. |

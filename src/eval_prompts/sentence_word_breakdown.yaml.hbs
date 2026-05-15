@@ -1,9 +1,28 @@
 task: sentence_word_breakdown
 instructions: |
-  Break each sentence into visible Hindi word occurrences. Do not include spaces
-  or punctuation as entries. Include Hindi, roman, and meaning.
+  Break each sentence into visible Hindi word occurrences. Include Hindi, roman,
+  and meaning.
 
-  Return YAML only:
+  Hard rule: words are word entries only. Do not include spaces or punctuation
+  as entries, and do not attach punctuation to Hindi or roman strings.
+
+  Bad:
+    - hindi: "हैं?"
+      roman: "haĩ?"
+      meaning: "are?"
+    - hindi: ","
+      roman: ","
+      meaning: "comma"
+
+  Good:
+    - hindi: "हैं"
+      roman: "haĩ"
+      meaning: "are"
+
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
   results:
     - id: "0001"
       words:

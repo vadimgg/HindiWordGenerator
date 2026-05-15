@@ -1,6 +1,7 @@
 use crate::cli::EvalReportOutput;
 use crate::ollama::{HttpOllamaClient, ModelClientError, ModelOutput, RunningModel};
 use crate::project::{ProjectRoot, ProjectRootError};
+use crate::source_identity::content_fingerprint;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -195,6 +196,8 @@ pub struct EvalSummaryReport {
     color: bool,
     verbose: bool,
     output: EvalReportOutput,
+    history: bool,
+    hidden_history_count: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -211,6 +214,9 @@ struct EvalSummaryRow {
     run_id: String,
     response: Option<String>,
     model_label: String,
+    prompt_version: Option<String>,
+    prompt_fingerprint: Option<String>,
+    current_prompt: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -226,7 +232,21 @@ impl EvalSummaryReport {
     pub fn render(&self) -> String {
         let mut output = format!("{}\n\n", self.section_title("Eval Report"));
         if self.rows.is_empty() {
-            output.push_str("No eval runs found under eval/.\n");
+            if self.hidden_history_count > 0 && !self.history {
+                output.push_str("No eval runs match the current built-in prompt fingerprints.\n\n");
+                output.push_str(&format!(
+                    "{}\n",
+                    dim_or_plain(
+                        &format!(
+                            "{} older prompt runs hidden; use `hindi eval report --history` to compare them.",
+                            self.hidden_history_count
+                        ),
+                        self.color
+                    )
+                ));
+            } else {
+                output.push_str("No eval runs found under eval/.\n");
+            }
             return output;
         }
 
@@ -248,7 +268,10 @@ impl EvalSummaryReport {
             output.push_str(&format!(
                 "{}\n\n",
                 dim_or_plain(
-                    "scope: every result below grades this full item set",
+                    &format!(
+                        "scope: every result below grades this full item set · {}",
+                        self.prompt_scope_text()
+                    ),
                     self.color
                 )
             ));
@@ -326,6 +349,19 @@ impl EvalSummaryReport {
         }
 
         output
+    }
+
+    fn prompt_scope_text(&self) -> String {
+        if self.history {
+            "showing all prompt versions".to_string()
+        } else if self.hidden_history_count > 0 {
+            format!(
+                "current prompt fingerprints only; {} older runs hidden",
+                self.hidden_history_count
+            )
+        } else {
+            "current prompt fingerprints only".to_string()
+        }
     }
 
     fn render_result_table(&self, rows: &[&EvalSummaryRow]) -> String {
@@ -451,6 +487,7 @@ struct EvalRowGroup<'a> {
 #[derive(Debug, Clone)]
 struct PromptTemplate {
     id: &'static str,
+    version: &'static str,
     input_template: &'static str,
     grade_template: &'static str,
     threshold_pct: u8,
@@ -467,6 +504,10 @@ struct SourceYaml {
 struct EvalMeta {
     run_id: String,
     prompt_id: String,
+    #[serde(default)]
+    prompt_version: Option<String>,
+    #[serde(default)]
+    prompt_fingerprint: Option<String>,
     input_path: String,
     fields: Vec<String>,
     max_items: Option<usize>,
@@ -557,6 +598,8 @@ pub fn run_with_client<C: EvalModelClient>(
     let total_started = Instant::now();
     let started_at = timestamp_string();
     let template = prompt_template(prompt_id)?;
+    let prompt_version = template.version.to_string();
+    let prompt_fingerprint = prompt_fingerprint(&template);
     let selected_fields = parse_fields(fields)?;
     let input_path = resolve_input_path(root, input);
     let input_relative = relative_to_root(root, &input_path);
@@ -604,6 +647,8 @@ pub fn run_with_client<C: EvalModelClient>(
     let meta = EvalMeta {
         run_id: prompt_scoped_run_id(prompt_id, &run_path),
         prompt_id: prompt_id.to_string(),
+        prompt_version: Some(prompt_version),
+        prompt_fingerprint: Some(prompt_fingerprint),
         input_path: input_relative.to_string_lossy().to_string(),
         fields: selected_fields.clone(),
         max_items,
@@ -653,9 +698,10 @@ pub fn report_from_current_dir(
     color: bool,
     verbose: bool,
     output: EvalReportOutput,
+    history: bool,
 ) -> Result<EvalSummaryReport, EvalError> {
     let root = ProjectRoot::discover_from(current_dir()?)?;
-    report_from(&root, color, verbose, output)
+    report_from(&root, color, verbose, output, history)
 }
 
 fn report_from(
@@ -663,6 +709,7 @@ fn report_from(
     color: bool,
     verbose: bool,
     output: EvalReportOutput,
+    history: bool,
 ) -> Result<EvalSummaryReport, EvalError> {
     let eval_root = root.join("eval");
     if !eval_root.is_dir() {
@@ -671,6 +718,8 @@ fn report_from(
             color,
             verbose,
             output,
+            history,
+            hidden_history_count: 0,
         });
     }
 
@@ -689,6 +738,7 @@ fn report_from(
         let grade = read_optional_grade(&run_path)?;
         let source_items = source_items_for_meta(root, &meta);
         let response = read_optional_response(&run_path)?;
+        let current_prompt = matches_current_prompt(&meta);
         rows.push(EvalSummaryRow {
             prompt_id: meta.prompt_id,
             model: meta.model,
@@ -704,8 +754,17 @@ fn report_from(
                 .to_string(),
             response,
             model_label: String::new(),
+            prompt_version: meta.prompt_version,
+            prompt_fingerprint: meta.prompt_fingerprint,
+            current_prompt,
         });
     }
+
+    let total_rows = rows.len();
+    if !history {
+        rows.retain(|row| row.current_prompt);
+    }
+    let hidden_history_count = total_rows.saturating_sub(rows.len());
 
     rows.sort_by(|left, right| {
         left.prompt_id
@@ -714,10 +773,12 @@ fn report_from(
     });
 
     Ok(EvalSummaryReport {
-        rows: label_repeated_model_runs(rows),
+        rows: label_repeated_model_runs(rows, history),
         color,
         verbose,
         output,
+        history,
+        hidden_history_count,
     })
 }
 
@@ -814,6 +875,28 @@ fn prompt_template(prompt_id: &str) -> Result<PromptTemplate, EvalError> {
         .ok_or_else(|| EvalError::UnknownPrompt(prompt_id.to_string()))
 }
 
+fn prompt_fingerprint(template: &PromptTemplate) -> String {
+    let content = format!(
+        "id:{}\nversion:{}\nthreshold:{}\n--- input ---\n{}\n--- grade ---\n{}",
+        template.id,
+        template.version,
+        template.threshold_pct,
+        template.input_template,
+        template.grade_template
+    );
+    content_fingerprint(content.as_bytes())
+}
+
+fn matches_current_prompt(meta: &EvalMeta) -> bool {
+    let Some(stored_fingerprint) = meta.prompt_fingerprint.as_deref() else {
+        return false;
+    };
+    let Ok(template) = prompt_template(&meta.prompt_id) else {
+        return false;
+    };
+    stored_fingerprint == prompt_fingerprint(&template)
+}
+
 fn collect_meta_paths(directory: &Path, paths: &mut Vec<PathBuf>) -> Result<(), EvalError> {
     for entry in fs::read_dir(directory).map_err(|source| EvalError::Io {
         path: directory.to_path_buf(),
@@ -907,18 +990,22 @@ fn grouped_eval_rows(rows: &[EvalSummaryRow]) -> Vec<EvalRowGroup<'_>> {
     groups_by_key.into_values().collect()
 }
 
-fn label_repeated_model_runs(mut rows: Vec<EvalSummaryRow>) -> Vec<EvalSummaryRow> {
+fn label_repeated_model_runs(mut rows: Vec<EvalSummaryRow>, history: bool) -> Vec<EvalSummaryRow> {
     let mut counts: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in &rows {
         *counts
-            .entry((row.prompt_id.clone(), row.model.clone()))
+            .entry((row.prompt_id.clone(), model_group_key(row, history)))
             .or_default() += 1;
     }
     let mut seen: BTreeMap<(String, String), usize> = BTreeMap::new();
     for row in &mut rows {
-        let key = (row.prompt_id.clone(), row.model.clone());
+        let key = (row.prompt_id.clone(), model_group_key(row, history));
         let count = *counts.get(&key).unwrap_or(&1);
-        let base = strip_ollama_prefix(&row.model).to_string();
+        let mut base = strip_ollama_prefix(&row.model).to_string();
+        if history {
+            base.push(' ');
+            base.push_str(&prompt_history_label(row));
+        }
         if count > 1 {
             let entry = seen.entry(key).or_default();
             *entry += 1;
@@ -928,6 +1015,21 @@ fn label_repeated_model_runs(mut rows: Vec<EvalSummaryRow>) -> Vec<EvalSummaryRo
         }
     }
     rows
+}
+
+fn model_group_key(row: &EvalSummaryRow, history: bool) -> String {
+    if history {
+        format!("{}#{}", row.model, prompt_history_label(row))
+    } else {
+        row.model.clone()
+    }
+}
+
+fn prompt_history_label(row: &EvalSummaryRow) -> String {
+    row.prompt_version
+        .as_ref()
+        .map(|version| format!("@{version}"))
+        .unwrap_or_else(|| "@legacy".to_string())
 }
 
 fn item_string(item: &Map<String, Value>, field: &str) -> Option<String> {
@@ -1280,6 +1382,14 @@ fn short_run_id(run_id: &str) -> String {
     run_id.rsplit('/').next().unwrap_or(run_id).to_string()
 }
 
+fn short_fingerprint(fingerprint: &str) -> &str {
+    fingerprint
+        .strip_prefix("sha256:")
+        .unwrap_or(fingerprint)
+        .get(..12)
+        .unwrap_or(fingerprint)
+}
+
 fn is_pass(row: &EvalSummaryRow) -> bool {
     row.verdict
         .as_deref()
@@ -1355,36 +1465,42 @@ fn prompt_templates() -> Vec<PromptTemplate> {
     vec![
         PromptTemplate {
             id: "sentence/source-qa",
+            version: "v2",
             input_template: include_str!("eval_prompts/sentence_source_qa.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_source_qa.grade.yaml.hbs"),
             threshold_pct: 80,
         },
         PromptTemplate {
             id: "sentence/english",
+            version: "v2",
             input_template: include_str!("eval_prompts/sentence_english.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_english.grade.yaml.hbs"),
             threshold_pct: 80,
         },
         PromptTemplate {
             id: "sentence/literal",
+            version: "v2",
             input_template: include_str!("eval_prompts/sentence_literal.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_literal.grade.yaml.hbs"),
             threshold_pct: 80,
         },
         PromptTemplate {
             id: "sentence/register",
+            version: "v2",
             input_template: include_str!("eval_prompts/sentence_register.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_register.grade.yaml.hbs"),
             threshold_pct: 80,
         },
         PromptTemplate {
             id: "sentence/word-breakdown",
+            version: "v2",
             input_template: include_str!("eval_prompts/sentence_word_breakdown.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_word_breakdown.grade.yaml.hbs"),
             threshold_pct: 75,
         },
         PromptTemplate {
             id: "sentence/word-breakdown-from-translation",
+            version: "v2",
             input_template: include_str!(
                 "eval_prompts/sentence_word_breakdown_from_translation.yaml.hbs"
             ),
@@ -1395,6 +1511,7 @@ fn prompt_templates() -> Vec<PromptTemplate> {
         },
         PromptTemplate {
             id: "sentence/full-enrichment",
+            version: "v2",
             input_template: include_str!("eval_prompts/sentence_full_enrichment.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_full_enrichment.grade.yaml.hbs"),
             threshold_pct: 70,
@@ -1646,6 +1763,17 @@ fn render_summary(meta: &EvalMeta, grade: Option<&Grade>) -> String {
     let mut output = String::from("Eval Run\n\n");
     output.push_str("Prompt\n");
     output.push_str(&format!("  id        {}\n", meta.prompt_id));
+    output.push_str(&format!(
+        "  version   {}\n",
+        meta.prompt_version.as_deref().unwrap_or("legacy")
+    ));
+    output.push_str(&format!(
+        "  hash      {}\n",
+        meta.prompt_fingerprint
+            .as_deref()
+            .map(short_fingerprint)
+            .unwrap_or("missing")
+    ));
     output.push_str(&format!("  input     {}\n", meta.input_path));
     output.push_str(&format!("  items     {}\n", meta.item_count));
     output.push_str(&format!("  fields    {}\n\n", meta.fields.join(",")));
@@ -1927,11 +2055,16 @@ items:
         fs::create_dir_all(root_path.join("eval/sentence/register/run1")).unwrap();
         fs::write(root_path.join("docs/DESIGN.md"), "").unwrap();
         fs::write(root_path.join("docs/ROADMAP.md"), "").unwrap();
+        let current_fingerprint =
+            super::prompt_fingerprint(&super::prompt_template("sentence/register").unwrap());
         fs::write(
             root_path.join("eval/sentence/register/run1/meta.json"),
-            r#"{
+            format!(
+                r#"{{
   "run_id": "sentence/register/run1",
   "prompt_id": "sentence/register",
+  "prompt_version": "v2",
+  "prompt_fingerprint": "{current_fingerprint}",
   "input_path": "input/sentences/sample.yaml",
   "fields": ["id", "hindi", "romanisation", "english"],
   "max_items": 1,
@@ -1941,9 +2074,10 @@ items:
   "model_source": "Ollama /api/ps",
   "started_at": "unix:1",
   "finished_at": "unix:2",
-  "timing_ms": { "render": 1, "model": 2, "total": 3 },
-  "artifacts": { "prompt": "prompt.txt", "response": "response.txt", "summary": "summary.txt" }
-}"#,
+  "timing_ms": {{ "render": 1, "model": 2, "total": 3 }},
+  "artifacts": {{ "prompt": "prompt.txt", "response": "response.txt", "summary": "summary.txt" }}
+}}"#,
+            ),
         )
         .unwrap();
         fs::write(
@@ -2016,11 +2150,16 @@ items:
 "#,
         )
         .unwrap();
+        let current_fingerprint =
+            super::prompt_fingerprint(&super::prompt_template("sentence/register").unwrap());
         fs::write(
             root_path.join("eval/sentence/register/run1/meta.json"),
-            r#"{
+            format!(
+                r#"{{
   "run_id": "sentence/register/run1",
   "prompt_id": "sentence/register",
+  "prompt_version": "v2",
+  "prompt_fingerprint": "{current_fingerprint}",
   "input_path": "input/sentences/sample.yaml",
   "fields": ["id", "hindi", "romanisation", "english"],
   "max_items": 1,
@@ -2030,9 +2169,10 @@ items:
   "model_source": "Ollama /api/ps",
   "started_at": "unix:1",
   "finished_at": "unix:2",
-  "timing_ms": { "render": 1, "model": 2100, "total": 2200 },
-  "artifacts": { "prompt": "prompt.txt", "response": "response.txt", "summary": "summary.txt" }
-}"#,
+  "timing_ms": {{ "render": 1, "model": 2100, "total": 2200 }},
+  "artifacts": {{ "prompt": "prompt.txt", "response": "response.txt", "summary": "summary.txt" }}
+}}"#,
+            ),
         )
         .unwrap();
         fs::write(
@@ -2057,7 +2197,7 @@ items:
         .unwrap();
         let root = ProjectRoot::discover_from(&root_path).unwrap();
 
-        let rendered = super::report_from(&root, false, true, super::EvalReportOutput::None)
+        let rendered = super::report_from(&root, false, true, super::EvalReportOutput::None, false)
             .unwrap()
             .render();
 

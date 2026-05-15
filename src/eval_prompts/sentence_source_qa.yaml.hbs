@@ -4,7 +4,10 @@ instructions: |
   Look for duplicated wording, wrong English meaning, romanisation mismatch, or
   obvious unnatural source text.
 
-  Return YAML only:
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
   results:
     - id: "0001"
       status: ok

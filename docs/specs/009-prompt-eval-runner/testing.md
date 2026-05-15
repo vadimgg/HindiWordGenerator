@@ -9,6 +9,8 @@
 - Multiple running Ollama models are accepted silently.
 - Input prompts and grading prompts drift apart for the same prompt ID.
 - Run folders become flat and hard to compare by prompt ID.
+- Reports mix old prompt results with current prompt results without making
+  the prompt version visible.
 
 ## Coverage Summary
 
@@ -18,6 +20,7 @@
 | Template context | Wrong prompt data | `cargo test eval` | Confirms `items`, `items_yaml`, `input_yaml`. |
 | Field selection | Missing/incorrect fields | Unit tests | Confirms errors and defaults. |
 | Artifact writes | Eval pollutes source/output | Integration test | Confirms writes stay under `eval/`. |
+| Prompt fingerprint | Prompt result provenance is unclear | Unit/manual test | Confirms `meta.json` stores prompt version/fingerprint and report filters current prompts by default. |
 | Prompt templates | Examples drift | `rg` and smoke run | Confirms templates use `{{#each items}}`. |
 | Grading flow | Grader response cannot be recorded | Unit/integration test | Confirms grade packet rendering and response parsing. |
 | Report flow | Eval results are hard to scan | Unit/manual test | Confirms source display and result table rendering. |
@@ -38,6 +41,8 @@
   `## Paste Grader Response Below` marker.
 - Parse grader response as YAML or JSON into the shared five-axis schema.
 - Render eval report rows for graded and ungraded runs.
+- Hide legacy/older prompt-fingerprint rows in the default report and show them
+  with `--history`.
 
 ## Integration Tests
 
@@ -64,7 +69,9 @@
   response.
 - Run `hindi eval report` and confirm the report includes source Hindi,
   romanisation, English, grouped test/model rows, timing, score percent,
-  verdict, summary footer, and notes.
+  verdict, summary footer, notes, and only current prompt-fingerprint runs.
+- Run `hindi eval report --history` and confirm legacy/older prompt runs are
+  included with prompt-version labels such as `@legacy`.
 - Run `hindi eval report --verbose` and confirm run folders and raw score
   fractions are shown.
 - Run `hindi eval report --output failures` and confirm response snippets are

@@ -4,7 +4,38 @@ instructions: |
   translation, register, tokens, and words. Tokens are visible word occurrences;
   words are explanation entries referenced by token word_id.
 
-  Return YAML only:
+  Hard rule: tokens and words are word entries only. Do not include spaces or
+  punctuation as entries, and do not attach punctuation to Hindi or roman
+  strings. Every token must have a word_id that matches one words[].id. If a
+  visible word repeats, include repeated tokens and reuse the same word_id when
+  the explanation is the same.
+
+  Bad token:
+    hindi: "हैं?"
+    roman: "haĩ?"
+    word_id: "w1"
+
+  Bad word:
+    id: "w2"
+    hindi: ","
+    roman: ","
+    meaning: "comma"
+
+  Good token:
+    hindi: "हैं"
+    roman: "haĩ"
+    word_id: "w1"
+
+  Good word:
+    id: "w1"
+    hindi: "हैं"
+    roman: "haĩ"
+    meaning: "are"
+
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
   results:
     - id: "0001"
       english: "..."

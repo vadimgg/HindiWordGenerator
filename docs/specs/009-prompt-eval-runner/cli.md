@@ -6,7 +6,7 @@
 |---|---|---|---|
 | `hindi eval run <prompt-id> <input-yaml>` | Test a built-in prompt against YAML input with the currently running local model. | New command. | Writes ignored artifacts under `eval/<prompt-id>/<run-id>/`. |
 | `hindi eval grade <run-id-or-path> [--response <path>]` | Prepare and capture a human/agent grading result for an eval run. | New command. | Writes grading artifacts inside that eval run folder. |
-| `hindi eval report [--no-color] [--verbose] [--output none\|failures\|all]` | Scan eval runs and show source rows, grouped test/model results, timings, scores, verdicts, notes, and optional model output snippets. | New command. | Read-only. |
+| `hindi eval report [--no-color] [--verbose] [--history] [--output none\|failures\|all]` | Scan eval runs and show source rows, grouped test/model results, timings, scores, verdicts, notes, and optional model output snippets. | New command. | Read-only. |
 
 ## Help Text
 
@@ -16,13 +16,14 @@ Hindi Word Generator
 Usage:
   hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]
   hindi eval grade <run-id-or-path> [--response <path>]
-  hindi eval report [--no-color] [--verbose] [--output none|failures|all]
+  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]
 
 Examples:
   hindi eval run sentence/register input/sentences/complete_hindi_chapter_02_sentences.yaml --max-items 2
   hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b
   hindi eval grade sentence/register/2026-05-15_143012_translategemma_12b --response /tmp/grade.yaml
   hindi eval report
+  hindi eval report --history
   hindi eval report --verbose
   hindi eval report --output failures
 
@@ -43,6 +44,7 @@ Options:
                        of opening $EDITOR.
   --no-color           Print eval report without ANSI colors.
   --verbose            Include run folder and raw score detail in eval report.
+  --history            Include legacy or older prompt fingerprints in eval report.
   --output <mode>      Show model response snippets: none, failures, or all.
 
 Compatibility aliases:
@@ -115,7 +117,7 @@ Import
 Eval Report
 
 Eval Set 1  input/sentences/complete_hindi_chapter_02_sentences.yaml  items 0001,0002  4 runs
-scope: every result below grades this full item set
+scope: every result below grades this full item set · current prompt fingerprints only
 
 Evaluated Sentences
 #0001
@@ -190,6 +192,11 @@ Slow model times are red, medium times are yellow, and fast times are green.
 restores run folders, raw score fractions, and informational notes for
 debugging. `--output failures` shows response snippets for failed runs;
 `--output all` shows response snippets for every run.
+
+The default report shows only runs whose `meta.json` prompt fingerprint matches
+the current compiled prompt template. `--history` includes legacy runs without
+a fingerprint and older runs from previous prompt versions, with labels such as
+`@legacy` or `@v2` next to the model name.
 
 ## UX Review Notes
 

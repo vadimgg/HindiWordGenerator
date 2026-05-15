@@ -3,7 +3,10 @@ instructions: |
   Give a close literal English rendering for each sentence. The literal should
   reveal Hindi structure while staying understandable.
 
-  Return YAML only:
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
   results:
     - id: "0001"
       literal: "..."

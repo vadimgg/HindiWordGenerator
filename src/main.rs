@@ -173,7 +173,8 @@ fn main() -> ExitCode {
             color,
             verbose,
             output,
-        }) => match eval::report_from_current_dir(color, verbose, output) {
+            history,
+        }) => match eval::report_from_current_dir(color, verbose, output, history) {
             Ok(report) => {
                 println!("{}", report.render());
                 ExitCode::SUCCESS

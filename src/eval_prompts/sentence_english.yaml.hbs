@@ -3,7 +3,10 @@ instructions: |
   Translate each Hindi sentence into natural English. Preserve meaning and
   politeness markers such as ji where relevant.
 
-  Return YAML only:
+  Return raw YAML only. Do not wrap the response in markdown fences. Do not add
+  prose before or after the YAML.
+
+  Required shape:
   results:
     - id: "0001"
       english: "..."
