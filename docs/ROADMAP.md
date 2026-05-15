@@ -85,6 +85,8 @@ Acceptance:
 - Existing output that matches a source row by normalized Hindi, romanisation,
   and English but lacks current `source_ref` is reported as a content
   duplicate and blocks generation until the old output is archived or repaired.
+- Existing Rust output with valid lineage that repeats source content from
+  another row is reported as a warning, not a blocker.
 - Existing YAML fixtures cover one completed item and one pending item.
 
 ## M3: Validator And Writer

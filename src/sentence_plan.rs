@@ -52,6 +52,7 @@ pub struct SentencePlan {
     max_batches: usize,
     batch_size: usize,
     planned_files: Vec<PathBuf>,
+    warnings: Vec<String>,
     errors: Vec<String>,
 }
 
@@ -209,6 +210,15 @@ impl SentencePlan {
             }
         }
 
+        if !self.warnings.is_empty() {
+            output.push_str("\nWarnings\n");
+            for warning in &self.warnings {
+                for line in warning.lines() {
+                    output.push_str(&format!("  {line}\n"));
+                }
+            }
+        }
+
         if self.has_errors() {
             output.push_str("\nProblems\n");
             for error in &self.errors {
@@ -265,6 +275,7 @@ fn build_plan(
 
     let mut errors = source_errors.clone();
     errors.extend(output_errors.clone());
+    let mut warnings = Vec::new();
     let mut done_keys = BTreeSet::new();
     let mut done = 0;
     let mut missing_lineage = 0;
@@ -299,7 +310,15 @@ fn build_plan(
             continue;
         }
         content_duplicates += 1;
-        content_duplicate_problems.push(content_duplicate_problem(card, source_file, source_row));
+        if card_has_current_lineage(card, &source_index) {
+            warnings.push(content_repeat_warning(card, source_file, source_row));
+        } else {
+            content_duplicate_problems.push(content_duplicate_problem(
+                card,
+                source_file,
+                source_row,
+            ));
+        }
     }
     let duplicate_problem_count = content_duplicate_problems.len();
     errors.extend(content_duplicate_problems.into_iter().take(5));
@@ -387,6 +406,7 @@ fn build_plan(
         max_batches,
         batch_size: DEFAULT_BATCH_SIZE,
         planned_files,
+        warnings,
         errors,
     }
 }
@@ -462,6 +482,35 @@ fn card_matches_source_ref(
     source_ref.file == source_file.relative_path.to_string_lossy().as_ref()
         && source_ref.item_id == source_row.id
         && source_ref.fingerprint == source_row.fingerprint
+}
+
+fn card_has_current_lineage(
+    card: &AcceptedCard,
+    source_index: &BTreeMap<(String, String), String>,
+) -> bool {
+    let Some(source_ref) = &card.source_ref else {
+        return false;
+    };
+    let key = (source_ref.file.clone(), source_ref.item_id.clone());
+    source_index
+        .get(&key)
+        .is_some_and(|current| current == &source_ref.fingerprint)
+}
+
+fn content_repeat_warning(
+    card: &AcceptedCard,
+    source_file: &SourceFile,
+    source_row: &SourceRow,
+) -> String {
+    format!(
+        "Repeated source content\n\nHindi\n  {}\n\nRoman\n  {}\n\nEnglish\n  {}\n\nAlready accepted in\n  {}\n\nAlso appears in source\n  {} item {}\n\nAction\n  This is valid Rust output from another source row, so generation may continue.",
+        card.hindi,
+        card.romanisation,
+        card.english,
+        card.path.display(),
+        source_file.relative_path.display(),
+        source_row.id,
+    )
 }
 
 fn content_duplicate_problem(
@@ -929,6 +978,52 @@ mod tests {
         assert_eq!(plan.content_duplicates, 0);
         assert_eq!(plan.done, 1);
         assert_eq!(plan.pending_items, 0);
+    }
+
+    #[test]
+    fn repeated_current_content_warns_without_blocking() {
+        let hindi = "क्यों?";
+        let romanisation = "kyõ?";
+        let english = "Why?";
+        let accepted_source = source_file_with_text("0001", hindi, romanisation, english);
+        let accepted_fingerprint = accepted_source.items[0].fingerprint.clone();
+        let repeated_source = SourceFile {
+            relative_path: PathBuf::from("input/sentences/another.yaml"),
+            stem: "another".to_string(),
+            title: Some("Example".to_string()),
+            subtitle: Some("Another".to_string()),
+            items: vec![super::SourceRow {
+                id: "0002".to_string(),
+                hindi: hindi.to_string(),
+                romanisation: romanisation.to_string(),
+                english: english.to_string(),
+                tags: Vec::new(),
+                fingerprint: source_fingerprint(hindi, romanisation, english),
+            }],
+        };
+
+        let plan = build_plan(
+            vec![accepted_source, repeated_source],
+            vec![],
+            vec![AcceptedCard {
+                path: PathBuf::from("output/sentences/example.json"),
+                hindi: hindi.to_string(),
+                romanisation: romanisation.to_string(),
+                english: english.to_string(),
+                source_ref: Some(SourceRef {
+                    file: "input/sentences/example.yaml".to_string(),
+                    item_id: "0001".to_string(),
+                    fingerprint: accepted_fingerprint,
+                }),
+                has_legacy_word_index: false,
+            }],
+            vec![],
+            1,
+        );
+
+        assert_eq!(plan.content_duplicates, 1);
+        assert_eq!(plan.warnings.len(), 1);
+        assert!(!plan.has_errors());
     }
 
     #[test]
