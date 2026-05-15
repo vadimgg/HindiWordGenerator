@@ -95,7 +95,10 @@ Accepted Rust-generated sentence cards should include:
 ```
 
 Older Python-generated cards may not have `source_ref`. `hindi sentences plan`
-should report those as `missing lineage`, not as clean.
+should report those as `missing lineage`, not as clean. If a lineage-less card
+matches a current source row by normalized Hindi, romanisation, and English, the
+planner reports it as a content duplicate and generation stops until the old
+output is archived or repaired.
 
 ## Output Contract
 
