@@ -257,7 +257,14 @@ impl EvalSummaryReport {
             output.push_str(&format!("\n{}\n", self.subsection_title("Notes")));
             for row in &group.rows {
                 let summary = row.summary.as_deref().unwrap_or("not graded yet");
-                let label = short_prompt_id(&row.prompt_id);
+                let label = format!(
+                    "{} / {} / {} / {} / {}",
+                    short_prompt_id(&row.prompt_id),
+                    strip_ollama_prefix(&row.model),
+                    format_grade(row.score.as_ref()),
+                    row.verdict.as_deref().unwrap_or("not graded"),
+                    short_run_id(&row.run_id)
+                );
                 let colored_label = color_test_name(&label, self.color);
                 output.push_str(&format!("  {}\n", colored_label));
                 output.push_str(&wrap_note(summary, 4, 92));
