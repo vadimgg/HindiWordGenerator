@@ -6,288 +6,253 @@
       "hindi": "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?",
       "romanisation": "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?",
       "english": "Teacher ji, how many students are here?",
-      "literal": "Teacher ji, here how many students are?",
-      "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0001",
-        "fingerprint": "sha256:d369b498fa9945485ad74f90843f06d4ddb598c7b49de53005d93fbf9f201728"
-      },
+      "literal": "teacher ji, here how many students are",
+      "register": "formal",
       "tokens": [
         {
           "hindi": "अध्यापक",
           "roman": "adhyāpak",
           "kind": "word",
-          "word_id": "w1",
-          "word_index": null
+          "word_index": 0
         },
         {
           "hindi": "जी",
           "roman": "jī",
           "kind": "word",
-          "word_id": "w2",
-          "word_index": null
+          "word_index": 1
         },
         {
           "hindi": "यहाँ",
           "roman": "yahā̃",
           "kind": "word",
-          "word_id": "w3",
-          "word_index": null
+          "word_index": 2
         },
         {
           "hindi": "कितने",
           "roman": "kitne",
           "kind": "word",
-          "word_id": "w4",
-          "word_index": null
+          "word_index": 3
         },
         {
           "hindi": "विद्यार्थी",
           "roman": "vidyārthī",
           "kind": "word",
-          "word_id": "w5",
-          "word_index": null
+          "word_index": 4
         },
         {
           "hindi": "हैं",
           "roman": "haĩ",
           "kind": "word",
-          "word_id": "w6",
-          "word_index": null
+          "word_index": 5
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "अध्यापक",
           "roman": "adhyāpak",
-          "meaning": "teacher"
+          "meaning": "teacher",
+          "gender": "masculine",
+          "number": "singular"
         },
         {
-          "id": "w2",
           "hindi": "जी",
           "roman": "jī",
-          "meaning": "a respectful way to address someone"
+          "meaning": "respectful address marker",
+          "note": "Adds respect after a name, title, or family word."
         },
         {
-          "id": "w3",
           "hindi": "यहाँ",
           "roman": "yahā̃",
           "meaning": "here"
         },
         {
-          "id": "w4",
           "hindi": "कितने",
           "roman": "kitne",
-          "meaning": "how many"
+          "meaning": "how many",
+          "number": "plural"
         },
         {
-          "id": "w5",
           "hindi": "विद्यार्थी",
           "roman": "vidyārthī",
-          "meaning": "student"
+          "meaning": "students",
+          "gender": "masculine",
+          "number": "plural"
         },
         {
-          "id": "w6",
           "hindi": "हैं",
           "roman": "haĩ",
           "meaning": "are"
         }
       ],
       "anki_tags": [
-        "greetings",
-        "standard"
-      ]
+        "school",
+        "question",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/01_adhyāpak_jī_yahā_kitne_vidyārthī_haĩ.mp3"
     },
     {
       "hindi": "अभी चौदह हैं – नौ लड़कियाँ और पाँच लड़के।",
       "romanisation": "abhī caudah haĩ – nau laṛkiyā̃ aur pā̃c laṛke.",
       "english": "At the moment there are 14 – nine girls and five boys.",
-      "literal": "At the moment 14 are – nine girls and five boys.",
+      "literal": "right now fourteen are - nine girls and five boys",
       "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0002",
-        "fingerprint": "sha256:380627bf499e29b8574e29f8e311d7fde3e4c8bf3c4f6fb152b2ed9cfe0a206b"
-      },
       "tokens": [
         {
           "hindi": "अभी",
           "roman": "abhī",
           "kind": "word",
-          "word_id": "w1",
-          "word_index": null
+          "word_index": 0
         },
         {
           "hindi": "चौदह",
           "roman": "caudah",
           "kind": "word",
-          "word_id": "w2",
-          "word_index": null
+          "word_index": 1
         },
         {
           "hindi": "हैं",
           "roman": "haĩ",
           "kind": "word",
-          "word_id": "w3",
-          "word_index": null
+          "word_index": 2
         },
         {
           "hindi": "नौ",
           "roman": "nau",
           "kind": "word",
-          "word_id": "w4",
-          "word_index": null
+          "word_index": 3
         },
         {
           "hindi": "लड़कियाँ",
           "roman": "laṛkiyā̃",
           "kind": "word",
-          "word_id": "w5",
-          "word_index": null
+          "word_index": 4
         },
         {
           "hindi": "और",
           "roman": "aur",
           "kind": "word",
-          "word_id": "w6",
-          "word_index": null
+          "word_index": 5
         },
         {
           "hindi": "पाँच",
           "roman": "pā̃c",
           "kind": "word",
-          "word_id": "w7",
-          "word_index": null
+          "word_index": 6
         },
         {
           "hindi": "लड़के",
           "roman": "laṛke",
           "kind": "word",
-          "word_id": "w8",
-          "word_index": null
+          "word_index": 7
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "अभी",
           "roman": "abhī",
-          "meaning": "at the moment",
-          "note": "can also mean 'now'"
+          "meaning": "right now, at the moment"
         },
         {
-          "id": "w2",
           "hindi": "चौदह",
           "roman": "caudah",
           "meaning": "fourteen"
         },
         {
-          "id": "w3",
           "hindi": "हैं",
           "roman": "haĩ",
           "meaning": "are"
         },
         {
-          "id": "w4",
           "hindi": "नौ",
           "roman": "nau",
           "meaning": "nine"
         },
         {
-          "id": "w5",
           "hindi": "लड़कियाँ",
           "roman": "laṛkiyā̃",
-          "meaning": "girls"
+          "meaning": "girls",
+          "gender": "feminine",
+          "number": "plural"
         },
         {
-          "id": "w6",
           "hindi": "और",
           "roman": "aur",
           "meaning": "and"
         },
         {
-          "id": "w7",
           "hindi": "पाँच",
           "roman": "pā̃c",
           "meaning": "five"
         },
         {
-          "id": "w8",
           "hindi": "लड़के",
           "roman": "laṛke",
-          "meaning": "boys"
+          "meaning": "boys",
+          "gender": "masculine",
+          "number": "plural"
         }
       ],
       "anki_tags": [
         "numbers",
-        "standard"
-      ]
+        "school",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/02_abhī_caudah_haĩ_nau_laṛkiyā_aur_pāc_laṛke.mp3"
     },
     {
       "hindi": "यह किताब कैसी है?",
       "romanisation": "yah kitāb kaisī hai?",
       "english": "What kind of book is this?",
-      "literal": "This book what kind is?",
+      "literal": "this book what-kind is",
       "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0003",
-        "fingerprint": "sha256:04f42a11ee86e4b94ec2c3750ac750ed11dd24795d83cadde87875405f8afd79"
-      },
       "tokens": [
         {
           "hindi": "यह",
           "roman": "yah",
           "kind": "word",
-          "word_id": "w1",
-          "word_index": null
+          "word_index": 0
         },
         {
           "hindi": "किताब",
           "roman": "kitāb",
           "kind": "word",
-          "word_id": "w2",
-          "word_index": null
+          "word_index": 1
         },
         {
           "hindi": "कैसी",
           "roman": "kaisī",
           "kind": "word",
-          "word_id": "w3",
-          "word_index": null
+          "word_index": 2
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w4",
-          "word_index": null
+          "word_index": 3
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "यह",
           "roman": "yah",
           "meaning": "this"
         },
         {
-          "id": "w2",
           "hindi": "किताब",
           "roman": "kitāb",
-          "meaning": "book"
+          "meaning": "book",
+          "gender": "feminine",
+          "number": "singular"
         },
         {
-          "id": "w3",
           "hindi": "कैसी",
           "roman": "kaisī",
-          "meaning": "what kind of",
-          "note": "feminine form"
+          "meaning": "what kind; how",
+          "gender": "feminine",
+          "number": "singular"
         },
         {
-          "id": "w4",
           "hindi": "है",
           "roman": "hai",
           "meaning": "is"
@@ -295,157 +260,136 @@
       ],
       "anki_tags": [
         "books",
-        "standard",
-        "question"
-      ]
+        "question",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/03_yah_kitāb_kaisī_hai.mp3"
     },
     {
       "hindi": "क्या यह अच्छी है?",
       "romanisation": "kyā yah acchī hai?",
       "english": "Is it good?",
-      "literal": "Is it good?",
+      "literal": "question-marker this good is",
       "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0004",
-        "fingerprint": "sha256:3ed269e4950561a022ea3d221d7e22341327e9b13159468e49b47f7967e4bc3c"
-      },
       "tokens": [
         {
           "hindi": "क्या",
           "roman": "kyā",
           "kind": "word",
-          "word_id": "w1",
-          "word_index": null
+          "word_index": 0
         },
         {
           "hindi": "यह",
           "roman": "yah",
           "kind": "word",
-          "word_id": "w2",
-          "word_index": null
+          "word_index": 1
         },
         {
           "hindi": "अच्छी",
           "roman": "acchī",
           "kind": "word",
-          "word_id": "w3",
-          "word_index": null
+          "word_index": 2
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w4",
-          "word_index": null
+          "word_index": 3
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "क्या",
           "roman": "kyā",
-          "meaning": "is it / are they"
+          "meaning": "question marker"
         },
         {
-          "id": "w2",
           "hindi": "यह",
           "roman": "yah",
-          "meaning": "this / it"
+          "meaning": "this; it"
         },
         {
-          "id": "w3",
           "hindi": "अच्छी",
           "roman": "acchī",
           "meaning": "good",
-          "note": "feminine form"
+          "gender": "feminine",
+          "number": "singular"
         },
         {
-          "id": "w4",
           "hindi": "है",
           "roman": "hai",
           "meaning": "is"
         }
       ],
       "anki_tags": [
-        "questions",
-        "standard",
-        "quality"
-      ]
+        "quality",
+        "question",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/04_kyā_yah_acchī_hai.mp3"
     },
     {
       "hindi": "हाँ, बुरी नहीं है।",
       "romanisation": "hā̃, burī nahī̃ hai.",
       "english": "Yes, it's not bad.",
-      "literal": "Yes, not bad is.",
+      "literal": "yes bad not is",
       "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0005",
-        "fingerprint": "sha256:d231d83970e43c09be88264b338e66bc9fb500f07cf08c606ac445dac33b3cdc"
-      },
       "tokens": [
         {
           "hindi": "हाँ",
           "roman": "hā̃",
           "kind": "word",
-          "word_id": "w1",
-          "word_index": null
+          "word_index": 0
         },
         {
           "hindi": "बुरी",
           "roman": "burī",
           "kind": "word",
-          "word_id": "w2",
-          "word_index": null
+          "word_index": 1
         },
         {
           "hindi": "नहीं",
           "roman": "nahī̃",
           "kind": "word",
-          "word_id": "w3",
-          "word_index": null
+          "word_index": 2
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w4",
-          "word_index": null
+          "word_index": 3
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "हाँ",
           "roman": "hā̃",
           "meaning": "yes"
         },
         {
-          "id": "w2",
           "hindi": "बुरी",
           "roman": "burī",
           "meaning": "bad",
-          "note": "feminine form"
+          "gender": "feminine",
+          "number": "singular"
         },
         {
-          "id": "w3",
           "hindi": "नहीं",
           "roman": "nahī̃",
           "meaning": "not"
         },
         {
-          "id": "w4",
           "hindi": "है",
           "roman": "hai",
           "meaning": "is"
         }
       ],
       "anki_tags": [
-        "affirmation",
-        "standard",
-        "quality"
-      ]
+        "quality",
+        "negation",
+        "chapter-02"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_01/05_hā_burī_nahī_hai.mp3"
     }
   ]
 }
