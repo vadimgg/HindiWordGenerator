@@ -1,5 +1,6 @@
 use crate::project::{ProjectRoot, ProjectRootError};
 use crate::source_identity::source_fingerprint;
+use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io;
@@ -41,6 +42,9 @@ pub struct SentencePlan {
     accepted_cards: usize,
     done: usize,
     missing_lineage: usize,
+    legacy_format: usize,
+    content_duplicates: usize,
+    invalid_output: usize,
     source_changed: usize,
     pending_items: usize,
     planned_items: usize,
@@ -72,7 +76,12 @@ struct SourceRow {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct AcceptedCard {
+    path: PathBuf,
+    hindi: String,
+    romanisation: String,
+    english: String,
     source_ref: Option<SourceRef>,
+    has_legacy_word_index: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,6 +89,12 @@ struct SourceRef {
     file: String,
     item_id: String,
     fingerprint: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct AcceptedOutputScan {
+    cards: Vec<AcceptedCard>,
+    errors: Vec<String>,
 }
 
 pub fn plan_from_current_dir(max_batches: usize) -> Result<SentencePlan, SentencePlanError> {
@@ -121,11 +136,12 @@ fn current_dir() -> Result<PathBuf, SentencePlanError> {
 fn plan(root: &ProjectRoot, max_batches: usize) -> Result<SentencePlan, SentencePlanError> {
     let source_files = load_source_files(root)?;
     let output_paths = collect_json_paths(root)?;
-    let accepted_cards = load_accepted_cards(root, &output_paths)?;
+    let output_scan = load_accepted_output(root, &output_paths)?;
     Ok(build_plan(
         source_files,
         output_paths,
-        accepted_cards,
+        output_scan.cards,
+        output_scan.errors,
         max_batches,
     ))
 }
@@ -136,14 +152,16 @@ pub fn generation_plan(
 ) -> Result<(SentencePlan, SentenceGenerationPlan), SentencePlanError> {
     let source_files = load_source_files(root)?;
     let output_paths = collect_json_paths(root)?;
-    let accepted_cards = load_accepted_cards(root, &output_paths)?;
+    let output_scan = load_accepted_output(root, &output_paths)?;
     let summary = build_plan(
         source_files.clone(),
         output_paths.clone(),
-        accepted_cards.clone(),
+        output_scan.cards.clone(),
+        output_scan.errors,
         max_batches,
     );
-    let generation = build_generation_plan(source_files, output_paths, accepted_cards, max_batches);
+    let generation =
+        build_generation_plan(source_files, output_paths, output_scan.cards, max_batches);
     Ok((summary, generation))
 }
 
@@ -165,6 +183,12 @@ impl SentencePlan {
         output.push_str(&format!("  accepted cards     {}\n", self.accepted_cards));
         output.push_str(&format!("  done               {}\n", self.done));
         output.push_str(&format!("  missing lineage    {}\n", self.missing_lineage));
+        output.push_str(&format!("  legacy format      {}\n", self.legacy_format));
+        output.push_str(&format!(
+            "  content duplicate  {}\n",
+            self.content_duplicates
+        ));
+        output.push_str(&format!("  invalid output     {}\n", self.invalid_output));
         output.push_str(&format!("  source changed     {}\n\n", self.source_changed));
 
         output.push_str("Plan\n");
@@ -188,7 +212,9 @@ impl SentencePlan {
         if self.has_errors() {
             output.push_str("\nProblems\n");
             for error in &self.errors {
-                output.push_str(&format!("  {error}\n"));
+                for line in error.lines() {
+                    output.push_str(&format!("  {line}\n"));
+                }
             }
             output.push_str("\nNext\n  Fix source/output issues, then rerun the planner.");
         } else {
@@ -203,22 +229,24 @@ fn build_plan(
     source_files: Vec<SourceFile>,
     output_paths: Vec<PathBuf>,
     accepted_cards: Vec<AcceptedCard>,
+    output_errors: Vec<String>,
     max_batches: usize,
 ) -> SentencePlan {
-    let mut errors = Vec::new();
+    let mut source_errors = Vec::new();
     let mut source_index = BTreeMap::new();
+    let mut content_index = BTreeMap::new();
     for source_file in &source_files {
         let mut ids = BTreeSet::new();
         for row in &source_file.items {
             if row.id.len() != 4 || !row.id.bytes().all(|byte| byte.is_ascii_digit()) {
-                errors.push(format!(
+                source_errors.push(format!(
                     "Malformed source id {:?} in {}.",
                     row.id,
                     source_file.relative_path.display()
                 ));
             }
             if !ids.insert(row.id.clone()) {
-                errors.push(format!(
+                source_errors.push(format!(
                     "Duplicate source id {:?} in {}.",
                     row.id,
                     source_file.relative_path.display()
@@ -231,14 +259,23 @@ fn build_plan(
                 ),
                 row.fingerprint.clone(),
             );
+            content_index.insert(row.fingerprint.clone(), (source_file, row));
         }
     }
 
+    let mut errors = source_errors.clone();
+    errors.extend(output_errors.clone());
     let mut done_keys = BTreeSet::new();
     let mut done = 0;
     let mut missing_lineage = 0;
+    let mut legacy_format = 0;
+    let mut content_duplicates = 0;
+    let mut content_duplicate_problems = Vec::new();
     let mut source_changed = 0;
     for card in &accepted_cards {
+        if card.has_legacy_word_index {
+            legacy_format += 1;
+        }
         match &card.source_ref {
             Some(source_ref) => {
                 let key = (source_ref.file.clone(), source_ref.item_id.clone());
@@ -253,6 +290,24 @@ fn build_plan(
             }
             None => missing_lineage += 1,
         }
+
+        let fingerprint = source_fingerprint(&card.hindi, &card.romanisation, &card.english);
+        let Some((source_file, source_row)) = content_index.get(&fingerprint) else {
+            continue;
+        };
+        if card_matches_source_ref(card, source_file, source_row) {
+            continue;
+        }
+        content_duplicates += 1;
+        content_duplicate_problems.push(content_duplicate_problem(card, source_file, source_row));
+    }
+    let duplicate_problem_count = content_duplicate_problems.len();
+    errors.extend(content_duplicate_problems.into_iter().take(5));
+    if duplicate_problem_count > 5 {
+        errors.push(format!(
+            "Additional content duplicates\n\nProblem\n  {remaining} more accepted cards match current source rows by Hindi/Roman/English content but do not have current source_ref lineage.\n\nAction\n  Archive or repair legacy output before generating more cards.",
+            remaining = duplicate_problem_count - 5
+        ));
     }
 
     let pending_by_file: Vec<(&SourceFile, usize)> = source_files
@@ -317,11 +372,14 @@ fn build_plan(
             .iter()
             .map(|source_file| source_file.items.len())
             .sum::<usize>()
-            .saturating_sub(errors.len()),
+            .saturating_sub(source_errors.len()),
         output_files: output_paths.len(),
         accepted_cards: accepted_cards.len(),
         done,
         missing_lineage,
+        legacy_format,
+        content_duplicates,
+        invalid_output: output_errors.len(),
         source_changed,
         pending_items,
         planned_items,
@@ -391,6 +449,48 @@ fn build_generation_plan(
     }
 
     SentenceGenerationPlan { batches }
+}
+
+fn card_matches_source_ref(
+    card: &AcceptedCard,
+    source_file: &SourceFile,
+    source_row: &SourceRow,
+) -> bool {
+    let Some(source_ref) = &card.source_ref else {
+        return false;
+    };
+    source_ref.file == source_file.relative_path.to_string_lossy().as_ref()
+        && source_ref.item_id == source_row.id
+        && source_ref.fingerprint == source_row.fingerprint
+}
+
+fn content_duplicate_problem(
+    card: &AcceptedCard,
+    source_file: &SourceFile,
+    source_row: &SourceRow,
+) -> String {
+    let source_ref_problem = if card.source_ref.is_some() {
+        "Existing card matches the source text but its source_ref does not match the current source row."
+    } else {
+        "Existing card matches the source text but has no source_ref."
+    };
+    let format_problem = if card.has_legacy_word_index {
+        "\n  Existing card also uses legacy word_index output instead of Rust word_id output."
+    } else {
+        ""
+    };
+
+    format!(
+        "Possible duplicate accepted output\n\nHindi\n  {}\n\nRoman\n  {}\n\nEnglish\n  {}\n\nFound in\n  {}\n\nMatches source\n  {} item {}\n\nProblem\n  {}{}\n\nAction\n  Archive or repair legacy output before generating more cards.",
+        card.hindi,
+        card.romanisation,
+        card.english,
+        card.path.display(),
+        source_file.relative_path.display(),
+        source_row.id,
+        source_ref_problem,
+        format_problem,
+    )
 }
 
 fn done_keys(
@@ -620,156 +720,104 @@ fn collect_json_paths(root: &ProjectRoot) -> Result<Vec<PathBuf>, SentencePlanEr
     Ok(paths)
 }
 
-fn load_accepted_cards(
+fn load_accepted_output(
     root: &ProjectRoot,
     paths: &[PathBuf],
-) -> Result<Vec<AcceptedCard>, SentencePlanError> {
+) -> Result<AcceptedOutputScan, SentencePlanError> {
     let mut cards = Vec::new();
+    let mut errors = Vec::new();
     for relative_path in paths {
         let path = root.join(relative_path);
         let content =
             fs::read_to_string(&path).map_err(|source| SentencePlanError::Io { path, source })?;
-        cards.extend(parse_accepted_cards(&content));
+        match parse_accepted_cards(relative_path, &content) {
+            Ok(parsed) => cards.extend(parsed),
+            Err(error) => errors.push(error),
+        }
     }
+    Ok(AcceptedOutputScan { cards, errors })
+}
+
+fn parse_accepted_cards(path: &Path, content: &str) -> Result<Vec<AcceptedCard>, String> {
+    let value: Value = serde_json::from_str(content).map_err(|source| {
+        format!(
+            "Invalid accepted output\n\nFile\n  {}\n\nProblem\n  JSON parse failed: {source}\n\nAction\n  Archive or repair this file before generating more cards.",
+            path.display()
+        )
+    })?;
+    let Some(sentences) = value.get("sentences").and_then(Value::as_array) else {
+        return Err(format!(
+            "Invalid accepted output\n\nFile\n  {}\n\nProblem\n  Missing sentences array.\n\nAction\n  Archive or repair this file before generating more cards.",
+            path.display()
+        ));
+    };
+
+    let mut cards = Vec::new();
+    for (index, sentence) in sentences.iter().enumerate() {
+        let Some(object) = sentence.as_object() else {
+            return Err(invalid_sentence_problem(
+                path,
+                index,
+                "sentence entry is not an object",
+            ));
+        };
+        let Some(hindi) = object.get("hindi").and_then(Value::as_str) else {
+            return Err(invalid_sentence_problem(path, index, "missing hindi"));
+        };
+        let Some(romanisation) = object.get("romanisation").and_then(Value::as_str) else {
+            return Err(invalid_sentence_problem(
+                path,
+                index,
+                "missing romanisation",
+            ));
+        };
+        let Some(english) = object.get("english").and_then(Value::as_str) else {
+            return Err(invalid_sentence_problem(path, index, "missing english"));
+        };
+
+        cards.push(AcceptedCard {
+            path: path.to_path_buf(),
+            hindi: hindi.to_string(),
+            romanisation: romanisation.to_string(),
+            english: english.to_string(),
+            source_ref: parse_source_ref_value(sentence),
+            has_legacy_word_index: has_legacy_word_index(sentence),
+        });
+    }
+
     Ok(cards)
 }
 
-fn parse_accepted_cards(content: &str) -> Vec<AcceptedCard> {
-    let Some(array_start) = content.find("\"sentences\"") else {
-        return Vec::new();
-    };
-    let Some(bracket_start) = content[array_start..]
-        .find('[')
-        .map(|index| array_start + index)
-    else {
-        return Vec::new();
-    };
-    let Some(bracket_end) = matching_bracket(content, bracket_start, '[', ']') else {
-        return Vec::new();
-    };
-    let array = &content[bracket_start + 1..bracket_end];
-
-    top_level_objects(array)
-        .into_iter()
-        .map(|object| AcceptedCard {
-            source_ref: parse_source_ref(object),
-        })
-        .collect()
+fn invalid_sentence_problem(path: &Path, index: usize, problem: &str) -> String {
+    format!(
+        "Invalid accepted output\n\nFile\n  {}\n\nProblem\n  Sentence {} {problem}.\n\nAction\n  Archive or repair this file before generating more cards.",
+        path.display(),
+        index + 1,
+    )
 }
 
-fn parse_source_ref(object: &str) -> Option<SourceRef> {
-    let source_ref_index = object.find("\"source_ref\"")?;
-    let brace_start = object[source_ref_index..]
-        .find('{')
-        .map(|index| source_ref_index + index)?;
-    let brace_end = matching_bracket(object, brace_start, '{', '}')?;
-    let source_ref = &object[brace_start + 1..brace_end];
+fn parse_source_ref_value(sentence: &Value) -> Option<SourceRef> {
+    let source_ref = sentence.get("source_ref")?.as_object()?;
     Some(SourceRef {
-        file: json_string_field(source_ref, "file")?,
-        item_id: json_string_field(source_ref, "item_id")?,
-        fingerprint: json_string_field(source_ref, "fingerprint")?,
+        file: source_ref.get("file")?.as_str()?.to_string(),
+        item_id: source_ref.get("item_id")?.as_str()?.to_string(),
+        fingerprint: source_ref.get("fingerprint")?.as_str()?.to_string(),
     })
 }
 
-fn json_string_field(object: &str, name: &str) -> Option<String> {
-    let pattern = format!("\"{name}\"");
-    let field_index = object.find(&pattern)?;
-    let colon_index =
-        object[field_index + pattern.len()..].find(':')? + field_index + pattern.len();
-    let after_colon = &object[colon_index + 1..];
-    let quote_start = after_colon.find('"')?;
-    let value_start = quote_start + 1;
-    let value_end = find_string_end(after_colon, value_start)?;
-    Some(unescape_json_string(&after_colon[value_start..value_end]))
-}
-
-fn top_level_objects(array: &str) -> Vec<&str> {
-    let mut objects = Vec::new();
-    let mut start = None;
-    let mut depth = 0usize;
-    let mut in_string = false;
-    let mut escaped = false;
-    for (index, byte) in array.bytes().enumerate() {
-        if in_string {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == b'"' {
-                in_string = false;
-            }
-            continue;
-        }
-        match byte {
-            b'"' => in_string = true,
-            b'{' => {
-                if depth == 0 {
-                    start = Some(index);
-                }
-                depth += 1;
-            }
-            b'}' => {
-                depth = depth.saturating_sub(1);
-                if depth == 0 {
-                    if let Some(start_index) = start.take() {
-                        objects.push(&array[start_index..=index]);
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    objects
-}
-
-fn matching_bracket(content: &str, start: usize, open: char, close: char) -> Option<usize> {
-    let mut depth = 0usize;
-    let mut in_string = false;
-    let mut escaped = false;
-    for (offset, ch) in content[start..].char_indices() {
-        if in_string {
-            if escaped {
-                escaped = false;
-            } else if ch == '\\' {
-                escaped = true;
-            } else if ch == '"' {
-                in_string = false;
-            }
-            continue;
-        }
-        if ch == '"' {
-            in_string = true;
-        } else if ch == open {
-            depth += 1;
-        } else if ch == close {
-            depth = depth.saturating_sub(1);
-            if depth == 0 {
-                return Some(start + offset);
-            }
-        }
-    }
-    None
-}
-
-fn find_string_end(content: &str, start: usize) -> Option<usize> {
-    let mut escaped = false;
-    for (offset, byte) in content[start..].bytes().enumerate() {
-        if escaped {
-            escaped = false;
-        } else if byte == b'\\' {
-            escaped = true;
-        } else if byte == b'"' {
-            return Some(start + offset);
-        }
-    }
-    None
-}
-
-fn unescape_json_string(value: &str) -> String {
-    value
-        .replace("\\\"", "\"")
-        .replace("\\\\", "\\")
-        .replace("\\n", "\n")
+fn has_legacy_word_index(sentence: &Value) -> bool {
+    sentence
+        .get("tokens")
+        .and_then(Value::as_array)
+        .is_some_and(|tokens| {
+            tokens.iter().any(|token| {
+                let has_numeric_word_index = token
+                    .get("word_index")
+                    .is_some_and(|value| value.as_u64().is_some());
+                let has_word_id = token.get("word_id").and_then(Value::as_str).is_some();
+                has_numeric_word_index && !has_word_id
+            })
+        })
 }
 
 #[cfg(test)]
@@ -779,7 +827,7 @@ mod tests {
         SourceFile, SourceRef,
     };
     use crate::source_identity::source_fingerprint;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     #[test]
     fn computes_source_fingerprint_with_normalized_whitespace() {
@@ -795,7 +843,8 @@ mod tests {
         let plan = build_plan(
             vec![source_file("0001", "fp")],
             vec![],
-            vec![AcceptedCard { source_ref: None }],
+            vec![accepted_card(None)],
+            vec![],
             1,
         );
 
@@ -810,16 +859,74 @@ mod tests {
         let plan = build_plan(
             vec![source],
             vec![],
-            vec![AcceptedCard {
-                source_ref: Some(SourceRef {
-                    file: "input/sentences/example.yaml".to_string(),
-                    item_id: "0001".to_string(),
-                    fingerprint: "fp".to_string(),
-                }),
-            }],
+            vec![accepted_card(Some(SourceRef {
+                file: "input/sentences/example.yaml".to_string(),
+                item_id: "0001".to_string(),
+                fingerprint: "fp".to_string(),
+            }))],
+            vec![],
             1,
         );
 
+        assert_eq!(plan.done, 1);
+        assert_eq!(plan.pending_items, 0);
+    }
+
+    #[test]
+    fn flags_legacy_content_duplicate_without_source_ref() {
+        let hindi = "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?";
+        let romanisation = "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?";
+        let english = "Teacher ji, how many students are here?";
+        let plan = build_plan(
+            vec![source_file_with_text("0001", hindi, romanisation, english)],
+            vec![],
+            vec![AcceptedCard {
+                path: PathBuf::from("output/sentences/old.json"),
+                hindi: hindi.to_string(),
+                romanisation: romanisation.to_string(),
+                english: english.to_string(),
+                source_ref: None,
+                has_legacy_word_index: true,
+            }],
+            vec![],
+            1,
+        );
+
+        assert_eq!(plan.content_duplicates, 1);
+        assert_eq!(plan.legacy_format, 1);
+        assert!(plan.has_errors());
+        assert!(plan.render().contains("Possible duplicate accepted output"));
+        assert!(plan.render().contains("Roman"));
+        assert!(plan.render().contains("adhyāpak"));
+    }
+
+    #[test]
+    fn ignores_content_duplicate_when_source_ref_is_current() {
+        let hindi = "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?";
+        let romanisation = "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?";
+        let english = "Teacher ji, how many students are here?";
+        let source = source_file_with_text("0001", hindi, romanisation, english);
+        let fingerprint = source.items[0].fingerprint.clone();
+        let plan = build_plan(
+            vec![source],
+            vec![],
+            vec![AcceptedCard {
+                path: PathBuf::from("output/sentences/rust.json"),
+                hindi: hindi.to_string(),
+                romanisation: romanisation.to_string(),
+                english: english.to_string(),
+                source_ref: Some(SourceRef {
+                    file: "input/sentences/example.yaml".to_string(),
+                    item_id: "0001".to_string(),
+                    fingerprint,
+                }),
+                has_legacy_word_index: false,
+            }],
+            vec![],
+            1,
+        );
+
+        assert_eq!(plan.content_duplicates, 0);
         assert_eq!(plan.done, 1);
         assert_eq!(plan.pending_items, 0);
     }
@@ -829,18 +936,36 @@ mod tests {
         let plan = build_plan(
             vec![source_file("0001", "current")],
             vec![],
-            vec![AcceptedCard {
-                source_ref: Some(SourceRef {
-                    file: "input/sentences/example.yaml".to_string(),
-                    item_id: "0001".to_string(),
-                    fingerprint: "old".to_string(),
-                }),
-            }],
+            vec![accepted_card(Some(SourceRef {
+                file: "input/sentences/example.yaml".to_string(),
+                item_id: "0001".to_string(),
+                fingerprint: "old".to_string(),
+            }))],
+            vec![],
             1,
         );
 
         assert_eq!(plan.source_changed, 1);
         assert_eq!(plan.pending_items, 1);
+    }
+
+    #[test]
+    fn reports_invalid_output_errors_without_reducing_valid_source_ids() {
+        let plan = build_plan(
+            vec![source_file("0001", "fp")],
+            vec![],
+            vec![accepted_card(Some(SourceRef {
+                file: "input/sentences/example.yaml".to_string(),
+                item_id: "0001".to_string(),
+                fingerprint: "fp".to_string(),
+            }))],
+            vec!["Invalid accepted output".to_string()],
+            1,
+        );
+
+        assert_eq!(plan.invalid_output, 1);
+        assert_eq!(plan.valid_ids, 1);
+        assert!(plan.has_errors());
     }
 
     #[test]
@@ -878,7 +1003,7 @@ mod tests {
                 })
                 .collect(),
         };
-        let plan = build_plan(vec![source], vec![], vec![], 2);
+        let plan = build_plan(vec![source], vec![], vec![], vec![], 2);
 
         assert_eq!(plan.planned_files.len(), 2);
         assert_eq!(plan.planned_items, 10);
@@ -899,11 +1024,33 @@ mod tests {
     #[test]
     fn parses_accepted_cards_with_source_ref() {
         let cards = parse_accepted_cards(
-            r#"{"sentences":[{"source_ref":{"file":"input/sentences/example.yaml","item_id":"0001","fingerprint":"fp"}}]}"#,
-        );
+            Path::new("output/sentences/example.json"),
+            r#"{"sentences":[{"hindi":"यहाँ","romanisation":"yahā̃","english":"Here.","tokens":[{"word_index":0}],"source_ref":{"file":"input/sentences/example.yaml","item_id":"0001","fingerprint":"fp"}}]}"#,
+        )
+        .unwrap();
 
         assert_eq!(cards.len(), 1);
         assert!(cards[0].source_ref.is_some());
+        assert!(cards[0].has_legacy_word_index);
+    }
+
+    #[test]
+    fn rejects_accepted_output_without_sentence_array() {
+        let error =
+            parse_accepted_cards(Path::new("output/sentences/broken.json"), "{}").unwrap_err();
+
+        assert!(error.contains("Missing sentences array"));
+    }
+
+    fn accepted_card(source_ref: Option<SourceRef>) -> AcceptedCard {
+        AcceptedCard {
+            path: PathBuf::from("output/sentences/example.json"),
+            hindi: String::new(),
+            romanisation: String::new(),
+            english: String::new(),
+            source_ref,
+            has_legacy_word_index: false,
+        }
     }
 
     fn source_file(id: &str, fingerprint: &str) -> SourceFile {
@@ -919,6 +1066,28 @@ mod tests {
                 english: String::new(),
                 tags: Vec::new(),
                 fingerprint: fingerprint.to_string(),
+            }],
+        }
+    }
+
+    fn source_file_with_text(
+        id: &str,
+        hindi: &str,
+        romanisation: &str,
+        english: &str,
+    ) -> SourceFile {
+        SourceFile {
+            relative_path: PathBuf::from("input/sentences/example.yaml"),
+            stem: "example".to_string(),
+            title: Some("Example".to_string()),
+            subtitle: Some("Chapter".to_string()),
+            items: vec![super::SourceRow {
+                id: id.to_string(),
+                hindi: hindi.to_string(),
+                romanisation: romanisation.to_string(),
+                english: english.to_string(),
+                tags: Vec::new(),
+                fingerprint: source_fingerprint(hindi, romanisation, english),
             }],
         }
     }

@@ -72,7 +72,8 @@ Acceptance:
 - Reads `input/sentences/*.yaml`.
 - Reads existing `output/sentences/*.json`.
 - Reports source validity, done, pending, deferred, missing lineage, source
-  changed, and planned output filenames.
+  changed, legacy format output, content duplicates, invalid output, and
+  planned output filenames.
 - Planned output filenames use the next unused zero-padded batch number for the
   source stem.
 - `--max-batches` is total output files across the command invocation, not
@@ -81,6 +82,9 @@ Acceptance:
 - Source item IDs are parsed and validated.
 - Items in existing output without `source_ref` are reported as
   `missing lineage`; the planner does not backfill.
+- Existing output that matches a source row by normalized Hindi, romanisation,
+  and English but lacks current `source_ref` is reported as a content
+  duplicate and blocks generation until the old output is archived or repaired.
 - Existing YAML fixtures cover one completed item and one pending item.
 
 ## M3: Validator And Writer
