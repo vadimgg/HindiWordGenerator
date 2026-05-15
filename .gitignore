@@ -15,6 +15,7 @@ viewer/node_modules/
 viewer/dist/
 runs/
 eval/
+exports/
 
 demos-read-only/
 reference/

@@ -1,4 +1,4 @@
-.PHONY: build test fmt clippy check run doctor plan generate audio viewer viewer-check viewer-build export install clean
+.PHONY: build test fmt clippy check run doctor plan generate audio quality viewer viewer-check viewer-build export install clean
 
 SOURCE ?= Complete Hindi
 TOPIC ?= Chapter 02
@@ -31,6 +31,9 @@ generate:
 
 audio:
 	cargo run -- sentences audio
+
+quality:
+	cargo run -- sentences quality
 
 viewer:
 	cargo run -- viewer

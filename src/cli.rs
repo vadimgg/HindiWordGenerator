@@ -23,6 +23,7 @@ pub enum Command {
         max_batches: usize,
     },
     SentencesAudio,
+    SentencesQuality,
     EvalHelp,
     EvalRun {
         input: String,
@@ -158,8 +159,11 @@ where
         [command, action] if command == "sentences" && action == "audio" => {
             Ok(Command::SentencesAudio)
         }
+        [command, action] if command == "sentences" && action == "quality" => {
+            Ok(Command::SentencesQuality)
+        }
         [command, ..] if command == "sentences" => Err(CliError::new(
-            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio",
+            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio | quality",
         )),
         [command, flag] if command == "eval" && is_help_flag(flag) => Ok(Command::EvalHelp),
         [command, action, ..] if command == "eval" && action == "run" => parse_eval_run(&args[2..]),
@@ -359,7 +363,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, or backfill sentence batches\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences quality\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, or review accepted sentence quality\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -379,7 +383,7 @@ pub fn source_ids_help_text() -> &'static str {
 }
 
 pub fn sentences_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n\nCommands:\n  plan       Preview pending sentence batches without writing output\n  generate   Generate pending sentence batches with the configured local model\n  audio      Backfill missing audio for accepted sentence batches"
+    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences quality\n\nCommands:\n  plan       Preview pending sentence batches without writing output\n  generate   Generate pending sentence batches with the configured local model\n  audio      Backfill missing audio for accepted sentence batches\n  quality    Scan accepted sentence batches for learner-quality issues"
 }
 
 pub fn eval_help_text() -> &'static str {
@@ -447,6 +451,10 @@ mod tests {
         assert_eq!(
             parse(["sentences", "audio"]).unwrap(),
             Command::SentencesAudio
+        );
+        assert_eq!(
+            parse(["sentences", "quality"]).unwrap(),
+            Command::SentencesQuality
         );
     }
 

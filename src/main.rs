@@ -11,6 +11,7 @@ mod sentence_audio;
 mod sentence_enrichment;
 mod sentence_generate;
 mod sentence_plan;
+mod sentence_quality;
 mod sentence_schema;
 mod sentence_validate;
 mod source_identity;
@@ -131,6 +132,20 @@ fn main() -> ExitCode {
                     ExitCode::SUCCESS
                 } else {
                     ExitCode::from(1)
+                }
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
+        Ok(cli::Command::SentencesQuality) => match sentence_quality::quality_from_current_dir() {
+            Ok(report) => {
+                println!("{}", report.render());
+                if report.has_problems() {
+                    ExitCode::from(1)
+                } else {
+                    ExitCode::SUCCESS
                 }
             }
             Err(error) => {
