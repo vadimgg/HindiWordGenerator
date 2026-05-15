@@ -1,0 +1,416 @@
+{
+  "title": "Complete Hindi",
+  "subtitle": "Chapter 02",
+  "sentences": [
+    {
+      "hindi": "लेकिन सस्ती नहीं है, काफ़ी महँगी है।",
+      "romanisation": "lekin sastī nahī̃ hai, kāfī mahãgī hai.",
+      "english": "But it's not cheap, it's quite expensive.",
+      "literal": "But cheap not is, quite expensive is.",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0006",
+        "fingerprint": "sha256:2b16bf2aa4edded0083154214195d70f1d997c42c11f8e058e1b4472dd3e5285"
+      },
+      "tokens": [
+        {
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "सस्ती",
+          "roman": "sastī",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_id": "w4"
+        },
+        {
+          "hindi": "काफ़ी",
+          "roman": "kāfī",
+          "kind": "word",
+          "word_id": "w5"
+        },
+        {
+          "hindi": "महँगी",
+          "roman": "mahãgī",
+          "kind": "word",
+          "word_id": "w6"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_id": "w7"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "लेकिन",
+          "roman": "lekin",
+          "meaning": "but",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "सस्ती",
+          "roman": "sastī",
+          "meaning": "cheap",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "meaning": "not",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is",
+          "kind": "word"
+        },
+        {
+          "id": "w5",
+          "hindi": "काफ़ी",
+          "roman": "kāfī",
+          "meaning": "quite",
+          "kind": "word"
+        },
+        {
+          "id": "w6",
+          "hindi": "महँगी",
+          "roman": "mahãgī",
+          "meaning": "expensive",
+          "kind": "word"
+        },
+        {
+          "id": "w7",
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "क्या ये शब्दकोश भी महँगे हैं?",
+      "romanisation": "kyā ye śabdkoś bhī mahãge haĩ?",
+      "english": "Are these dictionaries also expensive?",
+      "literal": "What this dictionaries also expensive are?",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0007",
+        "fingerprint": "sha256:e7705465c43a2481ca70739cbc010190df5fa3c7bfc3fd36e323fbf5f5adb1d5"
+      },
+      "tokens": [
+        {
+          "hindi": "क्या",
+          "roman": "kyā",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "ये",
+          "roman": "ye",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "शब्दकोश",
+          "roman": "śabdkoś",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "भी",
+          "roman": "bhī",
+          "kind": "word",
+          "word_id": "w4"
+        },
+        {
+          "hindi": "महँगे",
+          "roman": "mahãge",
+          "kind": "word",
+          "word_id": "w5"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "kind": "word",
+          "word_id": "w6"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "क्या",
+          "roman": "kyā",
+          "meaning": "what",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "ये",
+          "roman": "ye",
+          "meaning": "these",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "शब्दकोश",
+          "roman": "śabdkoś",
+          "meaning": "dictionaries",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "भी",
+          "roman": "bhī",
+          "meaning": "also",
+          "kind": "word"
+        },
+        {
+          "id": "w5",
+          "hindi": "महँगे",
+          "roman": "mahãge",
+          "meaning": "expensive",
+          "kind": "word"
+        },
+        {
+          "id": "w6",
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "नहीं, बिलकुल नहीं।",
+      "romanisation": "nahī̃, bilkul nahī̃.",
+      "english": "No, not at all.",
+      "literal": "Not, completely not.",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0008",
+        "fingerprint": "sha256:2e5ec8ac37fc19687456030b64ba0a85cf1344c44fde184ed4fa664dffbf8ce2"
+      },
+      "tokens": [
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "बिलकुल",
+          "roman": "bilkul",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "kind": "word",
+          "word_id": "w3"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "meaning": "no",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "बिलकुल",
+          "roman": "bilkul",
+          "meaning": "absolutely",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "नहीं",
+          "roman": "nahī̃",
+          "meaning": "not",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "बहुत सस्ते हैं।",
+      "romanisation": "bahut saste haĩ.",
+      "english": "They're very cheap.",
+      "literal": "Very cheap are.",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0009",
+        "fingerprint": "sha256:f74575e36464ae73f72469a8608a14ba442a3c7cb83f3de468ecf575a061adf3"
+      },
+      "tokens": [
+        {
+          "hindi": "बहुत",
+          "roman": "bahut",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "सस्ते",
+          "roman": "saste",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "kind": "word",
+          "word_id": "w3"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "बहुत",
+          "roman": "bahut",
+          "meaning": "very",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "सस्ते",
+          "roman": "saste",
+          "meaning": "cheap",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "हैं",
+          "roman": "haĩ",
+          "meaning": "are",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    },
+    {
+      "hindi": "और वह मोटी किताब क्या है?",
+      "romanisation": "aur vah moṭī kitāb kyā hai?",
+      "english": "And what is that thick book?",
+      "literal": "And that thick book what is?",
+      "register": "standard",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "item_id": "0010",
+        "fingerprint": "sha256:1767f6a3a392056b5f812ba4404ec426917266fba91ca7b1d4e5d9dbcdcfbdfd"
+      },
+      "tokens": [
+        {
+          "hindi": "और",
+          "roman": "aur",
+          "kind": "word",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "वह",
+          "roman": "vah",
+          "kind": "word",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "मोटी",
+          "roman": "moṭī",
+          "kind": "word",
+          "word_id": "w3"
+        },
+        {
+          "hindi": "किताब",
+          "roman": "kitāb",
+          "kind": "word",
+          "word_id": "w4"
+        },
+        {
+          "hindi": "क्या",
+          "roman": "kyā",
+          "kind": "word",
+          "word_id": "w5"
+        },
+        {
+          "hindi": "है",
+          "roman": "hai",
+          "kind": "word",
+          "word_id": "w6"
+        }
+      ],
+      "words": [
+        {
+          "id": "w1",
+          "hindi": "और",
+          "roman": "aur",
+          "meaning": "and",
+          "kind": "word"
+        },
+        {
+          "id": "w2",
+          "hindi": "वह",
+          "roman": "vah",
+          "meaning": "that",
+          "kind": "word"
+        },
+        {
+          "id": "w3",
+          "hindi": "मोटी",
+          "roman": "moṭī",
+          "meaning": "thick",
+          "kind": "word"
+        },
+        {
+          "id": "w4",
+          "hindi": "किताब",
+          "roman": "kitāb",
+          "meaning": "book",
+          "kind": "word"
+        },
+        {
+          "id": "w5",
+          "hindi": "क्या",
+          "roman": "kyā",
+          "meaning": "what",
+          "kind": "word"
+        },
+        {
+          "id": "w6",
+          "hindi": "है",
+          "roman": "hai",
+          "meaning": "is",
+          "kind": "word"
+        }
+      ],
+      "anki_tags": []
+    }
+  ]
+}

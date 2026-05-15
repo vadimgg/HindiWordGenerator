@@ -211,7 +211,7 @@ hindi sentences generate --max-batches 1
 Rules:
 
 - Plan from current YAML and existing output at runtime.
-- Call the configured sentence model.
+- Call the configured sentence model through focused stages.
 - Validate JSON before writing.
 - Write through temp files and rename.
 - Refuse output collisions.
@@ -228,18 +228,24 @@ accepted output JSON file; batch size is controlled by config.
 
 Prompt contract:
 
-- The model receives structured source rows: `id`, `hindi`, `romanisation`,
-  `english`, and optional `tags`. Title and subtitle are not sent — Rust
+- Each stage call receives one structured source row: `id`, `hindi`,
+  `romanisation`, `english`, and optional `tags`. Title and subtitle are not sent — Rust
   copies them itself and the model has no need for them.
 - Rust copies trusted source fields from YAML/planner data: title, subtitle,
   Hindi, romanisation, English, tags, `source_ref`, content fingerprint, and
   target filename.
-- The model returns enrichment keyed by source ID: `literal`, `register`,
-  `tokens`, `words`, and optionally `anki_tags`.
+- The model returns enrichment keyed by source ID in focused stages:
+  `sentence/register`, `sentence/literal`, and
+  `sentence/word-breakdown-from-translation`.
+- Rust merges stage outputs by source ID and builds final `literal`,
+  `register`, `tokens`, `words`, and optional `anki_tags`.
 - Response extraction should tolerate markdown fences and leading/trailing
   prose, but validation still decides whether the result can be written.
-- If single-prompt JSON quality is poor, staged prompting is the fallback:
-  literal/register first, word breakdown second, token alignment last.
+- Missing, duplicate, or extra source IDs from any stage fail the batch before
+  accepted output is written.
+- A generated output file may still contain multiple accepted sentence cards,
+  but model prompts are per sentence to keep local context small and reduce
+  malformed multi-item responses.
 
 If generation fails validation, inspect the run folder named in the error and
 rerun `hindi sentences generate` after fixing the source, prompt, or validator.
@@ -256,12 +262,41 @@ Minimal run report:
   "targets": ["output/sentences/complete_hindi_chapter_02_sentences_batch_05.json"],
   "model": "ollama:translategemma:12b",
   "model_digest": null,
-  "prompt_path": "generation_prompt_sentences_enrichment.txt",
+  "prompt_path": "staged-sentence-generation",
   "prompt_fingerprint": "sha256:...",
-  "started_at": "2026-05-14T12:00:00Z",
-  "finished_at": "2026-05-14T12:00:18Z",
+  "stages": [
+    {
+      "stage_id": "sentence/register",
+      "prompt_version": "v3",
+      "prompt_fingerprint": "sha256:...",
+      "model": "ollama:translategemma:12b",
+      "model_digest": null,
+      "duration_ms": 3200,
+      "ok": true
+    },
+    {
+      "stage_id": "sentence/literal",
+      "prompt_version": "v2",
+      "prompt_fingerprint": "sha256:...",
+      "model": "ollama:translategemma:12b",
+      "model_digest": null,
+      "duration_ms": 2100,
+      "ok": true
+    },
+    {
+      "stage_id": "sentence/word-breakdown-from-translation",
+      "prompt_version": "v2",
+      "prompt_fingerprint": "sha256:...",
+      "model": "ollama:translategemma:12b",
+      "model_digest": null,
+      "duration_ms": 12400,
+      "ok": true
+    }
+  ],
+  "started_at_unix": 1778845272,
+  "finished_at_unix": 1778845289,
   "validation": {
-    "ok": true,
+    "valid": true,
     "errors": []
   },
   "writes": {
@@ -276,8 +311,8 @@ exist in some stable form. `model_digest` is best-effort and may be `null` when
 Ollama does not expose a stable digest.
 
 `generation_prompt_sentences.txt` remains the archived Python full-card prompt.
-Rust generation should use `generation_prompt_sentences_enrichment.txt`, which
-matches the enrichment-only trust boundary.
+The old Rust full-enrichment prompt remains useful for eval comparison, but
+normal Rust generation uses the staged prompt path above.
 
 Review mode is optional and later:
 

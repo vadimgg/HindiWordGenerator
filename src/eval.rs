@@ -1485,7 +1485,7 @@ fn prompt_templates() -> Vec<PromptTemplate> {
         },
         PromptTemplate {
             id: "sentence/literal",
-            version: "v2",
+            version: "v3",
             input_template: include_str!("eval_prompts/sentence_literal.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_literal.grade.yaml.hbs"),
             threshold_pct: 80,
@@ -1506,7 +1506,7 @@ fn prompt_templates() -> Vec<PromptTemplate> {
         },
         PromptTemplate {
             id: "sentence/word-breakdown-from-translation",
-            version: "v2",
+            version: "v3",
             input_template: include_str!(
                 "eval_prompts/sentence_word_breakdown_from_translation.yaml.hbs"
             ),
