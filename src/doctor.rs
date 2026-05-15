@@ -83,13 +83,14 @@ impl DoctorReport {
             check_dir(&root, "audio", "audio/", true),
         ];
         let prompts = vec![
+            check_builtin("sentences", "built-in staged prompts", true),
             check_file(
                 &root,
-                "sentences",
+                "legacy",
                 "generation_prompt_sentences_enrichment.txt",
-                true,
+                false,
             ),
-            check_file(&root, "python", "generation_prompt_sentences.txt", true),
+            check_file(&root, "python", "generation_prompt_sentences.txt", false),
         ];
 
         Self {
@@ -187,6 +188,15 @@ fn check_file(root: &ProjectRoot, name: &'static str, path: &'static str, requir
     check_path(root, name, path, required, PathKind::File)
 }
 
+fn check_builtin(name: &'static str, path: &'static str, required: bool) -> Check {
+    Check {
+        name,
+        state: CheckState::Ok,
+        path,
+        required,
+    }
+}
+
 fn check_path(
     root: &ProjectRoot,
     name: &'static str,
@@ -281,15 +291,19 @@ mod tests {
     }
 
     #[test]
-    fn missing_required_prompt_fails() {
+    fn legacy_prompt_files_are_optional() {
         let root = create_project();
         fs::remove_file(root.join("generation_prompt_sentences_enrichment.txt")).unwrap();
+        fs::remove_file(root.join("generation_prompt_sentences.txt")).unwrap();
         let report = collect(&root, OllamaStatus::Ok);
 
-        assert!(!report.required_checks_passed());
+        assert!(report.required_checks_passed());
         assert!(report
             .render()
-            .contains("sentences missing  generation_prompt_sentences_enrichment.txt"));
+            .contains("sentences ok       built-in staged prompts"));
+        assert!(report
+            .render()
+            .contains("legacy    missing  generation_prompt_sentences_enrichment.txt"));
         fs::remove_dir_all(root).unwrap();
     }
 

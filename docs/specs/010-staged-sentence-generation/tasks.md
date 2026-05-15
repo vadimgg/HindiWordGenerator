@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|
 | WP01 | Add staged prompt parsing and merge internals | rust-engineer | done | none | AC04, AC05, AC06, AC07, AC12 |
 | WP02 | Wire staged generation and run reports | rust-engineer | done | WP01 | AC01, AC02, AC03, AC08, AC09, AC10, AC11, AC12 |
-| WP03 | Validate staged generation and update docs | rust-engineer | planned | WP01, WP02 | AC12, AC13 |
+| WP03 | Validate staged generation and update docs | rust-engineer | done | WP01, WP02 | AC12, AC13 |
 
 ## Notes
 

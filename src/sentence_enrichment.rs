@@ -12,15 +12,11 @@ pub const WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID: &str =
 
 #[derive(Debug)]
 pub enum EnrichmentError {
-    JsonNotFound,
-    Json(serde_json::Error),
     StructuredNotFound,
     StructuredParse { yaml: String, json: String },
     UnknownStage(String),
     TemplateRegistration(handlebars::TemplateError),
     Template(handlebars::RenderError),
-    MissingItem(String),
-    DuplicateItem(String),
     MissingStageItem { stage_id: String, item_id: String },
     DuplicateStageItem { stage_id: String, item_id: String },
     ExtraStageItem { stage_id: String, item_id: String },
@@ -29,12 +25,6 @@ pub enum EnrichmentError {
 impl std::fmt::Display for EnrichmentError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EnrichmentError::JsonNotFound => {
-                write!(formatter, "Model response did not contain a JSON object.")
-            }
-            EnrichmentError::Json(error) => {
-                write!(formatter, "Could not parse model enrichment JSON: {error}")
-            }
             EnrichmentError::StructuredNotFound => {
                 write!(formatter, "Model response did not contain YAML or JSON.")
             }
@@ -53,18 +43,6 @@ impl std::fmt::Display for EnrichmentError {
             }
             EnrichmentError::Template(error) => {
                 write!(formatter, "Could not render sentence stage prompt: {error}")
-            }
-            EnrichmentError::MissingItem(id) => {
-                write!(
-                    formatter,
-                    "Model response did not include enrichment for source id {id}."
-                )
-            }
-            EnrichmentError::DuplicateItem(id) => {
-                write!(
-                    formatter,
-                    "Model response included duplicate enrichment for source id {id}."
-                )
             }
             EnrichmentError::MissingStageItem { stage_id, item_id } => {
                 write!(formatter, "Stage {stage_id} did not return item {item_id}.")
@@ -98,25 +76,7 @@ struct PromptItem<'a> {
     tags: Vec<&'a str>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-struct EnrichmentResponse {
-    #[serde(default)]
-    items: Vec<EnrichmentItem>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-struct EnrichmentItem {
-    id: String,
-    literal: String,
-    register: String,
-    #[serde(default)]
-    tokens: Vec<SentenceToken>,
-    #[serde(default)]
-    words: Vec<SentenceWord>,
-    #[serde(default)]
-    anki_tags: Vec<String>,
-}
-
+#[cfg(test)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StagePromptDefinition {
     pub id: &'static str,
@@ -168,6 +128,7 @@ pub struct StagedEnrichment {
     pub word_breakdown: Vec<WordBreakdownStageRecord>,
 }
 
+#[cfg(test)]
 pub fn generation_stage_prompts() -> Vec<StagePromptDefinition> {
     generation_stage_prompt_templates()
         .into_iter()
@@ -234,23 +195,6 @@ pub fn parse_word_breakdown_stage(
     parse_stage_response::<WordBreakdownStageRecord>(response_text)
 }
 
-pub fn build_prompt(prompt_template: &str, rows: &[PlannedSentenceRow]) -> String {
-    let input = PromptInput {
-        items: rows
-            .iter()
-            .map(|row| PromptItem {
-                id: &row.id,
-                hindi: &row.hindi,
-                romanisation: &row.romanisation,
-                english: &row.english,
-                tags: row.tags.iter().map(String::as_str).collect(),
-            })
-            .collect(),
-    };
-    let payload = serde_json::to_string_pretty(&input).expect("prompt input is serializable");
-    format!("{prompt_template}\n\nINPUT\n```json\n{payload}\n```")
-}
-
 pub fn merge_staged_enrichment(
     batch: &PlannedSentenceBatch,
     staged: StagedEnrichment,
@@ -294,49 +238,6 @@ pub fn merge_staged_enrichment(
     reject_extra_stage_items(REGISTER_STAGE_ID, &register_by_id)?;
     reject_extra_stage_items(LITERAL_STAGE_ID, &literal_by_id)?;
     reject_extra_stage_items(WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID, &word_by_id)?;
-
-    Ok(SentenceBatch {
-        title: batch.title.clone(),
-        subtitle: batch.subtitle.clone(),
-        sentences,
-    })
-}
-
-pub fn merge_enrichment(
-    batch: &PlannedSentenceBatch,
-    response_text: &str,
-) -> Result<SentenceBatch, EnrichmentError> {
-    let response = parse_response(response_text)?;
-    let mut by_id = BTreeMap::new();
-    for item in response.items {
-        if by_id.contains_key(&item.id) {
-            return Err(EnrichmentError::DuplicateItem(item.id));
-        }
-        by_id.insert(item.id.clone(), item);
-    }
-
-    let mut sentences = Vec::new();
-    for row in &batch.rows {
-        let Some(item) = by_id.remove(&row.id) else {
-            return Err(EnrichmentError::MissingItem(row.id.clone()));
-        };
-        sentences.push(SentenceCard {
-            hindi: Some(row.hindi.clone()),
-            romanisation: Some(row.romanisation.clone()),
-            english: Some(row.english.clone()),
-            literal: Some(item.literal),
-            register: Some(item.register),
-            source_ref: Some(SourceRef {
-                file: batch.source_file.to_string_lossy().to_string(),
-                item_id: row.id.clone(),
-                fingerprint: row.fingerprint.clone(),
-            }),
-            tokens: word_tokens_only(item.tokens),
-            words: item.words,
-            anki_tags: item.anki_tags,
-            audio: None,
-        });
-    }
 
     Ok(SentenceBatch {
         title: batch.title.clone(),
@@ -486,18 +387,6 @@ fn word_breakdown_to_tokens_and_words(
     (tokens, words, breakdown.anki_tags)
 }
 
-fn word_tokens_only(tokens: Vec<SentenceToken>) -> Vec<SentenceToken> {
-    tokens
-        .into_iter()
-        .filter(|token| token.kind.as_deref() == Some("word"))
-        .collect()
-}
-
-fn parse_response(response_text: &str) -> Result<EnrichmentResponse, EnrichmentError> {
-    let json = extract_json_object(response_text).ok_or(EnrichmentError::JsonNotFound)?;
-    serde_json::from_str(json).map_err(EnrichmentError::Json)
-}
-
 fn extract_json_object(response_text: &str) -> Option<&str> {
     let bytes = response_text.as_bytes();
     let mut start = None;
@@ -541,23 +430,14 @@ fn extract_json_object(response_text: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_prompt, generation_stage_prompts, merge_enrichment, merge_staged_enrichment,
-        parse_literal_stage, parse_register_stage, parse_word_breakdown_stage, render_stage_prompt,
-        EnrichmentError, LiteralStageRecord, RegisterStageRecord, StagedEnrichment,
-        WordBreakdownStageRecord, LITERAL_STAGE_ID, REGISTER_STAGE_ID,
-        WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID,
+        generation_stage_prompts, merge_staged_enrichment, parse_literal_stage,
+        parse_register_stage, parse_word_breakdown_stage, render_stage_prompt, EnrichmentError,
+        LiteralStageRecord, RegisterStageRecord, StagedEnrichment, WordBreakdownStageRecord,
+        LITERAL_STAGE_ID, REGISTER_STAGE_ID, WORD_BREAKDOWN_FROM_TRANSLATION_STAGE_ID,
     };
     use crate::sentence_plan::{PlannedSentenceBatch, PlannedSentenceRow};
     use crate::sentence_schema::SentenceWord;
     use std::path::PathBuf;
-
-    #[test]
-    fn prompt_contains_only_source_row_payload() {
-        let prompt = build_prompt("Template", &[row("0001")]);
-
-        assert!(prompt.contains("\"hindi\""));
-        assert!(!prompt.contains("\"source_ref\""));
-    }
 
     #[test]
     fn generation_stage_registry_contains_default_stages() {
@@ -620,48 +500,6 @@ results:
         assert_eq!(register[0].register, "standard");
         assert_eq!(literal[0].literal, "here");
         assert_eq!(words[0].words[0].meaning.as_deref(), Some("here"));
-    }
-
-    #[test]
-    fn extracts_fenced_json_and_merges_trusted_fields() {
-        let batch = PlannedSentenceBatch {
-            source_file: PathBuf::from("input/sentences/example.yaml"),
-            title: Some("Title".to_string()),
-            subtitle: Some("Chapter".to_string()),
-            target_path: PathBuf::from("output/sentences/example_batch_01.json"),
-            rows: vec![row("0001")],
-        };
-        let output = r#"Here:
-```json
-{"items":[{"id":"0001","literal":"here","register":"standard","tokens":[{"hindi":"यहाँ","roman":"yahā̃","kind":"word","word_id":"w1"}],"words":[{"id":"w1","hindi":"यहाँ","roman":"yahā̃","meaning":"here"}]}]}
-```
-"#;
-
-        let merged = merge_enrichment(&batch, output).unwrap();
-
-        assert_eq!(merged.title.as_deref(), Some("Title"));
-        assert_eq!(merged.sentences[0].english.as_deref(), Some("Here."));
-        assert_eq!(
-            merged.sentences[0].source_ref.as_ref().unwrap().item_id,
-            "0001"
-        );
-    }
-
-    #[test]
-    fn removes_non_word_tokens_from_model_output() {
-        let batch = PlannedSentenceBatch {
-            source_file: PathBuf::from("input/sentences/example.yaml"),
-            title: Some("Title".to_string()),
-            subtitle: Some("Chapter".to_string()),
-            target_path: PathBuf::from("output/sentences/example_batch_01.json"),
-            rows: vec![row("0001")],
-        };
-        let output = r#"{"items":[{"id":"0001","literal":"here","register":"standard","tokens":[{"hindi":"यहाँ","roman":"yahā̃","kind":"word","word_id":"w1"},{"hindi":"?","roman":"?","kind":"punct","word_id":"w2"}],"words":[{"id":"w1","hindi":"यहाँ","roman":"yahā̃","meaning":"here"}]}]}"#;
-
-        let merged = merge_enrichment(&batch, output).unwrap();
-
-        assert_eq!(merged.sentences[0].tokens.len(), 1);
-        assert_eq!(merged.sentences[0].tokens[0].word_id.as_deref(), Some("w1"));
     }
 
     #[test]

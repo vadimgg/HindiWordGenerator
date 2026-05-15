@@ -2,7 +2,7 @@
 id: WP03
 title: Validate staged generation and update docs
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: ["WP01", "WP02"]
 acceptance_refs: ["AC12", "AC13"]
 extra_skills: ["doc-writer", "hindi-prompt-tuner"]
@@ -71,3 +71,9 @@ decision.
 Use the Hindi display rule in any new docs or CLI examples that include Hindi:
 romanisation must appear directly under Devanagari. This package may touch docs
 and tests, but it should not redesign the command surface.
+
+Validation completed with `make check`. A live generation smoke was intentionally
+skipped because it would write a real accepted batch at
+`output/sentences/complete_hindi_chapter_02_sentences_batch_06.json`; `output/`
+is protected and should only be written with explicit user approval during
+manual testing.

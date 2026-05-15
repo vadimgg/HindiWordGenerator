@@ -32,8 +32,9 @@ hindi doctor
 Acceptance:
 
 - One Rust binary crate exists with internal modules.
-- `hindi doctor` reports project root, input/output/audio folders, prompt files,
-  config file status, and Ollama reachability.
+- `hindi doctor` reports project root, input/output/audio folders, built-in
+  sentence prompt status, optional legacy prompt files, config file status, and
+  Ollama reachability.
 - No command writes accepted output.
 - CLI output follows the Hindi display rule.
 
@@ -128,19 +129,23 @@ Acceptance:
 - Checks Ollama readiness before model calls.
 - If the configured model is not installed or reachable, prints the exact
   `ollama run ...` command and exits before spending model time.
-- Calls the configured sentence model for enrichment only.
+- Calls the configured sentence model through focused enrichment stages:
+  register, literal, and word breakdown from the existing translation.
 - Rust copies source fields and lineage from YAML/planner data.
-- Sends structured source rows and expects enrichment JSON keyed by source ID;
-  extraction may tolerate markdown fences or leading/trailing prose before
-  validation.
+- Sends structured source rows to each stage and expects stage output keyed by
+  source ID; extraction may tolerate markdown fences or leading/trailing prose
+  before validation.
+- Fails the batch before writing accepted output if any stage has missing,
+  duplicate, or extra source IDs.
 - Validates output before writing.
 - Writes accepted output directly by default.
 - Leaves a minimal run report under `runs/sentences/` with command, status,
-  sources, targets, prompt path and prompt fingerprint, model name and best
-  available Ollama model metadata (digest when obtainable), timings,
-  validation result, and accepted/skipped writes.
-- Uses `generation_prompt_sentences_enrichment.txt`; the archived Python
-  full-card prompt remains `generation_prompt_sentences.txt`.
+  sources, targets, aggregate prompt fingerprint, per-stage prompt IDs,
+  per-stage prompt fingerprints, model name and best available Ollama model
+  metadata (digest when obtainable), timings, validation result, and
+  accepted/skipped writes.
+- Keeps the archived Python full-card prompt as reference only; normal Rust
+  generation uses staged prompts rather than the old full-enrichment prompt.
 - Viewer-compatible JSON remains under `output/sentences/`.
 - Failed validation writes no accepted output and tells the user which run
   folder to inspect before rerunning generation.

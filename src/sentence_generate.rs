@@ -183,7 +183,7 @@ pub fn generate_from<C: SentenceModelClient>(
         let register = match register {
             Ok(records) => records,
             Err(error) => {
-                return Ok(failed_batch_outcome(
+                return failed_batch_outcome(
                     root,
                     &batch,
                     &model.original,
@@ -194,7 +194,7 @@ pub fn generate_from<C: SentenceModelClient>(
                     run_reports,
                     stages,
                     error,
-                )?);
+                );
             }
         };
 
@@ -212,7 +212,7 @@ pub fn generate_from<C: SentenceModelClient>(
         let literal = match literal {
             Ok(records) => records,
             Err(error) => {
-                return Ok(failed_batch_outcome(
+                return failed_batch_outcome(
                     root,
                     &batch,
                     &model.original,
@@ -223,7 +223,7 @@ pub fn generate_from<C: SentenceModelClient>(
                     run_reports,
                     stages,
                     error,
-                )?);
+                );
             }
         };
 
@@ -241,7 +241,7 @@ pub fn generate_from<C: SentenceModelClient>(
         let word_breakdown = match word_breakdown {
             Ok(records) => records,
             Err(error) => {
-                return Ok(failed_batch_outcome(
+                return failed_batch_outcome(
                     root,
                     &batch,
                     &model.original,
@@ -252,7 +252,7 @@ pub fn generate_from<C: SentenceModelClient>(
                     run_reports,
                     stages,
                     error,
-                )?);
+                );
             }
         };
 
@@ -420,6 +420,7 @@ fn expected_sources(batch: &PlannedSentenceBatch) -> Vec<ExpectedSource> {
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_stage<C, T, F>(
     client: &C,
     model: &ModelSpec,
@@ -491,6 +492,7 @@ where
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn stage_report(
     stage_id: &str,
     prompt_version: &str,
