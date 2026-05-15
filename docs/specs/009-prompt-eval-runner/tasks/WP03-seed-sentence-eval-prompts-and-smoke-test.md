@@ -53,3 +53,7 @@ available.
 
 Keep prompt templates practical and easy to edit. The goal is a useful prompt
 workbench, not perfect prompt quality on the first pass.
+
+WP03 depends on WP02's run folder contract: grading loads `meta.json` from an
+existing eval run and writes grade artifacts beside it. Do not implement grading
+against ad hoc prompt/response files outside `eval/<prompt-id>/<run-id>/`.

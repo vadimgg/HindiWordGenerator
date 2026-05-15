@@ -30,6 +30,10 @@
 - Render a template with `{{#each items}}`.
 - Render `items_yaml`.
 - Resolve prompt IDs to paired input/grading templates.
+- Resolve `--run` arguments by prepending `eval/` only when the argument does
+  not already start with `eval/`.
+- Extract grader response from `grade_packet.md` using the exact
+  `## Paste Grader Response Below` marker.
 - Parse grader response as YAML or JSON into the shared five-axis schema.
 
 ## Integration Tests
@@ -41,7 +45,7 @@
 
 ## Drift Checks
 
-- `rg --fixed-strings "eval --model" docs src` should not show eval model
+- `rg "eval (run|grade) --model" docs src` should not show eval model
   switching.
 - `rg "{{#each items}}" src/eval_prompts`.
 

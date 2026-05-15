@@ -109,7 +109,8 @@ Next
 
 - Prompts: `hindi eval grade` writes `grade_prompt.txt` and opens
   `grade_packet.md` in `$EDITOR`. The packet contains the rendered grading
-  prompt plus a marked paste area for the Claude/ChatGPT response.
+  prompt plus this exact marker for the Claude/ChatGPT response:
+  `## Paste Grader Response Below`.
 - Non-interactive behavior: direct command, exits non-zero on errors.
 - Picker or fzf behavior: None.
 

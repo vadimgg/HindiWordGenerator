@@ -36,10 +36,12 @@ the pasted structured grader response.
    and `summary.txt`.
 10. Print selected model, timing, output folder, and next inspection command.
 11. For `hindi eval grade --run`, resolve either an `eval/...` path or a
-    prompt-scoped run ID, load `meta.json`, render the paired grading prompt,
-    write `grade_prompt.txt` and `grade_packet.md`, open `grade_packet.md` in
-    `$EDITOR`, extract the pasted response, parse it as YAML or JSON, then write
-    `grade_response.txt`, `grade.json`, and update `summary.txt`.
+    prompt-scoped run ID. If the argument does not start with `eval/`, prepend
+    `eval/` and resolve from the project root. Then load `meta.json`, render the
+    paired grading prompt, write `grade_prompt.txt` and `grade_packet.md`, open
+    `grade_packet.md` in `$EDITOR`, extract the pasted response, parse it as
+    YAML or JSON, then write `grade_response.txt`, `grade.json`, and update
+    `summary.txt`.
 
 ## Work Package Sequence
 

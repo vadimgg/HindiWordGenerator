@@ -130,6 +130,9 @@ Contract:
 
 - Path shape: `eval/<prompt-category>/<prompt-name>/<timestamp>_<model-slug>/`.
 - `--run` may accept either that path or `<prompt-category>/<prompt-name>/<run-id>`.
+- Resolution rule: if the argument starts with `eval/`, resolve it from the
+  project root as given; otherwise prepend `eval/` and resolve from the project
+  root. Do not probe arbitrary sibling directories before applying this rule.
 - Model slug must be filesystem-safe.
 
 Review smell:
@@ -145,41 +148,29 @@ Used by:
 - `hindi eval grade`
 - Future reports
 
-Contract:
+Contract for `grade.json`:
 
-```yaml
-run_id: sentence/register/2026-05-15_143012_translategemma_12b
-grader: human
-graded_at: "2026-05-15T15:00:00Z"
-scores:
-  accuracy:
-    score: 4
-    max: 4
-    note: ""
-  completeness:
-    score: 4
-    max: 4
-    note: ""
-  format_compliance:
-    score: 4
-    max: 4
-    note: ""
-  consistency:
-    score: 4
-    max: 4
-    note: ""
-  confidence:
-    score: 4
-    max: 4
-    note: ""
-total:
-  score: 20
-  max: 20
-  pct: 100
-verdict: pass
-item_flags: []
-summary: "Accurate and complete."
+```json
+{
+  "run_id": "sentence/register/2026-05-15_143012_translategemma_12b",
+  "grader": "human",
+  "graded_at": "2026-05-15T15:00:00Z",
+  "scores": {
+    "accuracy": { "score": 4, "max": 4, "note": "" },
+    "completeness": { "score": 4, "max": 4, "note": "" },
+    "format_compliance": { "score": 4, "max": 4, "note": "" },
+    "consistency": { "score": 4, "max": 4, "note": "" },
+    "confidence": { "score": 4, "max": 4, "note": "" }
+  },
+  "total": { "score": 20, "max": 20, "pct": 100 },
+  "verdict": "pass",
+  "item_flags": [],
+  "summary": "Accurate and complete."
+}
 ```
+
+The grader may paste YAML or JSON into `grade_packet.md`. The command parses
+either format, validates this schema, and writes canonical JSON to `grade.json`.
 
 Axis scale:
 
@@ -195,6 +186,127 @@ Review smell:
 
 - A prompt-specific grade file that cannot be compared with other prompt IDs.
 - A neutral midpoint scale such as 1-5.
+
+### Grade Packet Markers
+
+Used by:
+
+- `hindi eval grade`
+
+Contract:
+
+`grade_packet.md` must contain these exact markers:
+
+````text
+## Grading Prompt
+
+<rendered prompt for the user to copy>
+
+## Paste Grader Response Below
+
+```yaml
+```
+````
+
+After `$EDITOR` closes, the command extracts everything after
+`## Paste Grader Response Below`, strips one optional fenced code block, and
+parses the remaining text as YAML or JSON.
+
+Review smell:
+
+- The extractor depends on vague prose instead of a stable marker.
+- The marker text is duplicated in several files.
+
+### Eval Run Metadata
+
+Used by:
+
+- `hindi eval run`
+- `hindi eval grade`
+- Future reports
+
+Contract for `meta.json`:
+
+```json
+{
+  "run_id": "sentence/register/2026-05-15_143012_translategemma_12b",
+  "prompt_id": "sentence/register",
+  "input_path": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+  "fields": ["id", "hindi", "romanisation", "english"],
+  "max_items": 2,
+  "item_count": 2,
+  "model": "ollama:translategemma:12b",
+  "model_source": "ollama /api/ps",
+  "started_at": "2026-05-15T14:30:12Z",
+  "finished_at": "2026-05-15T14:30:24Z",
+  "timing_ms": {
+    "render": 4,
+    "model": 12310,
+    "total": 12402
+  },
+  "artifacts": {
+    "prompt": "prompt.txt",
+    "response": "response.txt",
+    "summary": "summary.txt"
+  }
+}
+```
+
+Review smell:
+
+- Timing exists only in terminal output.
+- Prompt ID, model, or selected fields are missing from structured metadata.
+
+### Eval Summary
+
+Used by:
+
+- `hindi eval run`
+- `hindi eval grade`
+
+Contract:
+
+After `hindi eval run`, `summary.txt` contains:
+
+```text
+Eval Run
+
+Prompt
+  id        sentence/register
+  input     input/sentences/complete_hindi_chapter_02_sentences.yaml
+  items     2
+  fields    id,hindi,romanisation,english
+
+Model
+  selected  ollama:translategemma:12b
+  source    Ollama /api/ps
+
+Timing
+  render    4ms
+  model     12.3s
+  total     12.4s
+
+Artifacts
+  prompt    prompt.txt
+  response  response.txt
+  meta      meta.json
+
+Grade
+  status    not graded
+```
+
+After `hindi eval grade`, append or regenerate the grade section:
+
+```text
+Grade
+  verdict   pass
+  score     18/20 (90%)
+  summary   Strong output with one register issue.
+  details   grade.json
+```
+
+`summary.txt` is rebuildable from `meta.json` and optional `grade.json`; never
+treat it as structured authority.
 
 ## Part 5 - Data And Drift Risks
 
