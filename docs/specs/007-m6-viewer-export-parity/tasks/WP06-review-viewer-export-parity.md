@@ -2,7 +2,7 @@
 id: WP06
 title: Review viewer export parity
 agent_type: rust-reviewer
-status: planned
+status: done
 dependencies: [WP05]
 acceptance_refs: [AC01, AC02, AC03, AC04, AC05, AC06, AC07, AC08, AC09]
 extra_skills: []

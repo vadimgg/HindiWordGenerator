@@ -2,7 +2,7 @@
 id: WP02
 title: Implement viewer command
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP01]
 acceptance_refs: [AC01, AC02, AC03, AC04, AC05, AC06, AC07, AC08, AC09]
 extra_skills: []

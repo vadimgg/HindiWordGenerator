@@ -2,7 +2,7 @@
 id: WP04
 title: Implement CLI export artifact
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP03]
 acceptance_refs: [AC01, AC02, AC03, AC04, AC05, AC06, AC07, AC08, AC09]
 extra_skills: []

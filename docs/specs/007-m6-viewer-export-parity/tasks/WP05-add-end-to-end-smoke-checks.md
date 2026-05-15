@@ -2,7 +2,7 @@
 id: WP05
 title: Add end to end smoke checks
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: [WP02, WP04]
 acceptance_refs: [AC01, AC02, AC03, AC04, AC05, AC06, AC07, AC08, AC09]
 extra_skills: []

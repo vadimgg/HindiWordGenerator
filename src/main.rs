@@ -2,6 +2,7 @@ mod accepted_writer;
 mod cli;
 mod config;
 mod doctor;
+mod export;
 mod ollama;
 mod project;
 mod run_report;
@@ -14,6 +15,7 @@ mod sentence_validate;
 mod source_identity;
 mod source_ids;
 mod tts;
+mod viewer;
 
 use std::process::ExitCode;
 
@@ -25,6 +27,14 @@ fn main() -> ExitCode {
         }
         Ok(cli::Command::DoctorHelp) => {
             println!("{}", cli::doctor_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::ViewerHelp) => {
+            println!("{}", cli::viewer_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::ExportHelp) => {
+            println!("{}", cli::export_help_text());
             ExitCode::SUCCESS
         }
         Ok(cli::Command::Doctor) => {
@@ -127,6 +137,25 @@ fn main() -> ExitCode {
                 ExitCode::from(1)
             }
         },
+        Ok(cli::Command::Viewer) => match viewer::run_from_current_dir() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
+        Ok(cli::Command::Export { source, topic }) => {
+            match export::export_from_current_dir(&source, &topic) {
+                Ok(report) => {
+                    println!("{}", report.render());
+                    ExitCode::SUCCESS
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
         Err(error) => {
             eprintln!("{error}");
             ExitCode::from(2)

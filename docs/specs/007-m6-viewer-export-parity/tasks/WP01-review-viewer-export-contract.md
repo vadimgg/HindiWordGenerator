@@ -2,7 +2,7 @@
 id: WP01
 title: Review viewer export contract
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: []
 acceptance_refs: [AC01, AC02, AC03, AC04, AC05, AC06, AC07, AC08, AC09]
 extra_skills: []
