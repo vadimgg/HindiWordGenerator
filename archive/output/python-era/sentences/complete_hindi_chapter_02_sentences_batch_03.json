@@ -6,411 +6,338 @@
       "hindi": "क्या वह भी शब्दकोश है?",
       "romanisation": "kyā vah bhī śabdkoś hai?",
       "english": "Is it a dictionary too?",
-      "literal": "What, that also dictionary is?",
-      "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0011",
-        "fingerprint": "sha256:0b3c21a7c986a77f169b40b8a53feb026ae6f131d8baeb8541fdb9a2cca75f26"
-      },
+      "literal": "question-marker that also dictionary is",
+      "register": "neutral",
       "tokens": [
         {
           "hindi": "क्या",
           "roman": "kyā",
           "kind": "word",
-          "word_id": "w1"
+          "word_index": 0
         },
         {
           "hindi": "वह",
           "roman": "vah",
           "kind": "word",
-          "word_id": "w2"
+          "word_index": 1
         },
         {
           "hindi": "भी",
           "roman": "bhī",
           "kind": "word",
-          "word_id": "w3"
+          "word_index": 2
         },
         {
           "hindi": "शब्दकोश",
           "roman": "śabdkoś",
           "kind": "word",
-          "word_id": "w4"
+          "word_index": 3
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w5"
+          "word_index": 4
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "क्या",
           "roman": "kyā",
-          "meaning": "what/is it",
-          "kind": "word"
+          "meaning": "question marker",
+          "note": "Marks a yes/no question when placed at the beginning."
         },
         {
-          "id": "w2",
           "hindi": "वह",
           "roman": "vah",
-          "meaning": "it/that",
-          "kind": "word"
+          "meaning": "that; it"
         },
         {
-          "id": "w3",
           "hindi": "भी",
           "roman": "bhī",
-          "meaning": "also/too",
-          "kind": "word"
+          "meaning": "also; too"
         },
         {
-          "id": "w4",
           "hindi": "शब्दकोश",
           "roman": "śabdkoś",
           "meaning": "dictionary",
-          "kind": "word"
+          "gender": "masculine",
+          "number": "singular"
         },
         {
-          "id": "w5",
           "hindi": "है",
           "roman": "hai",
-          "meaning": "is",
-          "kind": "word"
+          "meaning": "is"
         }
       ],
-      "anki_tags": []
+      "anki_tags": [
+        "complete-hindi",
+        "chapter-02",
+        "dialogue"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_03/01_kyā_vah_bhī_śabdkoś_hai.mp3"
     },
     {
       "hindi": "नहीं नहीं, वह शब्दकोश नहीं है, रामायण है!",
       "romanisation": "nahī̃ nahī̃, vah śabdkoś nahī̃ hai, rāmāyaṇ hai!",
       "english": "No no, it's not a dictionary, it's the Ramayan!",
-      "literal": "नहीं नहीं, वह शब्दकोश नहीं है, रामायण है!",
-      "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0012",
-        "fingerprint": "sha256:5889cbe6a8990e2690e14c676f3090fabf7aade46d9f1aef201944e8d3874e33"
-      },
+      "literal": "no no, that dictionary not is, Ramayan is",
+      "register": "neutral",
       "tokens": [
         {
           "hindi": "नहीं",
           "roman": "nahī̃",
           "kind": "word",
-          "word_id": "w1"
-        },
-        {
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "kind": "word",
-          "word_id": "w2"
+          "word_index": 0
         },
         {
           "hindi": "वह",
           "roman": "vah",
           "kind": "word",
-          "word_id": "w3"
+          "word_index": 1
         },
         {
           "hindi": "शब्दकोश",
           "roman": "śabdkoś",
           "kind": "word",
-          "word_id": "w4"
-        },
-        {
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "kind": "word",
-          "word_id": "w5"
+          "word_index": 2
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w6"
+          "word_index": 3
         },
         {
           "hindi": "रामायण",
           "roman": "rāmāyaṇ",
           "kind": "word",
-          "word_id": "w7"
-        },
-        {
-          "hindi": "है",
-          "roman": "hai",
-          "kind": "word",
-          "word_id": "w8"
+          "word_index": 4
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "नहीं",
           "roman": "nahī̃",
-          "meaning": "no",
-          "kind": "word"
+          "meaning": "no; not"
         },
         {
-          "id": "w2",
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "meaning": "no",
-          "kind": "word"
-        },
-        {
-          "id": "w3",
           "hindi": "वह",
           "roman": "vah",
-          "meaning": "it",
-          "kind": "word"
+          "meaning": "that; it"
         },
         {
-          "id": "w4",
           "hindi": "शब्दकोश",
           "roman": "śabdkoś",
           "meaning": "dictionary",
-          "kind": "word"
+          "gender": "masculine",
+          "number": "singular"
         },
         {
-          "id": "w5",
-          "hindi": "नहीं",
-          "roman": "nahī̃",
-          "meaning": "is not",
-          "kind": "word"
-        },
-        {
-          "id": "w6",
           "hindi": "है",
           "roman": "hai",
-          "meaning": "is",
-          "kind": "word"
+          "meaning": "is"
         },
         {
-          "id": "w7",
           "hindi": "रामायण",
           "roman": "rāmāyaṇ",
           "meaning": "Ramayan",
-          "kind": "word"
-        },
-        {
-          "id": "w8",
-          "hindi": "है",
-          "roman": "hai",
-          "meaning": "is",
-          "kind": "word"
+          "note": "A major Hindu epic; here it is the title of a book."
         }
       ],
-      "anki_tags": []
+      "anki_tags": [
+        "complete-hindi",
+        "chapter-02",
+        "dialogue"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_03/02_nahī_nahī_vah_śabdkoś_nahī_hai_rāmāyaṇ_hai.mp3"
     },
     {
       "hindi": "हलो राज, क्या हाल है?",
       "romanisation": "halo Rāj, kyā hāl hai?",
       "english": "Hello Raj, how're things?",
-      "literal": "Hello Raj, what is the state?",
+      "literal": "hello Raj, what condition is",
       "register": "informal",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0013",
-        "fingerprint": "sha256:672468fd5e6b6ba9ce37716cafb4fa935a8f7b89a39f409f42376f34ca1dc4d8"
-      },
       "tokens": [
         {
           "hindi": "हलो",
           "roman": "halo",
           "kind": "word",
-          "word_id": "w1"
+          "word_index": 0
         },
         {
           "hindi": "राज",
           "roman": "Rāj",
           "kind": "word",
-          "word_id": "w2"
+          "word_index": 1
         },
         {
           "hindi": "क्या",
           "roman": "kyā",
           "kind": "word",
-          "word_id": "w3"
+          "word_index": 2
         },
         {
           "hindi": "हाल",
           "roman": "hāl",
           "kind": "word",
-          "word_id": "w4"
+          "word_index": 3
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w5"
+          "word_index": 4
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "हलो",
           "roman": "halo",
-          "meaning": "hello",
-          "kind": "word"
+          "meaning": "hello"
         },
         {
-          "id": "w2",
           "hindi": "राज",
           "roman": "Rāj",
           "meaning": "Raj",
-          "kind": "word"
+          "gender": "masculine",
+          "number": "singular"
         },
         {
-          "id": "w3",
           "hindi": "क्या",
           "roman": "kyā",
-          "meaning": "what",
-          "kind": "word"
+          "meaning": "what"
         },
         {
-          "id": "w4",
           "hindi": "हाल",
           "roman": "hāl",
-          "meaning": "state",
-          "kind": "word"
+          "meaning": "condition; state",
+          "gender": "masculine",
+          "number": "singular"
         },
         {
-          "id": "w5",
           "hindi": "है",
           "roman": "hai",
-          "meaning": "is",
-          "kind": "word"
+          "meaning": "is"
         }
       ],
-      "anki_tags": []
+      "anki_tags": [
+        "complete-hindi",
+        "chapter-02",
+        "dialogue"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_03/03_halo_rāj_kyā_hāl_hai.mp3"
     },
     {
       "hindi": "सब ठीक है?",
       "romanisation": "sab ṭhīk hai?",
       "english": "Everything OK?",
-      "literal": "all correct is?",
-      "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0014",
-        "fingerprint": "sha256:70ebe855356341dd71e72a71d9f74bc0da63ace905b94f27fec96c4b66bffd44"
-      },
+      "literal": "everything fine is",
+      "register": "informal",
       "tokens": [
         {
           "hindi": "सब",
           "roman": "sab",
           "kind": "word",
-          "word_id": "w1"
+          "word_index": 0
         },
         {
           "hindi": "ठीक",
           "roman": "ṭhīk",
           "kind": "word",
-          "word_id": "w2"
+          "word_index": 1
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w3"
+          "word_index": 2
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "सब",
           "roman": "sab",
-          "meaning": "everything",
-          "kind": "word"
+          "meaning": "everything; all"
         },
         {
-          "id": "w2",
           "hindi": "ठीक",
           "roman": "ṭhīk",
-          "meaning": "okay",
-          "kind": "word"
+          "meaning": "fine; OK"
         },
         {
-          "id": "w3",
           "hindi": "है",
           "roman": "hai",
-          "meaning": "is",
-          "kind": "word"
+          "meaning": "is"
         }
       ],
-      "anki_tags": []
+      "anki_tags": [
+        "complete-hindi",
+        "chapter-02",
+        "dialogue"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_03/04_sab_ṭhīk_hai.mp3"
     },
     {
       "hindi": "हाँ, सब ठीक है।",
       "romanisation": "hā̃, sab ṭhīk hai.",
       "english": "Yes, everything's OK.",
-      "literal": "Yes, all good is.",
-      "register": "standard",
-      "source_ref": {
-        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
-        "item_id": "0015",
-        "fingerprint": "sha256:7c08db85076260e3b4e4e098bee9be0300b377079d7ca11568c5cf0fa2e00cb8"
-      },
+      "literal": "yes, everything fine is",
+      "register": "informal",
       "tokens": [
         {
           "hindi": "हाँ",
           "roman": "hā̃",
           "kind": "word",
-          "word_id": "w1"
+          "word_index": 0
         },
         {
           "hindi": "सब",
           "roman": "sab",
           "kind": "word",
-          "word_id": "w2"
+          "word_index": 1
         },
         {
           "hindi": "ठीक",
           "roman": "ṭhīk",
           "kind": "word",
-          "word_id": "w3"
+          "word_index": 2
         },
         {
           "hindi": "है",
           "roman": "hai",
           "kind": "word",
-          "word_id": "w4"
+          "word_index": 3
         }
       ],
       "words": [
         {
-          "id": "w1",
           "hindi": "हाँ",
           "roman": "hā̃",
-          "meaning": "yes",
-          "kind": "word"
+          "meaning": "yes"
         },
         {
-          "id": "w2",
           "hindi": "सब",
           "roman": "sab",
-          "meaning": "everything",
-          "kind": "word"
+          "meaning": "everything; all"
         },
         {
-          "id": "w3",
           "hindi": "ठीक",
           "roman": "ṭhīk",
-          "meaning": "okay",
-          "kind": "word"
+          "meaning": "fine; OK"
         },
         {
-          "id": "w4",
           "hindi": "है",
           "roman": "hai",
-          "meaning": "is",
-          "kind": "word"
+          "meaning": "is"
         }
       ],
-      "anki_tags": []
+      "anki_tags": [
+        "complete-hindi",
+        "chapter-02",
+        "dialogue"
+      ],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_03/05_hā_sab_ṭhīk_hai.mp3"
     }
   ]
 }
