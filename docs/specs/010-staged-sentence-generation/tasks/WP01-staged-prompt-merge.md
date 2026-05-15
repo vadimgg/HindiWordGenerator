@@ -2,7 +2,7 @@
 id: WP01
 title: Add staged prompt parsing and merge internals
 agent_type: rust-engineer
-status: planned
+status: done
 dependencies: []
 acceptance_refs: ["AC04", "AC05", "AC06", "AC07", "AC12"]
 extra_skills: []
