@@ -25,7 +25,7 @@ Rust workflow.
 
 - Provide `hindi eval run <prompt-id> <input-yaml>`.
 - Provide `hindi eval grade <run-id-or-path> [--response <path>]`.
-- Provide `hindi eval report [--no-color]`.
+- Provide `hindi eval report [--no-color] [--verbose]`.
 - Use the single currently running Ollama model from Ollama `/api/ps`; do not
   switch or start models for eval runs.
 - Use built-in prompt IDs such as `sentence/register`, with paired input and
@@ -53,7 +53,7 @@ Rust workflow.
 
 | ID | Criteria |
 |---|---|
-| AC01 | `hindi eval run <prompt-id> <input-yaml>`, `hindi eval grade <run-id-or-path> [--response <path>]`, and `hindi eval report [--no-color]` are parsed and documented in help output. |
+| AC01 | `hindi eval run <prompt-id> <input-yaml>`, `hindi eval grade <run-id-or-path> [--response <path>]`, and `hindi eval report [--no-color] [--verbose]` are parsed and documented in help output. |
 | AC02 | `hindi eval run` requires exactly one running Ollama model from `/api/ps` and prints the selected model. |
 | AC03 | Built-in prompt templates render with Handlebars using `{{#each items}}`, `{{items_yaml}}`, `{{input_yaml}}`, `{{input_path}}`, `{{prompt_id}}`, and `{{run_path}}`. |
 | AC04 | `--fields id,hindi,romanisation,english` selects top-level item fields; when omitted, fields default to `id,hindi,romanisation,english`; missing fields fail clearly. |
@@ -64,7 +64,7 @@ Rust workflow.
 | AC09 | The command never writes accepted output under `output/`. |
 | AC10 | `hindi eval grade` renders the grading prompt for an eval run, opens `grade_packet.md` in `$EDITOR` unless `--response <path>` is provided, accepts/persists pasted or imported grader YAML or JSON, writes `grade_prompt.txt`, `grade_response.txt`, `grade.json`, and updates `summary.txt`. |
 | AC11 | `grade.json` uses the shared grading schema: axis scores for accuracy, completeness, format compliance, consistency, confidence; total; verdict; item flags; summary. |
-| AC12 | `hindi eval report` scans `eval/`, prints source Hindi with romanisation and English, and summarizes prompt ID, model, item IDs, timing, grade, verdict, run ID, and notes. |
+| AC12 | `hindi eval report` scans `eval/`, prints source Hindi with romanisation and English, groups results by test with one model row per run, summarizes score percent, timing, verdict, and notes, and hides run folders unless `--verbose` is passed. |
 
 ## Architecture Notes
 

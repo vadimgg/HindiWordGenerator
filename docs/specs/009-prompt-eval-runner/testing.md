@@ -63,7 +63,10 @@
 - Run `hindi eval grade <eval-folder>` and paste a small valid grader
   response.
 - Run `hindi eval report` and confirm the report includes source Hindi,
-  romanisation, English, prompt ID, model, timing, grade, verdict, and notes.
+  romanisation, English, grouped test/model rows, timing, score percent,
+  verdict, summary footer, and notes.
+- Run `hindi eval report --verbose` and confirm run folders and raw score
+  fractions are shown.
 
 ## Not Covered
 

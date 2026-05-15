@@ -192,6 +192,7 @@ impl EvalGradeReport {
 pub struct EvalSummaryReport {
     rows: Vec<EvalSummaryRow>,
     color: bool,
+    verbose: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -228,16 +229,25 @@ impl EvalSummaryReport {
         let grouped_rows = grouped_eval_rows(&self.rows);
         for (index, group) in grouped_rows.iter().enumerate() {
             output.push_str(&format!(
-                "{}\n",
-                self.section_title(&format!("Evaluation Set {}", index + 1))
+                "{}  {}  {}  {}\n",
+                self.section_title(&format!("Eval Set {}", index + 1)),
+                dim_or_plain(&group.input_path, self.color),
+                dim_or_plain(
+                    &format!(
+                        "items {}",
+                        format_item_ids(&group.item_ids, group.item_count)
+                    ),
+                    self.color
+                ),
+                dim_or_plain(&format!("{} runs", group.rows.len()), self.color)
             ));
             output.push_str(&format!(
-                "{}\n  file    {}\n  items   {}\n",
-                self.subsection_title("Input"),
-                group.input_path,
-                format_item_ids(&group.item_ids, group.item_count)
+                "{}\n\n",
+                dim_or_plain(
+                    "scope: every result below grades this full item set",
+                    self.color
+                )
             ));
-            output.push_str("  scope   every result below grades this full item set\n\n");
 
             output.push_str(&format!(
                 "{}\n",
@@ -252,22 +262,37 @@ impl EvalSummaryReport {
 
             output.push_str(&format!("{}\n", self.subsection_title("Results")));
             output.push_str(&self.render_result_table(&group.rows));
-            output.push_str("Run Folder points to eval/<prompt-id>/<run-folder>/.\n");
+            output.push_str(&self.render_result_summary(&group.rows));
+            if self.verbose {
+                output.push_str("Run Folder points to eval/<prompt-id>/<run-folder>/.\n");
+            }
 
             output.push_str(&format!("\n{}\n", self.subsection_title("Notes")));
-            for row in &group.rows {
+            for row in ordered_note_rows(&group.rows) {
                 let summary = row.summary.as_deref().unwrap_or("not graded yet");
                 let label = format!(
-                    "{} / {} / {} / {} / {}",
+                    "{}  {} / {}",
+                    note_symbol(row),
                     short_prompt_id(&row.prompt_id),
-                    strip_ollama_prefix(&row.model),
-                    format_grade(row.score.as_ref()),
-                    row.verdict.as_deref().unwrap_or("not graded"),
-                    short_run_id(&row.run_id)
+                    strip_ollama_prefix(&row.model)
                 );
-                let colored_label = color_test_name(&label, self.color);
+                let colored_label = color_note_label(&label, row, self.color);
                 output.push_str(&format!("  {}\n", colored_label));
                 output.push_str(&wrap_note(summary, 4, 92));
+                if self.verbose {
+                    output.push_str(&format!(
+                        "    {}\n",
+                        dim_or_plain(
+                            &format!(
+                                "score {} · verdict {} · run {}",
+                                format_grade(row.score.as_ref()),
+                                row.verdict.as_deref().unwrap_or("not graded"),
+                                short_run_id(&row.run_id)
+                            ),
+                            self.color
+                        )
+                    ));
+                }
             }
 
             if index + 1 < grouped_rows.len() {
@@ -279,46 +304,68 @@ impl EvalSummaryReport {
     }
 
     fn render_result_table(&self, rows: &[&EvalSummaryRow]) -> String {
-        let headers = [
-            "Test",
-            "Model",
-            "Items",
-            "Time",
-            "Grade",
-            "Verdict",
-            "Run Folder",
-        ];
-        let plain_rows = rows
+        let headers = if self.verbose {
+            vec!["Test / Model", "Score", "Time", "Verdict", "Run Folder"]
+        } else {
+            vec!["Test / Model", "Score", "Time", "Verdict"]
+        };
+        let plain_rows = grouped_rows_for_table(rows, self.verbose);
+        let width_rows = plain_rows
             .iter()
-            .map(|row| {
-                vec![
-                    short_prompt_id(&row.prompt_id),
-                    strip_ollama_prefix(&row.model).to_string(),
-                    format_item_ids(&row.item_ids(), row.item_count),
-                    format_ms(row.model_ms),
-                    format_grade(row.score.as_ref()),
-                    row.verdict
-                        .clone()
-                        .unwrap_or_else(|| "not graded".to_string()),
-                    short_run_id(&row.run_id),
-                ]
-            })
+            .map(|row| row.cells.clone())
             .collect::<Vec<_>>();
-        let widths = table_widths(&headers, &plain_rows);
+        let widths = table_widths(&headers, &width_rows);
         let mut output = render_table_header(&headers, &widths, self.color);
-        for (row, cells) in rows.iter().zip(plain_rows) {
-            let colored = vec![
-                color_test_name(&cells[0], self.color),
-                color_model(&cells[1], self.color),
-                cells[2].clone(),
-                color_time(&cells[3], row.model_ms, self.color),
-                color_grade(&cells[4], row.score.as_ref(), self.color),
-                color_verdict(&cells[5], self.color),
-                color_run_id(&cells[6], self.color),
-            ];
-            output.push_str(&render_table_row(&colored, &widths));
+        let aligns = if self.verbose {
+            vec![
+                Align::Left,
+                Align::Right,
+                Align::Right,
+                Align::Left,
+                Align::Left,
+            ]
+        } else {
+            vec![Align::Left, Align::Right, Align::Right, Align::Left]
+        };
+        for table_row in plain_rows {
+            let colored = color_table_row(&table_row, self.color, self.verbose);
+            output.push_str(&render_table_row_aligned(&colored, &widths, &aligns));
         }
         output
+    }
+
+    fn render_result_summary(&self, rows: &[&EvalSummaryRow]) -> String {
+        let passed = rows.iter().filter(|row| is_pass(row)).count();
+        let failed = rows.iter().filter(|row| is_fail(row)).count();
+        let scores = rows
+            .iter()
+            .filter_map(|row| row.score.as_ref().map(|score| score.pct as usize))
+            .collect::<Vec<_>>();
+        let avg = if scores.is_empty() {
+            "-".to_string()
+        } else {
+            format!("{}%", scores.iter().sum::<usize>() / scores.len())
+        };
+        let slowest = rows.iter().max_by_key(|row| row.model_ms);
+        let slowest_text = slowest
+            .map(|row| {
+                format!(
+                    "{} / {} {}",
+                    short_prompt_id(&row.prompt_id),
+                    strip_ollama_prefix(&row.model),
+                    format_ms(row.model_ms)
+                )
+            })
+            .unwrap_or_else(|| "-".to_string());
+        format!(
+            "{}\n\n",
+            dim_or_plain(
+                &format!(
+                    "Summary: {passed} passed  ·  {failed} failed  ·  avg {avg}  ·  slowest {slowest_text}"
+                ),
+                self.color
+            )
+        )
     }
 
     fn section_title(&self, text: &str) -> String {
@@ -557,17 +604,22 @@ pub fn grade_from_current_dir(
     grade_from(&root, run, response_path)
 }
 
-pub fn report_from_current_dir(color: bool) -> Result<EvalSummaryReport, EvalError> {
+pub fn report_from_current_dir(color: bool, verbose: bool) -> Result<EvalSummaryReport, EvalError> {
     let root = ProjectRoot::discover_from(current_dir()?)?;
-    report_from(&root, color)
+    report_from(&root, color, verbose)
 }
 
-fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, EvalError> {
+fn report_from(
+    root: &ProjectRoot,
+    color: bool,
+    verbose: bool,
+) -> Result<EvalSummaryReport, EvalError> {
     let eval_root = root.join("eval");
     if !eval_root.is_dir() {
         return Ok(EvalSummaryReport {
             rows: Vec::new(),
             color,
+            verbose,
         });
     }
 
@@ -607,7 +659,11 @@ fn report_from(root: &ProjectRoot, color: bool) -> Result<EvalSummaryReport, Eva
             .then_with(|| left.run_id.cmp(&right.run_id))
     });
 
-    Ok(EvalSummaryReport { rows, color })
+    Ok(EvalSummaryReport {
+        rows,
+        color,
+        verbose,
+    })
 }
 
 pub fn grade_from(
@@ -803,6 +859,24 @@ fn table_widths(headers: &[&str], rows: &[Vec<String>]) -> Vec<usize> {
     widths
 }
 
+#[derive(Debug, Clone, Copy)]
+enum Align {
+    Left,
+    Right,
+}
+
+#[derive(Debug, Clone)]
+struct ReportTableRow<'a> {
+    kind: ReportTableRowKind<'a>,
+    cells: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+enum ReportTableRowKind<'a> {
+    Test,
+    Model(&'a EvalSummaryRow),
+}
+
 fn render_table_header(headers: &[&str], widths: &[usize], color: bool) -> String {
     let header_cells = headers
         .iter()
@@ -814,7 +888,8 @@ fn render_table_header(headers: &[&str], widths: &[usize], color: bool) -> Strin
             }
         })
         .collect::<Vec<_>>();
-    let mut output = render_table_row(&header_cells, widths);
+    let aligns = vec![Align::Left; headers.len()];
+    let mut output = render_table_row_aligned(&header_cells, widths, &aligns);
     output.push_str(&format!(
         "{}\n",
         widths
@@ -826,10 +901,13 @@ fn render_table_header(headers: &[&str], widths: &[usize], color: bool) -> Strin
     output
 }
 
-fn render_table_row(cells: &[String], widths: &[usize]) -> String {
+fn render_table_row_aligned(cells: &[String], widths: &[usize], aligns: &[Align]) -> String {
     let mut parts = Vec::new();
-    for (cell, width) in cells.iter().zip(widths) {
-        parts.push(pad_cell(cell, *width));
+    for ((cell, width), align) in cells.iter().zip(widths).zip(aligns) {
+        parts.push(match align {
+            Align::Left => pad_cell(cell, *width),
+            Align::Right => pad_cell_left(cell, *width),
+        });
     }
     format!("{}\n", parts.join("  "))
 }
@@ -837,6 +915,11 @@ fn render_table_row(cells: &[String], widths: &[usize]) -> String {
 fn pad_cell(cell: &str, width: usize) -> String {
     let padding = width.saturating_sub(visible_len(cell));
     format!("{cell}{}", " ".repeat(padding))
+}
+
+fn pad_cell_left(cell: &str, width: usize) -> String {
+    let padding = width.saturating_sub(visible_len(cell));
+    format!("{}{}", " ".repeat(padding), cell)
 }
 
 fn visible_len(value: &str) -> usize {
@@ -868,6 +951,98 @@ fn format_grade(score: Option<&GradeTotal>) -> String {
     score
         .map(|score| format!("{}/{} {}%", score.score, score.max, score.pct))
         .unwrap_or_else(|| "-".to_string())
+}
+
+fn format_score_pct(score: Option<&GradeTotal>) -> String {
+    score
+        .map(|score| format!("{}%", score.pct))
+        .unwrap_or_else(|| "-".to_string())
+}
+
+fn grouped_rows_for_table<'a>(
+    rows: &[&'a EvalSummaryRow],
+    verbose: bool,
+) -> Vec<ReportTableRow<'a>> {
+    let mut by_prompt: BTreeMap<String, Vec<&EvalSummaryRow>> = BTreeMap::new();
+    for row in rows {
+        by_prompt
+            .entry(row.prompt_id.clone())
+            .or_default()
+            .push(*row);
+    }
+
+    let mut table_rows = Vec::new();
+    for (prompt_id, mut prompt_rows) in by_prompt {
+        prompt_rows.sort_by(|left, right| {
+            strip_ollama_prefix(&left.model)
+                .cmp(strip_ollama_prefix(&right.model))
+                .then_with(|| left.run_id.cmp(&right.run_id))
+        });
+        let test_name = short_prompt_id(&prompt_id);
+        table_rows.push(ReportTableRow {
+            kind: ReportTableRowKind::Test,
+            cells: if verbose {
+                vec![
+                    test_name,
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                ]
+            } else {
+                vec![test_name, String::new(), String::new(), String::new()]
+            },
+        });
+        for row in prompt_rows {
+            let mut cells = vec![
+                format!("  {}", strip_ollama_prefix(&row.model)),
+                if verbose {
+                    format_grade(row.score.as_ref())
+                } else {
+                    format_score_pct(row.score.as_ref())
+                },
+                format_ms(row.model_ms),
+                verdict_symbol(row),
+            ];
+            if verbose {
+                cells.push(short_run_id(&row.run_id));
+            }
+            table_rows.push(ReportTableRow {
+                kind: ReportTableRowKind::Model(row),
+                cells,
+            });
+        }
+    }
+    table_rows
+}
+
+fn color_table_row(row: &ReportTableRow<'_>, color: bool, verbose: bool) -> Vec<String> {
+    match &row.kind {
+        ReportTableRowKind::Test => row
+            .cells
+            .iter()
+            .enumerate()
+            .map(|(index, cell)| {
+                if index == 0 {
+                    color_test_name(cell, color)
+                } else {
+                    cell.clone()
+                }
+            })
+            .collect(),
+        ReportTableRowKind::Model(summary_row) => {
+            let mut cells = vec![
+                color_model(&row.cells[0], color),
+                color_grade(&row.cells[1], summary_row.score.as_ref(), color),
+                color_time(&row.cells[2], summary_row.model_ms, color),
+                color_verdict_symbol(&row.cells[3], summary_row, color),
+            ];
+            if verbose {
+                cells.push(color_run_id(&row.cells[4], color));
+            }
+            cells
+        }
+    }
 }
 
 fn color_grade(text: &str, score: Option<&GradeTotal>, color: bool) -> String {
@@ -913,15 +1088,16 @@ fn color_time(text: &str, ms: u128, color: bool) -> String {
     paint(text, code)
 }
 
-fn color_verdict(text: &str, color: bool) -> String {
+fn color_verdict_symbol(text: &str, row: &EvalSummaryRow, color: bool) -> String {
     if !color {
         return text.to_string();
     }
-    match text.to_ascii_lowercase().as_str() {
-        "pass" => paint(text, "32"),
-        "fail" => paint(text, "31"),
-        "not graded" => paint(text, "33"),
-        _ => text.to_string(),
+    if is_pass(row) {
+        paint(text, "32")
+    } else if is_fail(row) {
+        paint(text, "31")
+    } else {
+        paint(text, "33")
     }
 }
 
@@ -935,6 +1111,14 @@ fn color_run_id(text: &str, color: bool) -> String {
 
 fn paint(text: &str, code: &str) -> String {
     format!("\x1b[{code}m{text}\x1b[0m")
+}
+
+fn dim_or_plain(text: &str, color: bool) -> String {
+    if color {
+        paint(text, "2")
+    } else {
+        text.to_string()
+    }
 }
 
 fn wrap_note(text: &str, indent: usize, width: usize) -> String {
@@ -974,6 +1158,77 @@ fn strip_ollama_prefix(model: &str) -> &str {
 
 fn short_run_id(run_id: &str) -> String {
     run_id.rsplit('/').next().unwrap_or(run_id).to_string()
+}
+
+fn is_pass(row: &EvalSummaryRow) -> bool {
+    row.verdict
+        .as_deref()
+        .is_some_and(|verdict| verdict.eq_ignore_ascii_case("pass"))
+}
+
+fn is_fail(row: &EvalSummaryRow) -> bool {
+    row.verdict
+        .as_deref()
+        .is_some_and(|verdict| verdict.eq_ignore_ascii_case("fail"))
+}
+
+fn is_warning(row: &EvalSummaryRow) -> bool {
+    !is_fail(row) && row.score.as_ref().is_some_and(|score| score.pct < 90)
+}
+
+fn verdict_symbol(row: &EvalSummaryRow) -> String {
+    if is_pass(row) {
+        "✓ pass".to_string()
+    } else if is_fail(row) {
+        "✗ fail".to_string()
+    } else {
+        "? not graded".to_string()
+    }
+}
+
+fn note_symbol(row: &EvalSummaryRow) -> &'static str {
+    if is_fail(row) {
+        "✗"
+    } else if is_warning(row) {
+        "⚠"
+    } else {
+        "ℹ"
+    }
+}
+
+fn color_note_label(text: &str, row: &EvalSummaryRow, color: bool) -> String {
+    if !color {
+        return text.to_string();
+    }
+    if is_fail(row) {
+        paint(text, "31")
+    } else if is_warning(row) {
+        paint(text, "33")
+    } else {
+        paint(text, "36")
+    }
+}
+
+fn ordered_note_rows<'a>(rows: &[&'a EvalSummaryRow]) -> Vec<&'a EvalSummaryRow> {
+    let mut ordered = rows.to_vec();
+    ordered.sort_by(|left, right| {
+        note_priority(left)
+            .cmp(&note_priority(right))
+            .then_with(|| left.prompt_id.cmp(&right.prompt_id))
+            .then_with(|| left.model.cmp(&right.model))
+            .then_with(|| left.run_id.cmp(&right.run_id))
+    });
+    ordered
+}
+
+fn note_priority(row: &EvalSummaryRow) -> u8 {
+    if is_fail(row) {
+        0
+    } else if is_warning(row) {
+        1
+    } else {
+        2
+    }
 }
 
 fn prompt_templates() -> Vec<PromptTemplate> {
@@ -1682,14 +1937,14 @@ items:
         .unwrap();
         let root = ProjectRoot::discover_from(&root_path).unwrap();
 
-        let rendered = super::report_from(&root, false).unwrap().render();
+        let rendered = super::report_from(&root, false, false).unwrap().render();
 
         assert!(rendered.contains("Hindi    यहाँ"));
         assert!(rendered.contains("Roman    yahā̃"));
         assert!(rendered.contains("English  Here."));
         assert!(rendered.contains("register"));
         assert!(rendered.contains("test-model:1b"));
-        assert!(rendered.contains("19/20 95%"));
+        assert!(rendered.contains("95%"));
         assert!(rendered.contains("pass"));
         assert!(rendered.contains("Clean register result."));
         fs::remove_dir_all(root_path).unwrap();
