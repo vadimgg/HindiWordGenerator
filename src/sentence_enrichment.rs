@@ -284,13 +284,58 @@ where
     let yaml = serde_yaml::from_str::<StageResponse<T>>(structured);
     match yaml {
         Ok(response) => Ok(response.results),
-        Err(yaml_error) => serde_json::from_str::<StageResponse<T>>(structured)
-            .map(|response| response.results)
-            .map_err(|json_error| EnrichmentError::StructuredParse {
-                yaml: yaml_error.to_string(),
-                json: json_error.to_string(),
-            }),
+        Err(yaml_error) => {
+            let yaml_error = yaml_error.to_string();
+            if let Some(repaired) = repair_yaml_scalar_trailing_commas(structured) {
+                if let Ok(response) = serde_yaml::from_str::<StageResponse<T>>(&repaired) {
+                    return Ok(response.results);
+                }
+            }
+            serde_json::from_str::<StageResponse<T>>(structured)
+                .map(|response| response.results)
+                .map_err(|json_error| EnrichmentError::StructuredParse {
+                    yaml: yaml_error,
+                    json: json_error.to_string(),
+                })
+        }
     }
+}
+
+fn repair_yaml_scalar_trailing_commas(structured: &str) -> Option<String> {
+    let mut changed = false;
+    let mut repaired = Vec::new();
+    for line in structured.lines() {
+        let without_comment = line.split_once('#').map(|(body, _)| body).unwrap_or(line);
+        let trimmed = without_comment.trim_end();
+        let next = trimmed.strip_suffix(',').map(str::trim_end);
+        if next.is_some_and(looks_like_yaml_scalar_line) {
+            repaired.push(next.unwrap().to_string());
+            changed = true;
+        } else {
+            repaired.push(line.to_string());
+        }
+    }
+    changed.then(|| repaired.join("\n"))
+}
+
+fn looks_like_yaml_scalar_line(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    if trimmed.starts_with('{') || trimmed.starts_with('[') {
+        return false;
+    }
+    let Some((_, value)) = trimmed.split_once(':') else {
+        return false;
+    };
+    let value = value.trim();
+    value.starts_with('"') || value.starts_with('\'') || is_plain_yaml_scalar(value)
+}
+
+fn is_plain_yaml_scalar(value: &str) -> bool {
+    !value.is_empty()
+        && !value.starts_with('{')
+        && !value.starts_with('[')
+        && !value.contains(':')
+        && !value.contains('#')
 }
 
 fn extract_structured_response(response_text: &str) -> Option<&str> {
@@ -550,6 +595,24 @@ results:
         assert_eq!(register[0].register, "standard");
         assert_eq!(literal[0].literal, "here");
         assert_eq!(words[0].words[0].meaning.as_deref(), Some("here"));
+    }
+
+    #[test]
+    fn repairs_model_yaml_with_trailing_commas_on_scalar_lines() {
+        let words = parse_word_breakdown_stage(
+            r#"```yaml
+results:
+  - id: "0001",
+    words:
+      - hindi: "है?",
+        roman: "hai?",
+        meaning: "is?",
+```"#,
+        )
+        .unwrap();
+
+        assert_eq!(words[0].id, "0001");
+        assert_eq!(words[0].words[0].roman.as_deref(), Some("hai?"));
     }
 
     #[test]
