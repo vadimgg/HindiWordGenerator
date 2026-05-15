@@ -1492,7 +1492,7 @@ fn prompt_templates() -> Vec<PromptTemplate> {
         },
         PromptTemplate {
             id: "sentence/register",
-            version: "v2",
+            version: "v3",
             input_template: include_str!("eval_prompts/sentence_register.yaml.hbs"),
             grade_template: include_str!("eval_prompts/sentence_register.grade.yaml.hbs"),
             threshold_pct: 80,
