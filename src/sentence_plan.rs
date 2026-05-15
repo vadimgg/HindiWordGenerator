@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 const SENTENCE_SOURCE_DIR: &str = "input/sentences";
 const SENTENCE_OUTPUT_DIR: &str = "output/sentences";
-const DEFAULT_BATCH_SIZE: usize = 5;
+const DEFAULT_BATCH_SIZE: usize = 1;
 
 #[derive(Debug)]
 pub enum SentencePlanError {
@@ -1101,8 +1101,8 @@ mod tests {
         let plan = build_plan(vec![source], vec![], vec![], vec![], 2);
 
         assert_eq!(plan.planned_files.len(), 2);
-        assert_eq!(plan.planned_items, 10);
-        assert_eq!(plan.deferred_items, 2);
+        assert_eq!(plan.planned_items, 2);
+        assert_eq!(plan.deferred_items, 10);
     }
 
     #[test]

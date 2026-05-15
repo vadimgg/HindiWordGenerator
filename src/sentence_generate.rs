@@ -757,11 +757,9 @@ mod tests {
         let outcome = generate_from(&project, 1, &client).unwrap();
 
         assert!(outcome.success);
-        assert_eq!(client.prompts.borrow().len(), 6);
+        assert_eq!(client.prompts.borrow().len(), 3);
         assert!(client.prompts.borrow()[0].contains("hindi: \"यहाँ\""));
         assert!(!client.prompts.borrow()[0].contains("hindi: \"वहाँ\""));
-        assert!(client.prompts.borrow()[3].contains("hindi: \"वहाँ\""));
-        assert!(!client.prompts.borrow()[3].contains("hindi: \"यहाँ\""));
         assert_eq!(outcome.accepted.len(), 1);
         assert!(root
             .join("output/sentences/example_batch_01.json")
@@ -778,7 +776,7 @@ mod tests {
         .unwrap();
         assert!(report.contains("\"stages\""));
         assert!(report.contains("sentence/register"));
-        assert_eq!(report.matches("\"stage_id\"").count(), 6);
+        assert_eq!(report.matches("\"stage_id\"").count(), 3);
         fs::remove_dir_all(root).unwrap();
     }
 

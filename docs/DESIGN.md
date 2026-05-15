@@ -231,7 +231,9 @@ the source stem, for example
 If the planned target already exists, generation fails before writing.
 
 `--max-batches` limits output files, not source items. One batch means one
-accepted output JSON file; batch size is controlled by config.
+accepted output JSON file. The first Rust path intentionally uses one source
+sentence per accepted batch so slow local-model runs are easier to resume and
+debug.
 
 Prompt contract:
 
