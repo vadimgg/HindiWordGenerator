@@ -15,6 +15,7 @@ interface Props {
 const { tokens = [], words = [] } = Astro.props;
 const hasTokens = tokens.length > 0;
 const visibleTokens = tokens;
+const wordById = new Map(words.flatMap((word) => word.id ? [[word.id, word]] : []));
 const wordByIndex = new Map(words.map((word, index) => [index, word]));
 ---
 
@@ -54,9 +55,11 @@ const wordByIndex = new Map(words.map((word, index) => [index, word]));
     {hasTokens ? (
       <div class="flex flex-wrap gap-2">
         {visibleTokens.map((token) => {
-          const linkedWord = typeof token.word_index === 'number'
-            ? wordByIndex.get(token.word_index)
-            : undefined;
+          const linkedWord = token.word_id
+            ? wordById.get(token.word_id)
+            : typeof token.word_index === 'number'
+              ? wordByIndex.get(token.word_index)
+              : undefined;
           return (
             <span
               class:list={[

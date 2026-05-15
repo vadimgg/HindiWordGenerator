@@ -1,7 +1,11 @@
+mod accepted_writer;
 mod cli;
 mod doctor;
 mod project;
 mod sentence_plan;
+mod sentence_schema;
+mod sentence_validate;
+mod source_identity;
 mod source_ids;
 
 use std::process::ExitCode;

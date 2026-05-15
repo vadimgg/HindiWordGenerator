@@ -13,6 +13,7 @@ This is the active implementation plan. Older detailed planning drafts live in
 | Rust binary crate | Done |
 | YAML item IDs migrated | Done |
 | Sentence planner | Done |
+| Validator and writer | Done |
 | Local sentence generation | Pending |
 | Audio parity | Pending |
 | Viewer/export parity | Pending |
@@ -85,6 +86,11 @@ Acceptance:
 
 Goal: validate candidate sentence batches and add safe writes.
 
+Status: Done. Rust now has typed sentence candidate parsing, validation, atomic
+accepted-output writer internals, and viewer `word_id` compatibility. The
+writer is reusable infrastructure for M4; no normal CLI command writes accepted
+sentence output yet.
+
 Acceptance:
 
 - Validates required sentence fields.
@@ -138,8 +144,8 @@ Acceptance:
 - Viewer-compatible JSON remains under `output/sentences/`.
 - Failed validation writes no accepted output and tells the user which run
   folder to inspect before rerunning generation.
-- M3 viewer compatibility is present before running M4 against real source, so
-  the first new Rust card renders correctly.
+- Viewer `word_id` compatibility is present before running M4 against real
+  source, so the first new Rust card renders correctly.
 
 ## M5: Audio Parity
 

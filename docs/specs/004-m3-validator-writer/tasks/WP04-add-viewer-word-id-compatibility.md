@@ -2,14 +2,14 @@
 id: WP04
 title: Add viewer word id compatibility
 agent_type: astro-viewer
-status: planned
+status: done
 dependencies: ["WP03"]
 acceptance_refs: ["AC19", "AC20"]
 extra_skills: []
 read_scope: ["viewer/**", "output/sentences/*.json", "docs/DESIGN.md", "docs/ROADMAP.md", "docs/specs/004-m3-validator-writer/**"]
 write_scope: ["viewer/**", "docs/ROADMAP.md", "docs/specs/004-m3-validator-writer/**"]
 protected_scope: ["input/**", "output/**", "audio/**", "runs/**"]
-validation: ["npm run build", "cargo test", "git diff --name-only -- input output audio runs", "git diff --check"]
+validation: ["npm --prefix viewer run build", "cargo test", "git diff --name-only -- input output audio runs", "git diff --check"]
 manual_validation_reason: null
 created_at: 2026-05-15T03:01:05.805554+00:00
 started_at: null

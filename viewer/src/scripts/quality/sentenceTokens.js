@@ -23,7 +23,16 @@ export function getSentenceTokenIssue(sentence) {
     return { code: 'missing-words', reason: 'missing word breakdown' };
   }
 
-  if (sentence.tokens.length !== sentence.words.length) {
+  const wordById = new Map();
+  let hasWordIds = false;
+  for (const word of sentence.words) {
+    if (typeof word.id === 'string' && word.id.trim() !== '') {
+      hasWordIds = true;
+      wordById.set(word.id, word);
+    }
+  }
+
+  if (!hasWordIds && sentence.tokens.length !== sentence.words.length) {
     return {
       code: 'token-count-mismatch',
       reason: 'word token count does not match word breakdown',
@@ -34,11 +43,20 @@ export function getSentenceTokenIssue(sentence) {
 
   for (let index = 0; index < sentence.tokens.length; index += 1) {
     const token = sentence.tokens[index];
-    const word = sentence.words[index];
     if (token.kind !== 'word') {
       return { code: 'non-word-token', reason: 'tokens must contain words only', actual: token };
     }
-    if (token.word_index !== index) {
+    const word = typeof token.word_id === 'string'
+      ? wordById.get(token.word_id)
+      : sentence.words[index];
+    if (!word) {
+      return {
+        code: 'word-link-missing',
+        reason: 'word token does not reference a word breakdown entry',
+        actual: { word_id: token.word_id, word_index: token.word_index },
+      };
+    }
+    if (!token.word_id && token.word_index !== index) {
       return {
         code: 'word-index-mismatch',
         reason: 'word token index does not match token position',
