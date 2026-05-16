@@ -2,8 +2,8 @@
 
 Hindi Word Generator turns curated Hindi learning material into validated
 flashcard JSON, audio references, viewer data, and Anki exports. The current
-working implementation is archived Python; the next implementation target is a
-small Rust CLI, starting with sentence cards.
+working implementation is the Rust CLI sentence workflow; the archived Python
+runtime remains available as a behavior reference.
 
 ## Current State
 
@@ -11,12 +11,18 @@ small Rust CLI, starting with sentence cards.
 - Accepted learner-facing output is JSON under `output/`.
 - Audio lives under `audio/` and is referenced by accepted JSON.
 - Python has moved to `archive/python/` and remains the behavior reference.
-- The Rust CLI does not exist yet.
+- The Rust CLI owns the direct sentence workflow.
 - Any displayed Hindi should include romanisation directly underneath it.
 
 ## Start Here
 
-Use the archived Python command when you need the project to work today:
+For normal use, start with the guided Rust workflow:
+
+```bash
+hindi guide
+```
+
+For parity checks, the archived Python commands are still available:
 
 ```bash
 uv run archive/python/runtime/main.py check --type sentences --max-batches 1
@@ -24,13 +30,15 @@ uv run archive/python/runtime/main.py run --type sentences --max-batches 1
 uv run archive/python/runtime/main.py audio --type sentences
 ```
 
-The planned Rust happy path is intentionally small:
+The same Rust happy path is also available as separate commands:
 
 ```bash
 hindi doctor
 hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
+hindi sentences review-output
 hindi sentences audio
+hindi export
 hindi viewer
 ```
 

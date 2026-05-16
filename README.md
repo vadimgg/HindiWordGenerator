@@ -5,8 +5,8 @@ material into rich flashcard data: sentence cards, word breakdowns, audio,
 viewer previews, and Anki exports.
 
 The previous Python implementation has been archived under `archive/python/`.
-The next implementation target is a small Rust CLI that starts with sentence
-generation from YAML source files.
+The active path is the Rust CLI sentence workflow, generated from YAML source
+files and checked before export.
 
 ## Current Status
 
@@ -14,12 +14,19 @@ generation from YAML source files.
 - Accepted learner-facing output is JSON under `output/`.
 - Audio lives under `audio/` and is referenced by accepted JSON.
 - The Astro viewer previews generated cards and supports export workflows.
-- The Rust CLI does not exist yet.
-- Python remains available as the behavior reference while Rust reaches parity.
+- The Rust CLI now owns the sentence workflow; Python remains archived as the
+  behavior reference during parity checks.
 
-## Planned Rust Happy Path
+## Rust Happy Path
 
-The first useful workflow should stay short:
+For normal use, let the CLI walk you through the process:
+
+```bash
+hindi guide
+```
+
+For scripts or step-by-step debugging, the same workflow is available as
+separate commands:
 
 ```bash
 hindi doctor
@@ -27,6 +34,7 @@ hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
+hindi export
 hindi viewer
 ```
 

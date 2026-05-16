@@ -199,6 +199,7 @@ the Rust CLI can export Anki artifacts from accepted output.
 Commands:
 
 ```bash
+hindi guide
 hindi viewer
 hindi export
 ```
@@ -213,6 +214,8 @@ Acceptance:
 - Refreshing the viewer shows newly generated batches.
 - Export can produce an Anki artifact for all accepted groups by default, or a
   filtered artifact with `--source` and `--topic`.
+- `hindi guide` walks through doctor, source ID check, planning, generation,
+  audio, output review, export, and viewer prompts for interactive daily use.
 - Viewer export and CLI export share the same export contract once Rust owns
   export generation.
 

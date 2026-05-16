@@ -4,6 +4,7 @@ mod config;
 mod doctor;
 mod eval;
 mod export;
+mod guide;
 mod ollama;
 mod project;
 mod run_report;
@@ -27,6 +28,23 @@ fn main() -> ExitCode {
             println!("{}", cli::help_text());
             ExitCode::SUCCESS
         }
+        Ok(cli::Command::GuideHelp) => {
+            println!("{}", cli::guide_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::Guide { max_batches }) => match guide::run_from_current_dir(max_batches) {
+            Ok(outcome) => {
+                if outcome.success {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::from(1)
+                }
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
         Ok(cli::Command::DoctorHelp) => {
             println!("{}", cli::doctor_help_text());
             ExitCode::SUCCESS

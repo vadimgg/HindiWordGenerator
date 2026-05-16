@@ -20,15 +20,18 @@ input/sentences/*.yaml
   -> viewer / Anki export
 ```
 
-The end-state Rust CLI should feel small (M1 ships only `hindi doctor`; the
-rest of the surface lands across M2–M6):
+The Rust CLI should feel small:
 
 ```bash
+hindi guide
+
+# or step by step:
 hindi doctor
 hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
+hindi export
 hindi viewer
 ```
 

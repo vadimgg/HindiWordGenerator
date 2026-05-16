@@ -1,6 +1,10 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Help,
+    Guide {
+        max_batches: usize,
+    },
+    GuideHelp,
     Doctor,
     DoctorHelp,
     Viewer,
@@ -84,6 +88,22 @@ where
     match args.as_slice() {
         [] => Ok(Command::Help),
         [flag] if is_help_flag(flag) => Ok(Command::Help),
+        [command] if command == "guide" || command == "start" => {
+            Ok(Command::Guide { max_batches: 1 })
+        }
+        [command, flag] if (command == "guide" || command == "start") && is_help_flag(flag) => {
+            Ok(Command::GuideHelp)
+        }
+        [command, flag, value]
+            if (command == "guide" || command == "start") && flag == "--max-batches" =>
+        {
+            parse_positive_usize(value)
+                .map(|max_batches| Command::Guide { max_batches })
+                .ok_or_else(|| CliError::new("--max-batches must be a positive integer."))
+        }
+        [command, ..] if command == "guide" || command == "start" => Err(CliError::new(
+            "Usage: hindi guide [--max-batches <n>]",
+        )),
         [command] if command == "doctor" => Ok(Command::Doctor),
         [command, flag] if command == "doctor" && is_help_flag(flag) => Ok(Command::DoctorHelp),
         [command] if command == "viewer" => Ok(Command::Viewer),
@@ -384,7 +404,11 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, or review source/accepted output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, or review source/accepted output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
+}
+
+pub fn guide_help_text() -> &'static str {
+    "Hindi Word Generator\n\nUsage:\n  hindi guide [--max-batches <n>]\n  hindi start [--max-batches <n>]\n\nGuided mode walks through the normal sentence workflow:\n  doctor -> source id check -> plan -> generate -> audio -> review-output -> export -> viewer\n\nOptions:\n  --max-batches   Number of sentence batch files to plan/generate. Default: 1"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -429,6 +453,13 @@ mod tests {
 
     #[test]
     fn exposes_doctor_command() {
+        assert_eq!(parse(["guide"]).unwrap(), Command::Guide { max_batches: 1 });
+        assert_eq!(parse(["start"]).unwrap(), Command::Guide { max_batches: 1 });
+        assert_eq!(
+            parse(["guide", "--max-batches", "2"]).unwrap(),
+            Command::Guide { max_batches: 2 }
+        );
+        assert_eq!(parse(["guide", "--help"]).unwrap(), Command::GuideHelp);
         assert_eq!(parse(["doctor"]).unwrap(), Command::Doctor);
         assert_eq!(parse(["doctor", "--help"]).unwrap(), Command::DoctorHelp);
         assert_eq!(parse(["viewer"]).unwrap(), Command::Viewer);
