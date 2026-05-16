@@ -1,7 +1,7 @@
 use crate::project::{ProjectRoot, ProjectRootError};
 use crate::sentence_schema::{parse_sentence_batch, SentenceBatch, SentenceCard};
 use std::fs::{self, OpenOptions};
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -33,9 +33,12 @@ pub enum ExportError {
         source: serde_json::Error,
     },
     NoMatches {
-        source: String,
-        topic: String,
+        source: Option<String>,
+        topic: Option<String>,
     },
+    Cancelled,
+    EmptySelection,
+    Interactive(io::Error),
 }
 
 impl std::fmt::Display for ExportError {
@@ -48,10 +51,19 @@ impl std::fmt::Display for ExportError {
             ExportError::Json { path, source } => {
                 write!(formatter, "Could not parse {}\n\n{source}", path.display())
             }
-            ExportError::NoMatches { source, topic } => write!(
-                formatter,
-                "No accepted sentence cards matched source {source:?} and topic {topic:?}."
-            ),
+            ExportError::NoMatches { source, topic } => {
+                let source = source.as_deref().unwrap_or("any");
+                let topic = topic.as_deref().unwrap_or("any");
+                write!(
+                    formatter,
+                    "No accepted sentence cards matched source {source:?} and topic {topic:?}."
+                )
+            }
+            ExportError::Cancelled => write!(formatter, "Export cancelled."),
+            ExportError::EmptySelection => write!(formatter, "No export groups selected."),
+            ExportError::Interactive(error) => {
+                write!(formatter, "Could not read selection.\n\n{error}")
+            }
         }
     }
 }
@@ -64,8 +76,7 @@ impl From<ProjectRootError> for ExportError {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExportOutcome {
-    pub source: String,
-    pub topic: String,
+    pub groups: Vec<String>,
     pub sentences: usize,
     pub missing_audio: usize,
     pub artifact: PathBuf,
@@ -73,14 +84,21 @@ pub struct ExportOutcome {
 
 impl ExportOutcome {
     pub fn render(&self) -> String {
-        format!(
-            "Anki Export\n\n  source          {}\n  topic           {}\n  sentences       {}\n  missing audio   {}\n  artifact        {}\n\nNext\n  Import the artifact into Anki or use hindi viewer for interactive export.",
-            self.source,
-            self.topic,
-            self.sentences,
-            self.missing_audio,
-            self.artifact.display()
-        )
+        let mut output = String::from("Anki Export\n\n");
+        output.push_str(&format!("  groups          {}\n", self.groups.len()));
+        output.push_str(&format!("  sentences       {}\n", self.sentences));
+        output.push_str(&format!("  missing audio   {}\n", self.missing_audio));
+        output.push_str(&format!("  artifact        {}\n", self.artifact.display()));
+        if !self.groups.is_empty() {
+            output.push_str("\nGroups\n");
+            for group in &self.groups {
+                output.push_str(&format!("  {group}\n"));
+            }
+        }
+        output.push_str(
+            "\nNext\n  Import the artifact into Anki or use hindi viewer for interactive export.",
+        );
+        output
     }
 }
 
@@ -90,46 +108,103 @@ struct ExportSentence {
     group_label: String,
 }
 
-pub fn export_from_current_dir(source: &str, topic: &str) -> Result<ExportOutcome, ExportError> {
-    let root = ProjectRoot::discover_from(current_dir()?)?;
-    export_from(&root, source, topic)
+#[derive(Debug, Clone)]
+struct ExportGroup {
+    title: String,
+    subtitle: String,
+    label: String,
+    latest_modified: u128,
+    sentences: Vec<ExportSentence>,
 }
 
+impl ExportGroup {
+    fn missing_audio(&self) -> usize {
+        self.sentences
+            .iter()
+            .filter(|entry| audio_sound_tag(&entry.sentence).is_empty())
+            .count()
+    }
+}
+
+pub fn export_from_current_dir(
+    source: Option<&str>,
+    topic: Option<&str>,
+) -> Result<ExportOutcome, ExportError> {
+    let root = ProjectRoot::discover_from(current_dir()?)?;
+    export_from_filters(&root, source, topic)
+}
+
+#[cfg(test)]
 pub fn export_from(
     root: &ProjectRoot,
     source: &str,
     topic: &str,
 ) -> Result<ExportOutcome, ExportError> {
-    let sentences = load_matching_sentences(root, source, topic)?;
-    if sentences.is_empty() {
+    export_from_filters(root, Some(source), Some(topic))
+}
+
+pub fn export_from_filters(
+    root: &ProjectRoot,
+    source: Option<&str>,
+    topic: Option<&str>,
+) -> Result<ExportOutcome, ExportError> {
+    let groups = load_export_groups(root, source, topic)?;
+    if groups.is_empty() {
         return Err(ExportError::NoMatches {
-            source: source.to_string(),
-            topic: topic.to_string(),
+            source: source.map(ToString::to_string),
+            topic: topic.map(ToString::to_string),
         });
     }
-    let missing_audio = sentences
-        .iter()
-        .filter(|entry| audio_sound_tag(&entry.sentence).is_empty())
-        .count();
-    let artifact =
-        Path::new(EXPORT_DIR).join(format!("{}_{}_sentences.tsv", slug(source), slug(topic)));
+    let selected = select_groups(groups)?;
+    write_groups(root, selected)
+}
+
+fn write_groups(
+    root: &ProjectRoot,
+    groups: Vec<ExportGroup>,
+) -> Result<ExportOutcome, ExportError> {
+    if groups.is_empty() {
+        return Err(ExportError::EmptySelection);
+    }
+    let mut sentences = Vec::new();
+    let mut group_labels = Vec::new();
+    let mut missing_audio = 0usize;
+    for group in &groups {
+        group_labels.push(group.label.clone());
+        missing_audio += group.missing_audio();
+        sentences.extend(group.sentences.clone());
+    }
+    let artifact = export_artifact_for(&groups);
     let bytes = build_tsv(&sentences).into_bytes();
     write_export(root, &artifact, &bytes)?;
     Ok(ExportOutcome {
-        source: source.to_string(),
-        topic: topic.to_string(),
+        groups: group_labels,
         sentences: sentences.len(),
         missing_audio,
         artifact,
     })
 }
 
-fn load_matching_sentences(
+fn export_artifact_for(groups: &[ExportGroup]) -> PathBuf {
+    let name = if groups.len() == 1 {
+        format!(
+            "{}_{}_sentences.tsv",
+            slug(&groups[0].title),
+            slug(&groups[0].subtitle)
+        )
+    } else {
+        "sentences.tsv".to_string()
+    };
+    Path::new(EXPORT_DIR).join(name)
+}
+
+fn load_export_groups(
     root: &ProjectRoot,
-    source: &str,
-    topic: &str,
-) -> Result<Vec<ExportSentence>, ExportError> {
-    let mut matches = Vec::new();
+    source: Option<&str>,
+    topic: Option<&str>,
+) -> Result<Vec<ExportGroup>, ExportError> {
+    let mut by_group: std::collections::BTreeMap<(String, String), ExportGroup> =
+        std::collections::BTreeMap::new();
     for relative_path in collect_sentence_batch_paths(root)? {
         let path = root.join(&relative_path);
         let content = fs::read_to_string(&path).map_err(|source| ExportError::Io {
@@ -140,20 +215,37 @@ fn load_matching_sentences(
             path: path.clone(),
             source,
         })?;
-        if batch.title.as_deref() == Some(source) && batch.subtitle.as_deref() == Some(topic) {
-            matches.extend(batch_to_export_sentences(batch));
+        let title = batch.title.clone().unwrap_or_default();
+        let subtitle = batch.subtitle.clone().unwrap_or_default();
+        if source.is_some_and(|source| source != title.as_str())
+            || topic.is_some_and(|topic| topic != subtitle.as_str())
+        {
+            continue;
         }
+        let latest_modified = modified_nanos(&path);
+        let key = (title.clone(), subtitle.clone());
+        let group = by_group.entry(key).or_insert_with(|| ExportGroup {
+            label: group_label(Some(&title), Some(&subtitle)),
+            title,
+            subtitle,
+            latest_modified,
+            sentences: Vec::new(),
+        });
+        group.latest_modified = group.latest_modified.max(latest_modified);
+        group.sentences.extend(batch_to_export_sentences(batch));
     }
-    Ok(matches)
+    let mut groups = by_group.into_values().collect::<Vec<_>>();
+    groups.sort_by(|left, right| {
+        right
+            .latest_modified
+            .cmp(&left.latest_modified)
+            .then_with(|| left.label.cmp(&right.label))
+    });
+    Ok(groups)
 }
 
 fn batch_to_export_sentences(batch: SentenceBatch) -> Vec<ExportSentence> {
-    let group_label = [batch.title.as_deref(), batch.subtitle.as_deref()]
-        .into_iter()
-        .flatten()
-        .filter(|value| !value.trim().is_empty())
-        .collect::<Vec<_>>()
-        .join(" ");
+    let group_label = group_label(batch.title.as_deref(), batch.subtitle.as_deref());
     batch
         .sentences
         .into_iter()
@@ -162,6 +254,115 @@ fn batch_to_export_sentences(batch: SentenceBatch) -> Vec<ExportSentence> {
             group_label: group_label.clone(),
         })
         .collect()
+}
+
+fn group_label(title: Option<&str>, subtitle: Option<&str>) -> String {
+    let label = [title, subtitle]
+        .into_iter()
+        .flatten()
+        .filter(|value| !value.trim().is_empty())
+        .collect::<Vec<_>>()
+        .join(" ");
+    if label.is_empty() {
+        "Untitled".to_string()
+    } else {
+        label
+    }
+}
+
+fn modified_nanos(path: &Path) -> u128 {
+    fs::metadata(path)
+        .and_then(|metadata| metadata.modified())
+        .ok()
+        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
+        .map(|duration| duration.as_nanos())
+        .unwrap_or_default()
+}
+
+fn select_groups(groups: Vec<ExportGroup>) -> Result<Vec<ExportGroup>, ExportError> {
+    if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
+        return Ok(groups);
+    }
+
+    let mut selected = vec![true; groups.len()];
+    let mut page = 0usize;
+    loop {
+        print_export_menu(&groups, &selected, page)?;
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .map_err(ExportError::Interactive)?;
+        let input = input.trim();
+        if input.is_empty() {
+            if selected.iter().any(|value| *value) {
+                break;
+            }
+            println!("Select at least one group before exporting.");
+            continue;
+        }
+        match input {
+            "q" | "Q" => return Err(ExportError::Cancelled),
+            "a" | "A" => selected.fill(true),
+            "n" | "N" => selected.fill(false),
+            "0" => page = (page + 1) % groups.len().div_ceil(9).max(1),
+            value => {
+                for ch in value.chars() {
+                    if let Some(digit) = ch.to_digit(10) {
+                        if (1..=9).contains(&digit) {
+                            let index = page * 9 + digit as usize - 1;
+                            if index < selected.len() {
+                                selected[index] = !selected[index];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(groups
+        .into_iter()
+        .enumerate()
+        .filter_map(|(index, group)| selected[index].then_some(group))
+        .collect())
+}
+
+fn print_export_menu(
+    groups: &[ExportGroup],
+    selected: &[bool],
+    page: usize,
+) -> Result<(), ExportError> {
+    println!("Anki Export\n");
+    println!("Select groups to export. Everything is selected by default.");
+    println!("Press 1-9 to toggle, 0 for more, a for all, n for none, Enter to export.\n");
+    let start = page * 9;
+    let end = (start + 9).min(groups.len());
+    for (offset, group) in groups[start..end].iter().enumerate() {
+        let index = start + offset;
+        let marker = if selected[index] { "x" } else { " " };
+        println!(
+            "  {}. [{}] {}  ({} sentence{}, {} missing audio)",
+            offset + 1,
+            marker,
+            group.label,
+            group.sentences.len(),
+            plural(group.sentences.len()),
+            group.missing_audio()
+        );
+    }
+    if groups.len() > 9 {
+        println!("\n  0. show more");
+    }
+    print!("\nExport selection > ");
+    io::stdout().flush().map_err(ExportError::Interactive)
+}
+
+fn plural(count: usize) -> &'static str {
+    if count == 1 {
+        ""
+    } else {
+        "s"
+    }
 }
 
 fn collect_sentence_batch_paths(root: &ProjectRoot) -> Result<Vec<PathBuf>, ExportError> {
@@ -353,7 +554,7 @@ fn slug(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{audio_sound_tag, export_from};
+    use super::{audio_sound_tag, export_from, export_from_filters};
     use crate::project::ProjectRoot;
     use crate::sentence_schema::SentenceCard;
     use std::fs;
@@ -384,7 +585,7 @@ mod tests {
     #[test]
     fn exports_matching_sentence_batch_to_tsv() {
         let root = fixture_root();
-        write_sentence_batch(&root, "Complete Hindi", "Chapter 02");
+        write_sentence_batch(&root, "example.json", "Complete Hindi", "Chapter 02");
         let project = ProjectRoot::discover_from(&root).unwrap();
 
         let outcome = export_from(&project, "Complete Hindi", "Chapter 02").unwrap();
@@ -399,9 +600,27 @@ mod tests {
     }
 
     #[test]
+    fn exports_all_groups_by_default_in_non_interactive_mode() {
+        let root = fixture_root();
+        write_sentence_batch(&root, "chapter_02.json", "Complete Hindi", "Chapter 02");
+        write_sentence_batch(&root, "chapter_03.json", "Complete Hindi", "Chapter 03");
+        let project = ProjectRoot::discover_from(&root).unwrap();
+
+        let outcome = export_from_filters(&project, None, None).unwrap();
+
+        assert_eq!(outcome.groups.len(), 2);
+        assert_eq!(outcome.sentences, 2);
+        assert_eq!(outcome.artifact, PathBuf::from("exports/sentences.tsv"));
+        let content = fs::read_to_string(root.join(outcome.artifact)).unwrap();
+        assert!(content.contains("Complete Hindi Chapter 02"));
+        assert!(content.contains("Complete Hindi Chapter 03"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn no_matching_source_topic_is_error() {
         let root = fixture_root();
-        write_sentence_batch(&root, "Complete Hindi", "Chapter 02");
+        write_sentence_batch(&root, "example.json", "Complete Hindi", "Chapter 02");
         let project = ProjectRoot::discover_from(&root).unwrap();
 
         let error = export_from(&project, "Complete Hindi", "Chapter 03").unwrap_err();
@@ -420,9 +639,9 @@ mod tests {
         root
     }
 
-    fn write_sentence_batch(root: &std::path::Path, title: &str, subtitle: &str) {
+    fn write_sentence_batch(root: &std::path::Path, file_name: &str, title: &str, subtitle: &str) {
         fs::write(
-            root.join("output/sentences/example.json"),
+            root.join("output/sentences").join(file_name),
             format!(
                 r#"{{
   "title": "{title}",

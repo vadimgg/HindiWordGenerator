@@ -7,8 +7,8 @@ pub enum Command {
     ViewerHelp,
     ExportHelp,
     Export {
-        source: String,
-        topic: String,
+        source: Option<String>,
+        topic: Option<String>,
     },
     SourceIdsHelp,
     SourceIdsCheck,
@@ -89,25 +89,7 @@ where
         [command] if command == "viewer" => Ok(Command::Viewer),
         [command, flag] if command == "viewer" && is_help_flag(flag) => Ok(Command::ViewerHelp),
         [command, flag] if command == "export" && is_help_flag(flag) => Ok(Command::ExportHelp),
-        [command, source_flag, source, topic_flag, topic]
-            if command == "export" && source_flag == "--source" && topic_flag == "--topic" =>
-        {
-            Ok(Command::Export {
-                source: source.clone(),
-                topic: topic.clone(),
-            })
-        }
-        [command, topic_flag, topic, source_flag, source]
-            if command == "export" && source_flag == "--source" && topic_flag == "--topic" =>
-        {
-            Ok(Command::Export {
-                source: source.clone(),
-                topic: topic.clone(),
-            })
-        }
-        [command, ..] if command == "export" => Err(CliError::new(
-            "Usage: hindi export --source <title> --topic <subtitle>",
-        )),
+        [command, ..] if command == "export" => parse_export(&args[1..]),
         [command, subcommand, flag]
             if command == "source" && subcommand == "ids" && is_help_flag(flag) =>
         {
@@ -183,6 +165,38 @@ where
         [command, ..] if command == "eval" => Err(CliError::new(eval_usage_error())),
         [command, ..] => Err(CliError::new(format!("Unknown command: {command}"))),
     }
+}
+
+fn parse_export(args: &[String]) -> Result<Command, CliError> {
+    let mut source = None;
+    let mut topic = None;
+    let mut index = 0usize;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--source" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --source."));
+                };
+                source = Some(value.clone());
+            }
+            "--topic" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(CliError::new("Missing value for --topic."));
+                };
+                topic = Some(value.clone());
+            }
+            flag if is_help_flag(flag) => return Ok(Command::ExportHelp),
+            _ => {
+                return Err(CliError::new(
+                    "Usage: hindi export [--source <title>] [--topic <subtitle>]",
+                ));
+            }
+        }
+        index += 1;
+    }
+    Ok(Command::Export { source, topic })
 }
 
 fn parse_eval_report(args: &[String]) -> Result<Command, CliError> {
@@ -370,7 +384,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export --source <title> --topic <subtitle>\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, or review source/accepted output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Write a source/topic Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, or review source/accepted output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
 }
 
 pub fn doctor_help_text() -> &'static str {
@@ -382,7 +396,7 @@ pub fn viewer_help_text() -> &'static str {
 }
 
 pub fn export_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi export --source <title> --topic <subtitle>\n\nOptions:\n  --source   Match accepted sentence batch title\n  --topic    Match accepted sentence batch subtitle"
+    "Hindi Word Generator\n\nUsage:\n  hindi export [--source <title>] [--topic <subtitle>]\n\nBy default, exports all accepted sentence groups. In an interactive terminal, all groups start selected and you can press 1-9 to toggle visible groups, 0 to show more, or Enter to export.\n\nOptions:\n  --source   Filter accepted sentence groups by title\n  --topic    Filter accepted sentence groups by subtitle"
 }
 
 pub fn source_ids_help_text() -> &'static str {
@@ -623,6 +637,13 @@ mod tests {
     #[test]
     fn exposes_export_command() {
         assert_eq!(
+            parse(["export"]).unwrap(),
+            Command::Export {
+                source: None,
+                topic: None
+            }
+        );
+        assert_eq!(
             parse([
                 "export",
                 "--source",
@@ -632,12 +653,12 @@ mod tests {
             ])
             .unwrap(),
             Command::Export {
-                source: "Complete Hindi".to_string(),
-                topic: "Chapter 02".to_string()
+                source: Some("Complete Hindi".to_string()),
+                topic: Some("Chapter 02".to_string())
             }
         );
         assert_eq!(parse(["export", "--help"]).unwrap(), Command::ExportHelp);
-        assert!(parse(["export"])
+        assert!(parse(["export", "--bad"])
             .unwrap_err()
             .to_string()
             .contains("Usage:"));

@@ -226,7 +226,7 @@ fn main() -> ExitCode {
             }
         },
         Ok(cli::Command::Export { source, topic }) => {
-            match export::export_from_current_dir(&source, &topic) {
+            match export::export_from_current_dir(source.as_deref(), topic.as_deref()) {
                 Ok(report) => {
                     println!("{}", report.render());
                     ExitCode::SUCCESS

@@ -376,10 +376,13 @@ forms are `hindi sentences plan`, `hindi sentences generate`, and
 First simple export shape:
 
 ```bash
-hindi export --source "Complete Hindi" --topic "Chapter 02"
+hindi export
 ```
 
-Export `--source` matches YAML `title`; `--topic` matches YAML `subtitle`.
+Export defaults to all accepted sentence groups. In an interactive terminal it
+lists the groups with everything selected; press `1`-`9` to toggle visible
+groups, `0` to show more, and Enter to export. Optional `--source` and
+`--topic` flags filter by YAML `title` and `subtitle` for scripted runs.
 
 ## Data Surfaces
 

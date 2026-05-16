@@ -1,7 +1,5 @@
 .PHONY: build test fmt clippy check run doctor plan generate audio quality viewer viewer-check viewer-build export install clean
 
-SOURCE ?= Complete Hindi
-TOPIC ?= Chapter 02
 MAX_BATCHES ?= 1
 
 build:
@@ -45,7 +43,7 @@ viewer-build:
 	cd viewer && npm run build
 
 export:
-	cargo run -- export --source "$(SOURCE)" --topic "$(TOPIC)"
+	cargo run -- export
 
 install:
 	cargo install --path .
