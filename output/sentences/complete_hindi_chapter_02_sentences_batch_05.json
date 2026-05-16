@@ -1,0 +1,63 @@
+{
+  "sentences": [
+    {
+      "anki_tags": [],
+      "audio": "audio/sentences/complete_hindi_chapter_02_sentences_batch_05/01_kya_bat_hai.mp3",
+      "english": "What's the matter?",
+      "hindi": "क्या बात है?",
+      "literal": "what matter is?",
+      "register": "standard",
+      "romanisation": "kyā bāt hai?",
+      "source_ref": {
+        "file": "input/sentences/complete_hindi_chapter_02_sentences.yaml",
+        "fingerprint": "sha256:1c1be204170b4645316c8975c8928b7b1dfc06edefd872ab5468663b9183bb3f",
+        "item_id": "0021"
+      },
+      "tokens": [
+        {
+          "hindi": "क्या",
+          "kind": "word",
+          "roman": "kyā",
+          "word_id": "w1"
+        },
+        {
+          "hindi": "बात",
+          "kind": "word",
+          "roman": "bāt",
+          "word_id": "w2"
+        },
+        {
+          "hindi": "है",
+          "kind": "word",
+          "roman": "hai",
+          "word_id": "w3"
+        }
+      ],
+      "words": [
+        {
+          "hindi": "क्या",
+          "id": "w1",
+          "kind": "word",
+          "meaning": "what",
+          "roman": "kyā"
+        },
+        {
+          "hindi": "बात",
+          "id": "w2",
+          "kind": "word",
+          "meaning": "matter",
+          "roman": "bāt"
+        },
+        {
+          "hindi": "है",
+          "id": "w3",
+          "kind": "word",
+          "meaning": "is",
+          "roman": "hai"
+        }
+      ]
+    }
+  ],
+  "subtitle": "Chapter 02",
+  "title": "Complete Hindi"
+}
