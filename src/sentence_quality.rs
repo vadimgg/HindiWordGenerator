@@ -96,7 +96,9 @@ impl SentenceQualityReport {
     }
 
     pub fn render(&self) -> String {
-        let mut output = String::from("Sentence Quality\n\n");
+        let mut output = String::from("Review Output\n\n");
+        output
+            .push_str("Mode\n  deterministic learner-quality scan of accepted sentence output\n\n");
         output.push_str("Accepted Output\n");
         output.push_str(&format!("  batch files  {}\n", self.files));
         output.push_str(&format!("  cards        {}\n", self.cards));

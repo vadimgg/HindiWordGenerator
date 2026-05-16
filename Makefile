@@ -33,7 +33,7 @@ audio:
 	cargo run -- sentences audio
 
 quality:
-	cargo run -- sentences quality
+	cargo run -- sentences review-output
 
 viewer:
 	cargo run -- viewer

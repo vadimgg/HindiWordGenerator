@@ -139,6 +139,25 @@ fn main() -> ExitCode {
                 ExitCode::from(1)
             }
         },
+        Ok(cli::Command::SentencesReviewSource) => {
+            println!("Review Source\n");
+            println!("Status");
+            println!("  ready      no");
+            println!("  writes     none");
+            println!();
+            println!("What this will do");
+            println!("  Review source YAML before generation and report likely translation, romanisation, or teaching-quality issues.");
+            println!();
+            println!("Current behavior");
+            println!("  Model-based source review is planned but not active yet.");
+            println!();
+            println!("Run");
+            println!("  hindi sentences plan --max-batches 1");
+            println!(
+                "  hindi eval run sentence/source-qa input/sentences/<file>.yaml --max-items 5"
+            );
+            ExitCode::from(1)
+        }
         Ok(cli::Command::SentencesQuality) => match sentence_quality::quality_from_current_dir() {
             Ok(report) => {
                 println!("{}", report.render());
