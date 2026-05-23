@@ -159,9 +159,7 @@ pub fn raw_from(
                 }
                 eprintln!();
                 if !ask_edit_again()? {
-                    return Err(RawSentenceError::Input(
-                        "Raw sentence import cancelled.".to_string(),
-                    ));
+                    return Err(RawSentenceError::Input(cancelled_message().to_string()));
                 }
             }
         }
@@ -371,7 +369,7 @@ fn ask_edit_again() -> Result<bool, RawSentenceError> {
         return Ok(false);
     }
     loop {
-        print!("Edit again? [e/c] ");
+        print!("Edit again? [Y/n] ");
         io::stdout()
             .flush()
             .map_err(|source| RawSentenceError::Io {
@@ -386,11 +384,15 @@ fn ask_edit_again() -> Result<bool, RawSentenceError> {
                 source,
             })?;
         match input.trim().to_ascii_lowercase().as_str() {
-            "e" | "edit" | "" => return Ok(true),
-            "c" | "cancel" | "q" | "quit" => return Ok(false),
-            _ => eprintln!("Type e to edit again, or c to cancel."),
+            "y" | "yes" | "" => return Ok(true),
+            "n" | "no" | "q" | "quit" => return Ok(false),
+            _ => eprintln!("Press Enter or type y to edit again, or n to cancel."),
         }
     }
+}
+
+fn cancelled_message() -> &'static str {
+    "Raw sentence import cancelled."
 }
 
 fn destination_path(root: &ProjectRoot, document: &SourceYaml) -> PathBuf {
@@ -527,8 +529,8 @@ fn open_editor(path: &Path) -> Result<(), RawSentenceError> {
 #[cfg(test)]
 mod tests {
     use super::{
-        destination_path, extract_yaml_response, packet_content, slug, suggest_title_subtitle,
-        validate_source_yaml,
+        cancelled_message, destination_path, extract_yaml_response, packet_content, slug,
+        suggest_title_subtitle, validate_source_yaml,
     };
     use crate::project::ProjectRoot;
     use std::fs;
@@ -622,6 +624,11 @@ items:
         assert_eq!(title, "Complete Hindi");
         assert_eq!(subtitle, "Chapter 06 Dialog 01");
         assert_eq!(slug("Chapter 06 Dialog 01"), "chapter_06_dialog_01");
+    }
+
+    #[test]
+    fn cancel_message_is_plain_language() {
+        assert_eq!("Raw sentence import cancelled.", cancelled_message());
     }
 
     fn fixture_root() -> PathBuf {
