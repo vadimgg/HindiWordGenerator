@@ -32,6 +32,9 @@ pub enum Command {
     SentencesPackage {
         dest: Option<String>,
     },
+    SentencesRaw {
+        file: Option<String>,
+    },
     SentencesReviewSource,
     SentencesQuality,
     EvalHelp,
@@ -180,6 +183,21 @@ where
                 dest: Some(value.clone()),
             })
         }
+        [command, action] if command == "sentences" && action == "raw" => {
+            Ok(Command::SentencesRaw { file: None })
+        }
+        [command, action, file] if command == "sentences" && action == "raw" => {
+            Ok(Command::SentencesRaw {
+                file: Some(file.clone()),
+            })
+        }
+        [command, action, flag, file]
+            if command == "sentences" && action == "raw" && flag == "--file" =>
+        {
+            Ok(Command::SentencesRaw {
+                file: Some(file.clone()),
+            })
+        }
         [command, action] if command == "sentences" && action == "review-source" => {
             Ok(Command::SentencesReviewSource)
         }
@@ -190,7 +208,7 @@ where
             Ok(Command::SentencesQuality)
         }
         [command, ..] if command == "sentences" => Err(CliError::new(
-            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio | package [--dest <folder>] | review-source | review-output",
+            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio | package [--dest <folder>] | raw [file] | review-source | review-output",
         )),
         [command, flag] if command == "eval" && is_help_flag(flag) => Ok(Command::EvalHelp),
         [command, action, ..] if command == "eval" && action == "run" => parse_eval_run(&args[2..]),
@@ -422,7 +440,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi init\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package [--dest <folder>]\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  init         Create a self-contained Hindi workspace in the current folder\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, package, or review sentence output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi init\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package [--dest <folder>]\n  hindi sentences raw [file]\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  init         Create a self-contained Hindi workspace in the current folder\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, package, or review sentence output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
 }
 
 pub fn init_help_text() -> &'static str {
@@ -450,7 +468,7 @@ pub fn source_ids_help_text() -> &'static str {
 }
 
 pub fn sentences_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package [--dest <folder>]\n  hindi sentences review-source\n  hindi sentences review-output\n\nCommands:\n  plan            Preview pending sentence batches without writing output\n  generate        Generate pending sentence batches with the configured local model\n  audio           Backfill missing audio for accepted sentence batches\n  package         Copy accepted sentence JSON and referenced audio to a portable folder\n  review-source   Review source YAML before generation. Model-based source review is planned but not active yet.\n  review-output   Review accepted sentence output for obvious learner-quality issues. This is the current deterministic output QA.\n\nPackage destination:\n  --dest overrides [package].sentences_destination in hindi.toml.\n\nCompatibility:\n  hindi sentences quality  Alias for review-output"
+    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package [--dest <folder>]\n  hindi sentences raw [file]\n  hindi sentences raw --file <file>\n  hindi sentences review-source\n  hindi sentences review-output\n\nCommands:\n  plan            Preview pending sentence batches without writing output\n  generate        Generate pending sentence batches with the configured local model\n  audio           Backfill missing audio for accepted sentence batches\n  package         Copy accepted sentence JSON and referenced audio to a portable folder\n  raw             Convert copied raw book/web text into source YAML with ChatGPT or Claude\n  review-source   Review source YAML before generation. Model-based source review is planned but not active yet.\n  review-output   Review accepted sentence output for obvious learner-quality issues. This is the current deterministic output QA.\n\nPackage destination:\n  --dest overrides [package].sentences_destination in hindi.toml.\n\nRaw import flow:\n  Reads from raw/ when no file is given, opens a prompt packet in $EDITOR, validates the pasted YAML shape, and writes input/sentences/<title>_<subtitle>_sentences.yaml.\n\nCompatibility:\n  hindi sentences quality  Alias for review-output"
 }
 
 pub fn eval_help_text() -> &'static str {
@@ -549,6 +567,22 @@ mod tests {
         assert_eq!(
             parse(["sentences", "package"]).unwrap(),
             Command::SentencesPackage { dest: None }
+        );
+        assert_eq!(
+            parse(["sentences", "raw"]).unwrap(),
+            Command::SentencesRaw { file: None }
+        );
+        assert_eq!(
+            parse(["sentences", "raw", "raw/chapter.md"]).unwrap(),
+            Command::SentencesRaw {
+                file: Some("raw/chapter.md".to_string())
+            }
+        );
+        assert_eq!(
+            parse(["sentences", "raw", "--file", "raw/chapter.md"]).unwrap(),
+            Command::SentencesRaw {
+                file: Some("raw/chapter.md".to_string())
+            }
         );
         assert_eq!(
             parse(["sentences", "review-source"]).unwrap(),

@@ -34,11 +34,17 @@ the process:
 hindi guide
 ```
 
+If you are starting from copied book or web text, put raw files under `raw/`
+and run `hindi sentences raw` to open a ChatGPT/Claude conversion packet in
+`$EDITOR`. After you paste valid YAML back into the editor, the CLI writes it
+under `input/sentences/`.
+
 For scripts or step-by-step debugging, the same workflow is available as
 separate commands:
 
 ```bash
 hindi doctor
+hindi sentences raw raw/chapter.md
 hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output

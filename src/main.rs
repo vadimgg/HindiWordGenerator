@@ -15,6 +15,7 @@ mod sentence_generate;
 mod sentence_package;
 mod sentence_plan;
 mod sentence_quality;
+mod sentence_raw;
 mod sentence_schema;
 mod sentence_validate;
 mod source_identity;
@@ -175,6 +176,18 @@ fn main() -> ExitCode {
         },
         Ok(cli::Command::SentencesPackage { dest }) => {
             match sentence_package::package_from_current_dir(dest.as_deref()) {
+                Ok(report) => {
+                    println!("{}", report.render());
+                    ExitCode::SUCCESS
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Ok(cli::Command::SentencesRaw { file }) => {
+            match sentence_raw::raw_from_current_dir(file.as_deref()) {
                 Ok(report) => {
                     println!("{}", report.render());
                     ExitCode::SUCCESS
