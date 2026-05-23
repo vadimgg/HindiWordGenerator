@@ -426,7 +426,7 @@ pub fn help_text() -> &'static str {
 }
 
 pub fn init_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi init\n\nCreates a self-contained Hindi workspace in the current folder:\n  hindi.toml\n  input/sentences/\n  input/words/\n  output/sentences/\n  output/words/\n  audio/sentences/\n  audio/words/\n  runs/\n  exports/\n\nExisting hindi.toml is preserved. To set a default package destination, add:\n  [package]\n  sentences_destination = \"/path/to/package\""
+    "Hindi Word Generator\n\nUsage:\n  hindi init\n\nCreates a self-contained Hindi workspace in the current folder:\n  hindi.toml\n  input/sentences/\n  input/words/\n  output/sentences/\n  output/words/\n  audio/sentences/\n  audio/words/\n  runs/\n  exports/\n\nExisting hindi.toml is preserved.\n\nUseful hindi.toml format:\n  [models]\n  sentence_generation = \"ollama:translategemma:12b\"\n\n  # Optional default for `hindi sentences package`.\n  # Relative paths are resolved from this workspace root.\n  [package]\n  sentences_destination = \"packages/sentences\"\n\nTypical next commands:\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate --check\n  hindi source ids migrate\n  hindi sentences plan --max-batches 1\n  hindi sentences generate --max-batches 1\n  hindi sentences audio\n  hindi sentences review-output\n  hindi sentences package\n  hindi export\n  hindi viewer"
 }
 
 pub fn guide_help_text() -> &'static str {
@@ -471,7 +471,7 @@ fn eval_grade_usage_error() -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse, Command, EvalReportOutput};
+    use super::{init_help_text, parse, Command, EvalReportOutput};
 
     #[test]
     fn exposes_doctor_command() {
@@ -488,6 +488,18 @@ mod tests {
         assert_eq!(parse(["doctor", "--help"]).unwrap(), Command::DoctorHelp);
         assert_eq!(parse(["viewer"]).unwrap(), Command::Viewer);
         assert_eq!(parse(["viewer", "--help"]).unwrap(), Command::ViewerHelp);
+    }
+
+    #[test]
+    fn init_help_shows_config_and_next_commands() {
+        let help = init_help_text();
+
+        assert!(help.contains("[models]"));
+        assert!(help.contains("sentence_generation = \"ollama:translategemma:12b\""));
+        assert!(help.contains("[package]"));
+        assert!(help.contains("sentences_destination = \"packages/sentences\""));
+        assert!(help.contains("hindi sentences package"));
+        assert!(help.contains("hindi viewer"));
     }
 
     #[test]
