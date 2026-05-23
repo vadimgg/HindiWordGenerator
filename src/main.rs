@@ -11,6 +11,7 @@ mod run_report;
 mod sentence_audio;
 mod sentence_enrichment;
 mod sentence_generate;
+mod sentence_package;
 mod sentence_plan;
 mod sentence_quality;
 mod sentence_schema;
@@ -157,6 +158,18 @@ fn main() -> ExitCode {
                 ExitCode::from(1)
             }
         },
+        Ok(cli::Command::SentencesPackage { dest }) => {
+            match sentence_package::package_from_current_dir(&dest) {
+                Ok(report) => {
+                    println!("{}", report.render());
+                    ExitCode::SUCCESS
+                }
+                Err(error) => {
+                    eprintln!("{error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
         Ok(cli::Command::SentencesReviewSource) => {
             println!("Review Source\n");
             println!("Status");

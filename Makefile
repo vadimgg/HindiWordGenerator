@@ -1,6 +1,7 @@
-.PHONY: build test fmt clippy check run doctor plan generate audio quality viewer viewer-check viewer-build export install clean
+.PHONY: build test fmt clippy check run doctor plan generate audio quality package viewer viewer-check viewer-build export install clean
 
 MAX_BATCHES ?= 1
+PACKAGE_DEST ?= /tmp/hindi-sentences-package
 
 build:
 	cargo build
@@ -32,6 +33,9 @@ audio:
 
 quality:
 	cargo run -- sentences review-output
+
+package:
+	cargo run -- sentences package --dest "$(PACKAGE_DEST)"
 
 viewer:
 	cargo run -- viewer

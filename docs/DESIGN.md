@@ -31,6 +31,7 @@ hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
+hindi sentences package --dest /tmp/hindi-sentences-package
 hindi export
 hindi viewer
 ```
@@ -360,7 +361,7 @@ accepted JSON, but it must not change Hindi, romanisation, English, literal,
 register, tokens, words, source lineage, or tags unless a future explicit repair
 command is used.
 
-## Viewer And Export
+## Viewer, Package, And Export
 
 The Astro viewer is part of the product workflow. It previews generated cards,
 plays audio, supports filtering/selection, and provides interactive export.
@@ -368,13 +369,40 @@ plays audio, supports filtering/selection, and provides interactive export.
 print the local URL, and open the browser unless a future `--no-open` flag is
 passed.
 
+`hindi sentences package --dest <folder>` creates a portable package for
+further processing outside the project. It copies accepted sentence JSON and
+only referenced audio files while preserving project-relative paths, so an
+accepted JSON `audio` value still resolves from the destination folder. It also
+writes `manifest.json`, `indexes/sentences.jsonl`, and
+`indexes/missing_audio.json`.
+
+The package command refuses a non-empty destination. It does not rewrite
+accepted JSON and does not copy unrelated audio.
+
+Package layout:
+
+```text
+<destination>/
+  manifest.json
+  output/
+    sentences/
+      *_batch_*.json
+  audio/
+    sentences/
+      <batch-stem>/
+        *.mp3
+  indexes/
+    sentences.jsonl
+    missing_audio.json
+```
+
 CLI export is the scripted path. Viewer export and CLI export should share the
 same export builder once Rust owns export generation.
 
 Scoping rule: `doctor`, `viewer`, and `export` are cross-cutting commands.
-`plan`, `generate`, and `audio` are content-type-scoped, so the first Rust
-forms are `hindi sentences plan`, `hindi sentences generate`, and
-`hindi sentences audio`.
+`plan`, `generate`, `audio`, and `package` are content-type-scoped, so the
+first Rust forms are `hindi sentences plan`, `hindi sentences generate`,
+`hindi sentences audio`, and `hindi sentences package`.
 
 First simple export shape:
 

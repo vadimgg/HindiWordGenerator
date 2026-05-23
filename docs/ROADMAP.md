@@ -194,12 +194,14 @@ Acceptance:
 Goal: make Rust-generated output usable in the existing viewer and export flow.
 
 Status: Done. The viewer serves accepted Rust sentence output with audio, and
-the Rust CLI can export Anki artifacts from accepted output.
+the Rust CLI can package sentence output or export Anki artifacts from accepted
+output.
 
 Commands:
 
 ```bash
 hindi guide
+hindi sentences package --dest /tmp/hindi-sentences-package
 hindi viewer
 hindi export
 ```
@@ -212,6 +214,8 @@ Acceptance:
 - Viewer keeps the M3 `word_id` support and legacy `word_index` fallback while
   serving the full preview/export workflow.
 - Refreshing the viewer shows newly generated batches.
+- Package can copy accepted sentence JSON and referenced audio to a destination
+  folder with project-relative audio links preserved.
 - Export can produce an Anki artifact for all accepted groups by default, or a
   filtered artifact with `--source` and `--topic`.
 - `hindi guide` walks through doctor, source ID check, planning, generation,

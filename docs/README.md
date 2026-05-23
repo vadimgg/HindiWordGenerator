@@ -38,6 +38,7 @@ hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
+hindi sentences package --dest /tmp/hindi-sentences-package
 hindi export
 hindi viewer
 ```

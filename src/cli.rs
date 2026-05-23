@@ -27,6 +27,9 @@ pub enum Command {
         max_batches: usize,
     },
     SentencesAudio,
+    SentencesPackage {
+        dest: String,
+    },
     SentencesReviewSource,
     SentencesQuality,
     EvalHelp,
@@ -162,6 +165,16 @@ where
         [command, action] if command == "sentences" && action == "audio" => {
             Ok(Command::SentencesAudio)
         }
+        [command, action, flag, value]
+            if command == "sentences" && action == "package" && flag == "--dest" =>
+        {
+            Ok(Command::SentencesPackage {
+                dest: value.clone(),
+            })
+        }
+        [command, action] if command == "sentences" && action == "package" => {
+            Err(CliError::new("Missing required option: --dest <folder>"))
+        }
         [command, action] if command == "sentences" && action == "review-source" => {
             Ok(Command::SentencesReviewSource)
         }
@@ -172,7 +185,7 @@ where
             Ok(Command::SentencesQuality)
         }
         [command, ..] if command == "sentences" => Err(CliError::new(
-            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio | review-source | review-output",
+            "Usage: hindi sentences plan --max-batches <n> | generate --max-batches <n> | audio | package --dest <folder> | review-source | review-output",
         )),
         [command, flag] if command == "eval" && is_help_flag(flag) => Ok(Command::EvalHelp),
         [command, action, ..] if command == "eval" && action == "run" => parse_eval_run(&args[2..]),
@@ -404,7 +417,7 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, or review source/accepted output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package --dest <folder>\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, package, or review sentence output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
 }
 
 pub fn guide_help_text() -> &'static str {
@@ -428,7 +441,7 @@ pub fn source_ids_help_text() -> &'static str {
 }
 
 pub fn sentences_help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences review-source\n  hindi sentences review-output\n\nCommands:\n  plan            Preview pending sentence batches without writing output\n  generate        Generate pending sentence batches with the configured local model\n  audio           Backfill missing audio for accepted sentence batches\n  review-source   Review source YAML before generation. Model-based source review is planned but not active yet.\n  review-output   Review accepted sentence output for obvious learner-quality issues. This is the current deterministic output QA.\n\nCompatibility:\n  hindi sentences quality  Alias for review-output"
+    "Hindi Word Generator\n\nUsage:\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package --dest <folder>\n  hindi sentences review-source\n  hindi sentences review-output\n\nCommands:\n  plan            Preview pending sentence batches without writing output\n  generate        Generate pending sentence batches with the configured local model\n  audio           Backfill missing audio for accepted sentence batches\n  package         Copy accepted sentence JSON and referenced audio to a portable folder\n  review-source   Review source YAML before generation. Model-based source review is planned but not active yet.\n  review-output   Review accepted sentence output for obvious learner-quality issues. This is the current deterministic output QA.\n\nCompatibility:\n  hindi sentences quality  Alias for review-output"
 }
 
 pub fn eval_help_text() -> &'static str {
@@ -503,6 +516,12 @@ mod tests {
         assert_eq!(
             parse(["sentences", "audio"]).unwrap(),
             Command::SentencesAudio
+        );
+        assert_eq!(
+            parse(["sentences", "package", "--dest", "/tmp/hindi-package"]).unwrap(),
+            Command::SentencesPackage {
+                dest: "/tmp/hindi-package".to_string()
+            }
         );
         assert_eq!(
             parse(["sentences", "review-source"]).unwrap(),
