@@ -174,7 +174,7 @@ fn main() -> ExitCode {
             }
         },
         Ok(cli::Command::SentencesPackage { dest }) => {
-            match sentence_package::package_from_current_dir(&dest) {
+            match sentence_package::package_from_current_dir(dest.as_deref()) {
                 Ok(report) => {
                     println!("{}", report.render());
                     ExitCode::SUCCESS

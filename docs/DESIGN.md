@@ -32,7 +32,7 @@ hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
-hindi sentences package --dest /tmp/hindi-sentences-package
+hindi sentences package
 hindi export
 hindi viewer
 ```
@@ -403,6 +403,17 @@ writes `manifest.json`, `indexes/sentences.jsonl`, and
 
 The package command refuses a non-empty destination. It does not rewrite
 accepted JSON and does not copy unrelated audio.
+
+The destination can be provided on the command line or configured in
+`hindi.toml`:
+
+```toml
+[package]
+sentences_destination = "/path/to/package"
+```
+
+Relative configured destinations are resolved from the workspace root.
+Command-line `--dest <folder>` overrides the config value for one run.
 
 Package layout:
 

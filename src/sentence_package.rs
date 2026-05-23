@@ -1,3 +1,4 @@
+use crate::config::{load_config, ConfigError};
 use crate::project::{ProjectRoot, ProjectRootError};
 use crate::run_report::unix_now;
 use crate::sentence_schema::{parse_sentence_batch, SentenceBatch};
@@ -29,6 +30,8 @@ pub enum SentencePackageError {
         audio: String,
     },
     NoSentenceOutput,
+    MissingDestination,
+    Config(ConfigError),
 }
 
 impl std::fmt::Display for SentencePackageError {
@@ -58,6 +61,11 @@ impl std::fmt::Display for SentencePackageError {
                 formatter,
                 "No accepted sentence output found in output/sentences."
             ),
+            SentencePackageError::MissingDestination => write!(
+                formatter,
+                "No package destination configured.\n\nRun with:\n  hindi sentences package --dest /path/to/package\n\nOr add to hindi.toml:\n  [package]\n  sentences_destination = \"/path/to/package\""
+            ),
+            SentencePackageError::Config(error) => write!(formatter, "{error}"),
         }
     }
 }
@@ -65,6 +73,12 @@ impl std::fmt::Display for SentencePackageError {
 impl From<ProjectRootError> for SentencePackageError {
     fn from(error: ProjectRootError) -> Self {
         SentencePackageError::Project(error)
+    }
+}
+
+impl From<ConfigError> for SentencePackageError {
+    fn from(error: ConfigError) -> Self {
+        SentencePackageError::Config(error)
     }
 }
 
@@ -142,10 +156,34 @@ struct LoadedBatch {
 }
 
 pub fn package_from_current_dir(
-    dest: impl AsRef<Path>,
+    dest: Option<&str>,
 ) -> Result<SentencePackageOutcome, SentencePackageError> {
     let root = ProjectRoot::discover_from(current_dir()?)?;
-    package_from(&root, dest)
+    package_from_optional_dest(&root, dest)
+}
+
+pub fn package_from_optional_dest(
+    root: &ProjectRoot,
+    dest: Option<&str>,
+) -> Result<SentencePackageOutcome, SentencePackageError> {
+    let configured = if dest.is_some() {
+        None
+    } else {
+        load_config(root)?.sentence_package_destination
+    };
+    let destination = dest
+        .map(PathBuf::from)
+        .or_else(|| configured.map(|path| resolve_configured_destination(root, path)))
+        .ok_or(SentencePackageError::MissingDestination)?;
+    package_from(root, destination)
+}
+
+fn resolve_configured_destination(root: &ProjectRoot, path: PathBuf) -> PathBuf {
+    if path.is_absolute() {
+        path
+    } else {
+        root.join(path)
+    }
 }
 
 pub fn package_from(
@@ -427,11 +465,14 @@ fn path_string(path: &Path) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::package_from;
+    use super::{package_from, package_from_optional_dest};
     use crate::project::ProjectRoot;
     use std::fs;
     use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
     #[test]
     fn packages_sentence_json_and_referenced_audio() {
@@ -497,6 +538,44 @@ mod tests {
         fs::remove_dir_all(dest).unwrap();
     }
 
+    #[test]
+    fn uses_configured_package_destination_when_dest_is_omitted() {
+        let root = fixture_root();
+        fs::write(
+            root.join("hindi.toml"),
+            r#"
+[package]
+sentences_destination = "packages/sentences"
+"#,
+        )
+        .unwrap();
+        fs::write(
+            root.join("output/sentences/example_batch_01.json"),
+            r#"{"sentences":[{"hindi":"नमस्ते।","romanisation":"namaste.","english":"Hello."}]}"#,
+        )
+        .unwrap();
+        let project = ProjectRoot::discover_from(&root).unwrap();
+
+        let outcome = package_from_optional_dest(&project, None).unwrap();
+
+        assert_eq!(outcome.destination, root.join("packages/sentences"));
+        assert!(root.join("packages/sentences/manifest.json").is_file());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn reports_missing_destination_when_no_dest_or_config_exists() {
+        let root = fixture_root();
+        let project = ProjectRoot::discover_from(&root).unwrap();
+
+        let error = package_from_optional_dest(&project, None).unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("No package destination configured"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
     fn fixture_root() -> PathBuf {
         let root = temp_path("hindi-package-root");
         fs::create_dir_all(root.join("docs")).unwrap();
@@ -512,6 +591,7 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        std::env::temp_dir().join(format!("{label}-{}-{nanos}", std::process::id()))
+        let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+        std::env::temp_dir().join(format!("{label}-{}-{nanos}-{counter}", std::process::id()))
     }
 }

@@ -46,10 +46,13 @@ hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
-hindi sentences package --dest /tmp/hindi-sentences-package
+hindi sentences package
 hindi export
 hindi viewer
 ```
+
+`hindi sentences package` uses `[package].sentences_destination` from
+`hindi.toml` when present. Pass `--dest <folder>` to override it for one run.
 
 ## Active Docs
 

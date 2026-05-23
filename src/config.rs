@@ -9,6 +9,7 @@ const DEFAULT_SENTENCE_MODEL: &str = "ollama:translategemma:12b";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppConfig {
     pub sentence_generation_model: ModelSpec,
+    pub sentence_package_destination: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,6 +49,7 @@ pub fn load_config(root: &ProjectRoot) -> Result<AppConfig, ConfigError> {
         parse_sentence_model(&content).unwrap_or_else(|| DEFAULT_SENTENCE_MODEL.to_string());
     Ok(AppConfig {
         sentence_generation_model: ModelSpec::parse(&model)?,
+        sentence_package_destination: parse_package_destination(&content).map(PathBuf::from),
     })
 }
 
@@ -55,24 +57,33 @@ fn default_config() -> AppConfig {
     AppConfig {
         sentence_generation_model: ModelSpec::parse(DEFAULT_SENTENCE_MODEL)
             .expect("default sentence generation model is valid"),
+        sentence_package_destination: None,
     }
 }
 
 fn parse_sentence_model(content: &str) -> Option<String> {
-    let mut in_models = false;
+    parse_string_key(content, "models", "sentence_generation")
+}
+
+fn parse_package_destination(content: &str) -> Option<String> {
+    parse_string_key(content, "package", "sentences_destination")
+}
+
+fn parse_string_key(content: &str, section: &str, key: &str) -> Option<String> {
+    let mut in_section = false;
     for line in content.lines() {
         let line = line.split('#').next().unwrap_or_default().trim();
         if line.is_empty() {
             continue;
         }
         if line.starts_with('[') && line.ends_with(']') {
-            in_models = line == "[models]";
+            in_section = line == format!("[{section}]");
             continue;
         }
-        if !in_models {
+        if !in_section {
             continue;
         }
-        let Some(value) = line.strip_prefix("sentence_generation") else {
+        let Some(value) = line.strip_prefix(key) else {
             continue;
         };
         let Some((_, value)) = value.split_once('=') else {
@@ -112,7 +123,7 @@ impl ModelSpec {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_sentence_model, ModelSpec};
+    use super::{default_config, parse_package_destination, parse_sentence_model, ModelSpec};
 
     #[test]
     fn parses_sentence_generation_model_from_models_section() {
@@ -124,6 +135,28 @@ mod tests {
         );
 
         assert_eq!(model.as_deref(), Some("ollama:gemma4:latest"));
+    }
+
+    #[test]
+    fn parses_package_destination_from_package_section() {
+        let destination = parse_package_destination(
+            r#"
+            [models]
+            sentence_generation = "ollama:translategemma:12b"
+
+            [package]
+            sentences_destination = "/tmp/hindi-package"
+            "#,
+        );
+
+        assert_eq!(destination.as_deref(), Some("/tmp/hindi-package"));
+    }
+
+    #[test]
+    fn default_config_has_no_package_destination() {
+        let config = default_config();
+
+        assert!(config.sentence_package_destination.is_none());
     }
 
     #[test]

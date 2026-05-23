@@ -5,6 +5,12 @@ use std::path::{Path, PathBuf};
 const CONFIG_PATH: &str = "hindi.toml";
 const DEFAULT_CONFIG: &str = r#"[models]
 sentence_generation = "ollama:translategemma:12b"
+
+# Optional default for `hindi sentences package`.
+# Relative paths are resolved from this workspace root.
+#
+# [package]
+# sentences_destination = "packages/sentences"
 "#;
 
 const DIRECTORIES: [&str; 8] = [

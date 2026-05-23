@@ -203,7 +203,7 @@ Commands:
 ```bash
 hindi init
 hindi guide
-hindi sentences package --dest /tmp/hindi-sentences-package
+hindi sentences package
 hindi viewer
 hindi export
 ```
@@ -218,6 +218,8 @@ Acceptance:
 - Refreshing the viewer shows newly generated batches.
 - Package can copy accepted sentence JSON and referenced audio to a destination
   folder with project-relative audio links preserved.
+- Package destination can come from `[package].sentences_destination` in
+  `hindi.toml`; command-line `--dest` overrides it.
 - `hindi init` creates a self-contained workspace outside the source repo, and
   normal commands discover that workspace from `hindi.toml` or `input/sentences/`.
 - Export can produce an Anki artifact for all accepted groups by default, or a

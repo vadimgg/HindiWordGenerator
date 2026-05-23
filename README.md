@@ -43,10 +43,14 @@ hindi sentences plan --max-batches 1
 hindi sentences generate --max-batches 1
 hindi sentences review-output
 hindi sentences audio
-hindi sentences package --dest /tmp/hindi-sentences-package
+hindi sentences package
 hindi export
 hindi viewer
 ```
+
+`hindi sentences package` uses `[package].sentences_destination` from
+`hindi.toml` when present. Use `--dest /path/to/package` to override it for a
+single run.
 
 The CLI should check whether the expected Ollama model is installed and
 reachable. If it is not ready, it should print the exact `ollama run ...`
