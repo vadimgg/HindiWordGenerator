@@ -51,17 +51,19 @@ impl std::fmt::Display for ProjectRootError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             formatter,
-            "Project not found\n\nStarted from {}\n\nRun this command from HindiWordGenerator or one of its subdirectories.",
+            "Hindi workspace not found\n\nStarted from {}\n\nRun this command from a Hindi workspace or initialize the current folder:\n  hindi init",
             self.start.display()
         )
     }
 }
 
 fn is_project_root(path: &Path) -> bool {
-    path.join("docs/DESIGN.md").is_file()
-        && path.join("docs/ROADMAP.md").is_file()
-        && path.join("input").is_dir()
-        && path.join("output").is_dir()
+    path.join("hindi.toml").is_file()
+        || path.join("input/sentences").is_dir()
+        || (path.join("docs/DESIGN.md").is_file()
+            && path.join("docs/ROADMAP.md").is_file()
+            && path.join("input").is_dir()
+            && path.join("output").is_dir())
 }
 
 #[cfg(test)]
@@ -88,13 +90,36 @@ mod tests {
     }
 
     #[test]
+    fn discovers_workspace_from_hindi_toml() {
+        let root = temp_path("hindi-workspace");
+        fs::create_dir_all(root.join("nested/child")).unwrap();
+        fs::write(root.join("hindi.toml"), "").unwrap();
+
+        let discovered = ProjectRoot::discover_from(root.join("nested/child")).unwrap();
+
+        assert_eq!(discovered.path(), root.as_path());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn discovers_workspace_from_input_sentences() {
+        let root = temp_path("hindi-input-sentences");
+        fs::create_dir_all(root.join("input/sentences")).unwrap();
+
+        let discovered = ProjectRoot::discover_from(root.join("input/sentences")).unwrap();
+
+        assert_eq!(discovered.path(), root.as_path());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn fails_when_project_root_is_missing() {
         let root = temp_path("not-hindi-root");
         fs::create_dir_all(root.join("nested")).unwrap();
 
         let error = ProjectRoot::discover_from(root.join("nested")).unwrap_err();
 
-        assert!(error.to_string().contains("Project not found"));
+        assert!(error.to_string().contains("Hindi workspace not found"));
         fs::remove_dir_all(root).unwrap();
     }
 

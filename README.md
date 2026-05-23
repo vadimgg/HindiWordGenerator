@@ -19,7 +19,16 @@ files and checked before export.
 
 ## Rust Happy Path
 
-For normal use, let the CLI walk you through the process:
+Create a workspace anywhere:
+
+```bash
+mkdir my-hindi-work
+cd my-hindi-work
+hindi init
+```
+
+Add sentence YAML under `input/sentences/`, then let the CLI walk you through
+the process:
 
 ```bash
 hindi guide
@@ -58,6 +67,7 @@ uv run python archive/python/scripts/check-python-contracts.py
 
 ```text
 HindiWordGenerator/
+  hindi.toml                       # Optional workspace config
   agents/                         # Active local agent packs and standards
   archive/                        # Previous Python runtime, scripts, tests, docs
   docs/                           # Active design, roadmap, romanisation policy

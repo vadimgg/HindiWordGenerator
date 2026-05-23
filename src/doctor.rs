@@ -159,7 +159,7 @@ impl DoctorReport {
         }
 
         output.push_str("Next\n");
-        output.push_str("  cargo run -- sentences plan --max-batches 1");
+        output.push_str("  hindi sentences plan --max-batches 1");
         output
     }
 }

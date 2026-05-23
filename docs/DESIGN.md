@@ -23,6 +23,7 @@ input/sentences/*.yaml
 The Rust CLI should feel small:
 
 ```bash
+hindi init
 hindi guide
 
 # or step by step:
@@ -38,6 +39,30 @@ hindi viewer
 
 Sentence commands are explicit from the start so word generation can be added
 later without changing the command surface.
+
+## Workspace Discovery
+
+The installed CLI is workspace-based. `hindi init` creates a self-contained
+workspace in the current folder:
+
+```text
+hindi.toml
+input/sentences/
+input/words/
+output/sentences/
+output/words/
+audio/sentences/
+audio/words/
+runs/
+exports/
+```
+
+Commands discover the workspace by walking upward from the current directory and
+accepting either `hindi.toml`, `input/sentences/`, or the full repo docs/data
+layout as the root. Accepted JSON, generated audio, runs, exports, and packages
+are written relative to that root. The default layout keeps source, output, and
+audio together in one folder so temporary processing workspaces can be moved or
+deleted as a unit.
 
 ## Source Input
 

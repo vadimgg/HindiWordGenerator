@@ -5,6 +5,7 @@ mod doctor;
 mod eval;
 mod export;
 mod guide;
+mod init;
 mod ollama;
 mod project;
 mod run_report;
@@ -29,6 +30,20 @@ fn main() -> ExitCode {
             println!("{}", cli::help_text());
             ExitCode::SUCCESS
         }
+        Ok(cli::Command::InitHelp) => {
+            println!("{}", cli::init_help_text());
+            ExitCode::SUCCESS
+        }
+        Ok(cli::Command::Init) => match init::init_current_dir() {
+            Ok(report) => {
+                println!("{}", report.render());
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("{error}");
+                ExitCode::from(1)
+            }
+        },
         Ok(cli::Command::GuideHelp) => {
             println!("{}", cli::guide_help_text());
             ExitCode::SUCCESS

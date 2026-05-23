@@ -17,6 +17,7 @@ This is the active implementation plan. Older detailed planning drafts live in
 | Local sentence generation | Done |
 | Audio parity | Done |
 | Viewer/export parity | Done |
+| Installed workspace init | Done |
 
 ## M1: Rust CLI Skeleton
 
@@ -200,6 +201,7 @@ output.
 Commands:
 
 ```bash
+hindi init
 hindi guide
 hindi sentences package --dest /tmp/hindi-sentences-package
 hindi viewer
@@ -216,6 +218,8 @@ Acceptance:
 - Refreshing the viewer shows newly generated batches.
 - Package can copy accepted sentence JSON and referenced audio to a destination
   folder with project-relative audio links preserved.
+- `hindi init` creates a self-contained workspace outside the source repo, and
+  normal commands discover that workspace from `hindi.toml` or `input/sentences/`.
 - Export can produce an Anki artifact for all accepted groups by default, or a
   filtered artifact with `--source` and `--topic`.
 - `hindi guide` walks through doctor, source ID check, planning, generation,

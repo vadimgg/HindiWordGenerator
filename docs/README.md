@@ -16,7 +16,15 @@ runtime remains available as a behavior reference.
 
 ## Start Here
 
-For normal use, start with the guided Rust workflow:
+For normal use, create a workspace anywhere:
+
+```bash
+mkdir my-hindi-work
+cd my-hindi-work
+hindi init
+```
+
+Add sentence YAML under `input/sentences/`, then start the guided Rust workflow:
 
 ```bash
 hindi guide

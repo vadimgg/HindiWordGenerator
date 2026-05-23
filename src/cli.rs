@@ -1,6 +1,8 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Help,
+    Init,
+    InitHelp,
     Guide {
         max_batches: usize,
     },
@@ -91,6 +93,9 @@ where
     match args.as_slice() {
         [] => Ok(Command::Help),
         [flag] if is_help_flag(flag) => Ok(Command::Help),
+        [command] if command == "init" => Ok(Command::Init),
+        [command, flag] if command == "init" && is_help_flag(flag) => Ok(Command::InitHelp),
+        [command, ..] if command == "init" => Err(CliError::new("Usage: hindi init")),
         [command] if command == "guide" || command == "start" => {
             Ok(Command::Guide { max_batches: 1 })
         }
@@ -417,7 +422,11 @@ fn is_help_flag(value: &str) -> bool {
 }
 
 pub fn help_text() -> &'static str {
-    "Hindi Word Generator\n\nUsage:\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package --dest <folder>\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, package, or review sentence output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
+    "Hindi Word Generator\n\nUsage:\n  hindi init\n  hindi guide [--max-batches <n>]\n  hindi doctor\n  hindi source ids check\n  hindi source ids migrate [--check]\n  hindi sentences plan --max-batches <n>\n  hindi sentences generate --max-batches <n>\n  hindi sentences audio\n  hindi sentences package --dest <folder>\n  hindi sentences review-source\n  hindi sentences review-output\n  hindi eval run <prompt-id> <input-yaml> [--fields <list>] [--max-items <n>]\n  hindi eval grade <run-id-or-path> [--response <path>]\n  hindi eval report [--no-color] [--verbose] [--history] [--output none|failures|all]\n  hindi viewer\n  hindi export [--source <title>] [--topic <subtitle>]\n\nCommands:\n  init         Create a self-contained Hindi workspace in the current folder\n  guide        Step through the normal sentence workflow interactively\n  doctor       Check project paths, prompts, and Ollama reachability\n  source ids   Validate or migrate source YAML item IDs\n  sentences    Plan, generate, backfill audio, package, or review sentence output\n  eval         Run, grade, or report prompt experiments under eval/\n  viewer       Serve the Astro preview/export app\n  export       Select accepted sentence groups and write an Anki import artifact"
+}
+
+pub fn init_help_text() -> &'static str {
+    "Hindi Word Generator\n\nUsage:\n  hindi init\n\nCreates a self-contained Hindi workspace in the current folder:\n  hindi.toml\n  input/sentences/\n  input/words/\n  output/sentences/\n  output/words/\n  audio/sentences/\n  audio/words/\n  runs/\n  exports/\n\nExisting hindi.toml is preserved."
 }
 
 pub fn guide_help_text() -> &'static str {
@@ -466,6 +475,8 @@ mod tests {
 
     #[test]
     fn exposes_doctor_command() {
+        assert_eq!(parse(["init"]).unwrap(), Command::Init);
+        assert_eq!(parse(["init", "--help"]).unwrap(), Command::InitHelp);
         assert_eq!(parse(["guide"]).unwrap(), Command::Guide { max_batches: 1 });
         assert_eq!(parse(["start"]).unwrap(), Command::Guide { max_batches: 1 });
         assert_eq!(
