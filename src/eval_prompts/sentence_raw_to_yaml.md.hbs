@@ -4,51 +4,73 @@ flashcard workflow.
 The user will paste your response into a CLI that validates simple YAML shape
 and writes the file to `input/sentences/`.
 
-Return raw YAML only. Do not wrap the response in Markdown fences. Do not add
-prose before or after the YAML.
+Wrap your entire response in a single ```yaml ... ``` fence and nothing else.
+No prose before or after the fence.
 
-Required output shape:
+Required output shape (two items shown to make list syntax clear):
 
-```yaml
-title: Complete Hindi
-subtitle: Chapter 06 Dialog 01
+title: "{{suggested_title}}"
+subtitle: "{{suggested_subtitle}}"
 items:
   - id: "0001"
-    hindi: "प्रकाश, बताइए, आपका मेहमान प्रताप – वह क्या करता है?"
-    romanisation: "Prakāś, batāie, āpkā mehmān Pratāp – vah kyā kartā hai?"
-    english: "Prakash, tell me, your guest Pratap — what does he do?"
+    hindi: "…first Hindi sentence…"
+    romanisation: "…romanisation…"
+    english: "…English translation…"
     tags:
-      - complete-hindi
-      - chapter-06
-      - dialog-01
-```
+      - title-slug
+      - subtitle-slug
+  - id: "0002"
+    hindi: "…second Hindi sentence…"
+    romanisation: "…romanisation…"
+    english: "…English translation…"
+    tags:
+      - title-slug
+      - subtitle-slug
 
 Rules:
 
 - Keep only useful learner sentence material.
-- Remove ads, URLs, page headers, page footers, duplicated whitespace, and copied
-  website/book chrome.
-- If the raw file has English / Hindi / romanisation triples, preserve the
-  meaning but normalize romanisation to this project's learner style.
-- If the raw file has a Hindi dialogue followed by an English dialogue, align
-  the corresponding lines.
-- If the raw file is Hindi-only, produce learner-friendly romanisation and a
-  natural English translation.
-- Preserve speakers inside the sentence when useful. For example, a dialogue
-  line can remain as the spoken sentence, while the speaker name can become a
-  tag only if it helps.
+- Strip ads, URLs, page headers, footers, duplicated whitespace, book colophon
+  lines ("Excerpt From", author names, "This material may be protected by
+  copyright."), and all other copied website or book chrome.
+- If the raw file has English / Hindi / romanisation triples, re-derive the
+  romanisation from the Hindi script rather than copying the source romanisation,
+  which is often garbled or inconsistent.
+- If the raw file has a Hindi dialogue block followed by a separate English
+  dialogue block, align them by position: first Hindi line ↔ first English line,
+  second ↔ second, and so on.
+- If the raw file is Hindi-only, produce romanisation and a natural English
+  translation from scratch.
+- Noun phrases without a verb (e.g. "My brother", "Raj's car") — skip them
+  unless the source provides a full sentence using the same phrase nearby, in
+  which case keep only the sentence.
+- Stage directions or asides in brackets — include as an item if they form a
+  complete sentence; otherwise discard.
+- Do not put speaker names in the hindi or english fields. A speaker name may
+  become a tag (e.g. speaker-suresh) only if that speaker appears in 3 or more
+  items.
 - Prefer sentence-level items. Do not combine unrelated sentences into one item.
-- Assign stable string IDs starting at `"0001"` and increasing by one.
-- Every item must have `hindi`, `romanisation`, and `english`.
-- Add useful `tags` when they are obvious from the title, subtitle, filename, or
-  raw text.
+- Assign stable string IDs starting at "0001" and increasing by one.
+- Every item must have hindi, romanisation, and english.
+- Add useful tags when they are obvious from the title, subtitle, filename, or
+  raw text. Always include the title slug and subtitle slug as tags.
 
 Romanisation style:
 
+- Derive romanisation from the Hindi script directly.
 - Use learner-friendly diacritics: ā, ī, ū, ṛ, ṭ, ḍ, ṇ, ś, ṣ.
-- Use nasal vowels like ã, ĩ, ũ, ẽ, õ when the sound is nasalized.
-- Avoid `ṃ`, `ṁ`, `main`, `maiṃ`, and inconsistent plain ASCII romanisation.
-- Show Hindi and romanisation as matching sentence readings.
+- Use nasal vowels: ã, ĩ, ũ, ẽ, õ on the vowel that is nasalized.
+- The pronoun मैं is always romanised maĩ. Never use maiṃ, maiṁ, maiṅ, or main.
+- Write postpositions as separate words: mẽ, se, kā, kī, ke, ko, par, tak.
+- Capitalise proper nouns only (people, cities, countries).
+- Aspirates always include h: kh, gh, ch, jh, ṭh, ḍh, th, dh, ph, bh.
+
+OCR and source corruption:
+
+- Some Devanagari in the source may be garbled by OCR (wrong, missing, or
+  substituted characters). Silently correct these using the English gloss and
+  context. If correction is ambiguous, produce your best reading — do not skip
+  the item.
 
 Source filename:
 
