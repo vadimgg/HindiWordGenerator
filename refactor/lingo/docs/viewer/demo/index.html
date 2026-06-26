@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lingo · Generation Studio (mock)</title>
+<style>
+  /* ── Palette lifted from apps/viewer/src/styles/partials ─────────────── */
+  :root{
+    --amber:#fbbf24; --orange:#f97316; --teal:#5eead4; --hindi:#fbbf24;
+    --slate:#475569; --slate2:#64748b; --slate3:#94a3b8; --ink:#e2e8f0;
+    --red:#f87171; --warn:#f59e0b;
+    --panel:linear-gradient(145deg,#131f35,#0f172a);
+    --border:rgba(51,65,85,.5);
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;color:var(--ink);
+    background:radial-gradient(ellipse at 30% 20%,#0d1829 0%,#020617 70%) fixed;
+    font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-size:15px;line-height:1.5;
+  }
+  .devanagari{font-family:'Tiro Devanagari Hindi','Noto Sans Devanagari',serif}
+  .cond{font-family:'Barlow Condensed','Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+
+  /* ── Nav ─────────────────────────────────────────────────────────────── */
+  nav{position:sticky;top:0;z-index:50;display:flex;align-items:stretch;gap:0;
+    padding:0 1.5rem;background:rgba(2,6,23,.95);backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(51,65,85,.4);box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .brand{display:flex;align-items:center;gap:.6rem;padding:.875rem 0;margin-right:auto}
+  .brand .mark{background:linear-gradient(135deg,var(--amber),var(--orange));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:1.1rem}
+  .brand .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.22em;color:var(--slate)}
+  .navitems{display:flex}
+  .navitem{display:flex;flex-direction:column;align-items:center;gap:.2rem;
+    padding:0 1.1rem;min-width:4.2rem;border:0;background:none;color:var(--slate);
+    cursor:pointer;position:relative;font:inherit}
+  .navitem .lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em}
+  .navitem.active{color:var(--amber)}
+  .navitem.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;height:2px;background:linear-gradient(90deg,var(--amber),var(--orange))}
+
+  .shell{max-width:760px;margin:0 auto;padding:0 1.5rem 5rem}
+
+  /* ── Pipeline rail ───────────────────────────────────────────────────── */
+  .rail{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,.5);padding:1.1rem 1.25rem;margin:1.75rem 0}
+  .rail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.9rem;gap:1rem}
+  .rail-ws{font-size:13px;color:var(--slate3)}
+  .rail-ws b{color:var(--ink)}
+  .gear{border:1px solid var(--border);background:rgba(15,23,42,.7);color:var(--slate3);
+    border-radius:8px;padding:.35rem .7rem;cursor:pointer;font:inherit;font-size:12px}
+  .gear:hover{color:var(--ink)}
+  table.rail-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .rail-tbl th{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.12em;
+    font-size:10px;color:var(--slate);text-align:center;padding:.2rem .3rem;font-weight:700}
+  .rail-tbl th:first-child{text-align:left}
+  .rail-tbl td{padding:.4rem .3rem;text-align:center;border-top:1px solid rgba(51,65,85,.25)}
+  .rail-tbl td:first-child{text-align:left;font-weight:600;color:var(--ink)}
+  .rail-tbl tr.sel td:first-child{color:var(--amber)}
+  .rail-tbl tr{cursor:pointer}
+  .rail-tbl tr:hover td{background:rgba(30,41,59,.35)}
+  .dot{font-size:14px}
+  .dot.done{color:var(--teal)} .dot.part{color:var(--amber)} .dot.next{color:var(--amber)} .dot.wait{color:var(--slate)}
+  .summ{font-size:12px;color:var(--slate3);text-align:right}
+  .qa{color:var(--amber);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.1em;font-size:11px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.1);border-radius:6px;padding:2px 8px;cursor:pointer}
+  .newrow td{color:var(--slate2);font-style:italic;text-align:left!important}
+
+  /* ── Stepper ─────────────────────────────────────────────────────────── */
+  .stepper{display:flex;align-items:center;gap:.4rem;margin:1.75rem 0 1rem;flex-wrap:wrap}
+  .step{display:flex;align-items:center;gap:.45rem;border:1px solid var(--border);
+    background:rgba(15,23,42,.55);border-radius:99px;padding:.35rem .85rem;cursor:pointer;
+    font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:700;color:var(--slate2)}
+  .step .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;background:rgba(71,85,105,.4);color:var(--slate3)}
+  .step.active{border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 2px rgba(251,191,36,.15)}
+  .step.active .n{background:linear-gradient(135deg,var(--amber),var(--orange));color:#0b1220}
+  .step.done{color:var(--teal);border-color:rgba(94,234,212,.35)}
+  .step.done .n{background:rgba(94,234,212,.18);color:var(--teal)}
+  .step-sep{color:var(--slate);font-size:11px}
+
+  /* ── Panels ──────────────────────────────────────────────────────────── */
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    box-shadow:0 8px 32px rgba(0,0,0,.5);padding:1.35rem 1.4rem;margin-bottom:1.25rem}
+  .panel h2{margin:0 0 .15rem;font-family:'Barlow Condensed',sans-serif;font-size:1.45rem;
+    text-transform:uppercase;letter-spacing:.14em;color:var(--ink);font-weight:700}
+  .panel .sub{color:var(--slate2);font-size:13px;margin:0 0 1.1rem}
+  .hidden{display:none!important}
+
+  label.fld{display:block;margin:.7rem 0}
+  label.fld .cap{display:block;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:700;color:var(--slate3);margin-bottom:.3rem}
+  input[type=text],textarea{width:100%;background:rgba(15,23,42,.8);border:1px solid var(--border);
+    border-radius:8px;padding:.6rem .75rem;color:var(--ink);font:inherit;outline:none;caret-color:var(--amber)}
+  textarea{resize:vertical;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.55}
+  input:focus,textarea:focus{border-color:rgba(251,191,36,.4);box-shadow:0 0 0 2px rgba(251,191,36,.1)}
+  .hint{font-size:11px;color:var(--slate);margin-top:.25rem}
+  .modes{display:flex;gap:.5rem;margin:.4rem 0 .9rem;flex-wrap:wrap}
+  .mode{border:1px solid var(--border);background:rgba(15,23,42,.6);color:var(--slate3);
+    border-radius:8px;padding:.4rem .8rem;cursor:pointer;font:inherit;font-size:13px}
+  .mode.active{border-color:var(--amber);color:var(--amber);background:rgba(251,191,36,.1)}
+
+  .btn{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.14em;
+    font-weight:700;font-size:13px;border-radius:8px;padding:.6rem 1.1rem;cursor:pointer;border:1px solid var(--border);background:rgba(15,23,42,.7);color:var(--slate3)}
+  .btn:hover{color:var(--ink)}
+  .btn.primary{border:0;color:#0b1220;background:linear-gradient(135deg,var(--amber),var(--orange))}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+  .spacer{flex:1}
+
+  /* ── Packet Exchange ─────────────────────────────────────────────────── */
+  .pe-steps{display:flex;gap:.5rem;color:var(--slate2);font-size:12px;margin-bottom:.9rem;flex-wrap:wrap}
+  .pe-steps b{color:var(--amber)}
+  .panes{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+  @media(max-width:680px){.panes{grid-template-columns:1fr}}
+  .pane{display:flex;flex-direction:column}
+  .pane .ph{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:var(--slate);margin-bottom:.35rem;display:flex;justify-content:space-between}
+  pre.packet{margin:0;background:rgba(2,6,23,.7);border:1px solid var(--border);border-radius:8px;
+    padding:.7rem .8rem;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.55;
+    color:#cbd5e1;max-height:230px;overflow:auto;white-space:pre-wrap}
+  .links{font-size:12px;color:var(--slate2);margin-top:.5rem}
+  .links a{color:var(--teal);text-decoration:none}
+  .links a:hover{text-decoration:underline}
+
+  .note{font-size:12px;color:var(--slate2);margin-top:.9rem;border-top:1px solid rgba(51,65,85,.3);padding-top:.7rem}
+  .toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#0f172a;border:1px solid rgba(94,234,212,.4);
+    color:var(--teal);padding:.6rem 1rem;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);font-size:13px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+  /* problems / report */
+  .problems{margin-top:.9rem;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.08);border-radius:8px;padding:.7rem .85rem}
+  .problems h4{margin:0 0 .4rem;color:var(--red);font-size:12px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.12em}
+  .problems li{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#fecaca;margin:.2rem 0}
+  .report div{display:flex;gap:.5rem;align-items:baseline;padding:.25rem 0;font-size:13.5px}
+  .ok{color:var(--teal)} .warnc{color:var(--warn)} .err{color:var(--red)}
+
+  /* card review */
+  .card{border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;margin:.7rem 0;background:rgba(2,6,23,.35)}
+  .card .hi{font-size:1.5rem;color:var(--hindi);line-height:1.2}
+  .card .rom{color:var(--teal);font-size:.95rem;margin-top:.15rem}
+  .card .en{color:var(--slate3);font-size:.9rem;margin-top:.2rem}
+  .card .words{color:var(--slate2);font-size:.82rem;margin-top:.4rem}
+  .play{float:right;border:1px solid rgba(94,234,212,.3);background:rgba(94,234,212,.08);color:var(--teal);border-radius:6px;padding:1px 8px;font-size:12px;cursor:pointer}
+
+  .radio,.check{display:flex;align-items:center;gap:.5rem;font-size:13.5px;color:var(--slate3);margin:.4rem 0;cursor:pointer}
+  .progress{height:8px;border-radius:99px;background:rgba(71,85,105,.35);overflow:hidden;margin:.6rem 0}
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--orange));transition:width .25s}
+  select{background:rgba(15,23,42,.8);border:1px solid var(--border);border-radius:8px;color:var(--ink);padding:.45rem .6rem;font:inherit}
+
+  /* settings drawer */
+  .drawer-bg{position:fixed;inset:0;background:rgba(2,6,23,.6);z-index:60;display:none}
+  .drawer-bg.show{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,92vw);z-index:61;background:#0b1424;
+    border-left:1px solid var(--border);box-shadow:-12px 0 40px rgba(0,0,0,.5);padding:1.4rem;transform:translateX(100%);transition:transform .22s}
+  .drawer.show{transform:none}
+  .drawer h3{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:1.1rem;margin:.2rem 0 .2rem}
+  .drawer .grp{border-top:1px solid rgba(51,65,85,.35);padding:.9rem 0}
+  .drawer .grp .gl{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--amber);margin-bottom:.5rem}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:rgba(15,23,42,.7);color:var(--slate2);padding:.35rem .8rem;font:inherit;font-size:12px;cursor:pointer}
+  .seg button.on{background:rgba(251,191,36,.14);color:var(--amber)}
+  .keyok{color:var(--teal)} .keyno{color:var(--warn)}
+
+  .mockbadge{position:fixed;top:.5rem;right:.6rem;z-index:80;font-size:10px;letter-spacing:.14em;color:var(--slate);
+    border:1px solid var(--border);border-radius:99px;padding:2px 9px;background:rgba(2,6,23,.7);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="mockbadge">Mock · fake data</div>
+
+<nav>
+  <div class="brand"><span class="mark">✦</span><span class="name">Lingo</span></div>
+  <div class="navitems">
+    <button class="navitem"><span>◈</span><span class="lbl">Words</span></button>
+    <button class="navitem"><span>❝</span><span class="lbl">Sentences</span></button>
+    <button class="navitem active"><span>✎</span><span class="lbl">Studio</span></button>
+    <button class="navitem"><span>⊙</span><span class="lbl">Deliver</span></button>
+    <button class="navitem"><span>◇</span><span class="lbl">QA</span></button>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- Pipeline rail -->
+  <div class="rail">
+    <div class="rail-head">
+      <div class="rail-ws">Workspace <b>hindi-practice</b> &nbsp;·&nbsp; Hindi · 3 batches · 41 sentences</div>
+      <button class="gear" id="openSettings">⚙ Settings</button>
+    </div>
+    <table class="rail-tbl">
+      <thead><tr><th>Batch</th><th>Raw</th><th>Import</th><th>Build</th><th>Check</th><th>Audio</th><th></th></tr></thead>
+      <tbody>
+        <tr data-batch="introduce_yourself">
+          <td>introduce_yourself</td>
+          <td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot done">●</span></td>
+          <td class="summ">✓ done</td>
+        </tr>
+        <tr class="sel" data-batch="chapter_02">
+          <td>chapter_02</td>
+          <td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot part">◐</span></td>
+          <td class="summ">12/17 audio &nbsp;<span class="qa">▸ Resume</span></td>
+        </tr>
+        <tr data-batch="chapter_03">
+          <td>chapter_03</td>
+          <td><span class="dot done">●</span></td><td><span class="dot done">●</span></td><td><span class="dot next">○</span></td><td><span class="dot wait">–</span></td><td><span class="dot wait">–</span></td>
+          <td class="summ">needs build &nbsp;<span class="qa">▸ Build</span></td>
+        </tr>
+        <tr class="newrow"><td colspan="7" id="newBatch">+ New batch from raw text…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper" id="stepper">
+    <button class="step" data-stage="0"><span class="n">1</span>Raw</button><span class="step-sep">──</span>
+    <button class="step" data-stage="1"><span class="n">2</span>Import</button><span class="step-sep">──</span>
+    <button class="step" data-stage="2"><span class="n">3</span>Build</button><span class="step-sep">──</span>
+    <button class="step" data-stage="3"><span class="n">4</span>Check</button><span class="step-sep">──</span>
+    <button class="step" data-stage="4"><span class="n">5</span>Audio</button>
+  </div>
+
+  <!-- ───────── Stage 0 · Raw ───────── -->
+  <section class="panel" data-panel="0">
+    <h2>New batch · Raw text</h2>
+    <p class="sub">Paste source material, drop a file, or pick one already under <code>raw/</code>. This is the one step the CLI can't do for you — it writes <code>raw/&lt;batch&gt;.md</code> for you.</p>
+    <div class="modes">
+      <button class="mode active">Paste it</button>
+      <button class="mode">Drop a file</button>
+      <button class="mode">Pick from raw/</button>
+    </div>
+    <label class="fld"><span class="cap">Raw text</span>
+      <textarea id="rawText" style="min-height:150px">I am a boy
+मैं लड़का हूँ
+maĩ laṛkā hū̃
+
+I am a girl
+मैं लड़की हूँ
+maĩ laṛkī hū̃</textarea></label>
+    <label class="fld"><span class="cap">Batch id  ·  --batch</span>
+      <input type="text" id="batchId" value="introduce_yourself"><div class="hint">auto from filename · editable</div></label>
+    <label class="fld"><span class="cap">Title  ·  --title</span>
+      <input type="text" id="title" value="Introduce Yourself"><div class="hint">optional · auto from id</div></label>
+    <label class="fld"><span class="cap">Subtitle  ·  --subtitle</span>
+      <input type="text" id="subtitle" placeholder="optional"></label>
+    <div class="row">
+      <span class="hint">Saves to <code>raw/introduce-yourself.md</code></span>
+      <span class="spacer"></span>
+      <button class="btn">Cancel</button>
+      <button class="btn primary" data-go="1">Save &amp; Import →</button>
+    </div>
+  </section>
+
+  <!-- ───────── Stage 1 · Import (Packet Exchange) ───────── -->
+  <section class="panel hidden" data-panel="1">
+    <h2>Import · introduce_yourself</h2>
+    <p class="sub">Raw text → reviewed source YAML. <a class="links" href="#" style="color:var(--teal)">Tune prompt ↗</a></p>
+    <div class="pe-steps"><span><b>①</b> Copy packet</span>·<span><b>②</b> Paste into ChatGPT / Claude, copy reply</span>·<span><b>③</b> Paste reply &amp; Apply</span></div>
+    <div class="panes">
+      <div class="pane">
+        <div class="ph"><span>Packet (read-only) · YAML expected</span><span>import prompt</span></div>
+        <pre class="packet" id="importPacket">You are helping build a Hindi study deck.
+For each source block, return YAML:
+
+format: source.v1
+items:
+  - target: "<devanagari>"
+    romanisation: "<iso-15919>"
+    english: "<gloss>"
+    tags: [ ... ]
+
+── source ──
+I am a boy
+मैं लड़का हूँ / maĩ laṛkā hū̃
+
+I am a girl
+मैं लड़की हूँ / maĩ laṛkī hū̃</pre>
+        <div class="row" style="margin-top:.6rem">
+          <button class="btn primary" data-copy="importPacket">⧉ Copy packet</button>
+          <button class="btn">Download</button>
+          <span class="links">open <a href="#" onclick="return false">ChatGPT ↗</a> · <a href="#" onclick="return false">Claude ↗</a></span>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="ph"><span>Reply (paste here)</span><span class="links"><a href="#" id="sampleImport" onclick="return false">fill sample ⤵</a></span></div>
+        <textarea id="importReply" placeholder="⌁ paste the model's YAML reply, then Apply"></textarea>
+        <div class="row" style="margin-top:.6rem">
+          <button class="btn">Open in editor</button>
+          <span class="spacer"></span>
+          <button class="btn primary" id="applyImport">Apply →</button>
+        </div>
+      </div>
+    </div>
+    <div id="importProblems"></div>
+    <div id="importReview"></div>
+    <p class="note">Lingo validates the reply locally; nothing is written to <code>input/</code> until it passes. Markdown fences are stripped automatically.</p>
+  </section>
+
+  <!-- ───────── Stage 2 · Build (Packet Exchange) ───────── -->
+  <section class="panel hidden" data-panel="2">
+    <h2>Build · introduce_yourself</h2>
+    <p class="sub">Reviewed sentences → enriched card JSON. <a class="links" href="#" style="color:var(--teal)">Tune prompt ↗</a></p>
+    <div class="pe-steps"><span><b>①</b> Copy packet</span>·<span><b>②</b> Paste into your model</span>·<span><b>③</b> Paste reply &amp; Apply</span></div>
+    <div class="panes">
+      <div class="pane">
+        <div class="ph"><span>Packet (read-only) · JSON expected</span><span>build prompt</span></div>
+        <pre class="packet" id="buildPacket">Enrich each reviewed sentence into a card.
+Return JSON: { "format":"cards.v1", "cards":[ ... ] }
+Each card: source_item, literal, register,
+tokens[], words[] (id, target, romanisation,
+meaning, kind, grammar[]), tags[].
+
+── reviewed sentences ──
+[a1] मैं लड़का हूँ · maĩ laṛkā hū̃ · I am a boy.
+[b2] मैं लड़की हूँ · maĩ laṛkī hū̃ · I am a girl.</pre>
+        <div class="row" style="margin-top:.6rem">
+          <button class="btn primary" data-copy="buildPacket">⧉ Copy packet</button>
+          <button class="btn">Download</button>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="ph"><span>Reply (paste here)</span><span class="links"><a href="#" id="sampleBuild" onclick="return false">fill sample ⤵</a></span></div>
+        <textarea id="buildReply" placeholder="⌁ paste the model's JSON reply, then Apply"></textarea>
+        <div class="row" style="margin-top:.6rem">
+          <button class="btn">Open in editor</button>
+          <span class="spacer"></span>
+          <button class="btn primary" id="applyBuild">Apply →</button>
+        </div>
+      </div>
+    </div>
+    <div id="buildProblems"></div>
+    <div id="buildReview"></div>
+    <p class="note">Build replies also pass deterministic <code>check_card_batch</code> before they're accepted.</p>
+  </section>
+
+  <!-- ───────── Stage 3 · Check ───────── -->
+  <section class="panel hidden" data-panel="3">
+    <h2>Check · introduce_yourself</h2>
+    <p class="sub">Deterministic validation — no model involved.</p>
+    <div class="report" id="checkReport">
+      <div class="ok">✓ 2 cards structurally valid</div>
+      <div class="ok">✓ romanisation reconstructs every sentence</div>
+      <div class="warnc">⚠ 2 cards missing audio — resolved in Stage 5</div>
+    </div>
+    <div class="row">
+      <button class="btn">Re-run check</button>
+      <span class="spacer"></span>
+      <button class="btn primary" data-go="4">Audio →</button>
+    </div>
+  </section>
+
+  <!-- ───────── Stage 4 · Audio ───────── -->
+  <section class="panel hidden" data-panel="4">
+    <h2>Audio · introduce_yourself</h2>
+    <p class="sub">Synthesize the missing clips.</p>
+    <div class="gl cond" style="color:var(--slate3);font-size:11px;margin-bottom:.3rem">Backend · --backend</div>
+    <label class="radio"><input type="radio" name="backend" checked> gTTS <span class="hint">(default · free)</span></label>
+    <label class="radio"><input type="radio" name="backend" id="elBackend"> ElevenLabs</label>
+    <div id="voiceWrap" class="hidden" style="margin:.3rem 0 .2rem 1.6rem">
+      <select><option>Rachel · 9BWtsMIN…</option><option>Adam · EXAVITQu…</option><option>Bella · pNInz6ob…</option></select>
+      <label class="check"><input type="checkbox"> Use for this run only <span class="hint">--for-run / --voice</span></label>
+      <div class="hint keyok">● ELEVENLABS_API_KEY detected</div>
+    </div>
+    <label class="check"><input type="checkbox"> Force re-synthesize clips that already exist <span class="hint">--force</span></label>
+    <p class="sub" id="audioStatus" style="margin:.9rem 0 .2rem">2 of 2 clips missing</p>
+    <div class="progress"><i id="audioBar"></i></div>
+    <div class="row">
+      <button class="btn primary" id="genAudio">Generate audio</button>
+    </div>
+    <div id="doneCard"></div>
+  </section>
+
+</div>
+
+<!-- Settings drawer -->
+<div class="drawer-bg" id="drawerBg"></div>
+<aside class="drawer" id="drawer">
+  <h3>Deck settings</h3>
+  <p class="hint">Writes back to <code>config.toml</code>.</p>
+  <div class="grp">
+    <div class="gl">Display</div>
+    <div class="check">Lead &nbsp; <span class="seg"><button class="on">Romanisation</button><button>Target</button></span></div>
+    <label class="check"><input type="checkbox" checked> Show secondary line</label>
+  </div>
+  <div class="grp">
+    <div class="gl">Audio</div>
+    <div class="check">Backend &nbsp; <span class="seg"><button class="on">gTTS</button><button>ElevenLabs</button></span></div>
+    <label class="fld"><span class="cap">ElevenLabs voice</span><input type="text" value="Rachel · 9BWtsMINqrJLrRacOk9x"></label>
+    <div class="hint keyok">● ELEVENLABS_API_KEY set (read from env — never stored)</div>
+  </div>
+  <div class="grp">
+    <div class="gl">Viewer</div>
+    <label class="check"><input type="checkbox" checked> Open browser on start</label>
+    <label class="fld" style="margin-top:.4rem"><span class="cap">Port · --port</span><input type="text" value="4321"></label>
+  </div>
+  <div class="row"><span class="spacer"></span><button class="btn" id="closeSettings">Close</button><button class="btn primary" id="closeSettings2">Save</button></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+// ── stage navigation ──────────────────────────────────────────────
+const reached={0:true,1:false,2:false,3:false,4:false};
+function showStage(n){
+  $$('[data-panel]').forEach(p=>p.classList.toggle('hidden',+p.dataset.panel!==n));
+  $$('.step').forEach(s=>{const i=+s.dataset.stage;s.classList.toggle('active',i===n);s.classList.toggle('done',reached[i]&&i<n);});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$$('.step').forEach(s=>s.onclick=()=>{const i=+s.dataset.stage;if(reached[i]||i===0)showStage(i);else toast('Finish the earlier stage first');});
+$$('[data-go]').forEach(b=>b.onclick=()=>{const n=+b.dataset.go;reached[n]=true;showStage(n);});
+$('#newBatch').onclick=()=>showStage(0);
+$$('.rail-tbl tr[data-batch]').forEach(r=>r.onclick=()=>{$$('.rail-tbl tr').forEach(x=>x.classList.remove('sel'));r.classList.add('sel');toast('Focused '+r.dataset.batch);});
+
+// ── copy buttons ──────────────────────────────────────────────────
+$$('[data-copy]').forEach(b=>b.onclick=async()=>{
+  const txt=$('#'+b.dataset.copy).textContent;
+  try{await navigator.clipboard.writeText(txt);}catch(e){}
+  const o=b.textContent;b.textContent='✓ copied';toast('Packet copied to clipboard');setTimeout(()=>b.textContent=o,1400);
+});
+
+// ── mode toggles ──────────────────────────────────────────────────
+$$('.modes').forEach(m=>$$('.mode',m).forEach(btn=>btn.onclick=()=>{[...m.children].forEach(c=>c.classList.remove('active'));btn.classList.add('active');}));
+
+// ── sample fillers ────────────────────────────────────────────────
+$('#sampleImport').onclick=()=>{$('#importReply').value=`format: source.v1
+items:
+  - target: "मैं लड़का हूँ"
+    romanisation: "maĩ laṛkā hū̃"
+    english: "I am a boy."
+    tags: [identity]
+  - target: "मैं लड़की हूँ"
+    romanisation: "maĩ laṛkī hū̃"
+    english: "I am a girl."
+    tags: [identity]`;toast('Sample reply filled');};
+
+$('#sampleBuild').onclick=()=>{$('#buildReply').value=`{ "format":"cards.v1", "cards":[
+  {"source_item":"a1","literal":"I boy am","register":"neutral",
+   "words":[{"id":"w1","target":"मैं","romanisation":"maĩ","meaning":"I","kind":"pron","grammar":[]}]},
+  {"source_item":"b2","literal":"I girl am","register":"neutral","words":[]}
+]}`;toast('Sample reply filled');};
+
+// ── import apply ──────────────────────────────────────────────────
+$('#applyImport').onclick=()=>{
+  const v=$('#importReply').value.trim();
+  const prob=$('#importProblems'), rev=$('#importReview');
+  prob.innerHTML='';rev.innerHTML='';
+  if(!v){toast('Empty reply — nothing changed');return;}
+  if(!/format:\s*source\.v1/.test(v)){
+    prob.innerHTML=`<div class="problems"><h4>Reply rejected — input/ unchanged</h4>
+      <ul><li>expected format "source.v1" (the value the packet asked for)</li>
+      <li>reply contains no recognisable source items</li></ul></div>`;
+    toast('Validation failed');return;
+  }
+  rev.innerHTML=`<div style="margin-top:1rem">
+    ${review('मैं लड़का हूँ','maĩ laṛkā hū̃','I am a boy.','')}
+    ${review('मैं लड़की हूँ','maĩ laṛkī hū̃','I am a girl.','')}
+    <div class="row"><span class="ok">✓ 2 sentences imported → input/sentences/introduce-yourself.yaml</span>
+    <span class="spacer"></span><button class="btn" onclick="document.querySelector('[data-copy=importPacket]').click()">Re-import</button>
+    <button class="btn primary" data-go2="2">Build →</button></div></div>`;
+  reached[1]=true;$('[data-go2="2"]').onclick=()=>{reached[2]=true;showStage(2);};
+  toast('2 sentences imported');
+};
+function review(hi,rom,en,extra){return `<div class="card"><div class="hi devanagari">${hi}</div><div class="rom">${rom}</div><div class="en">${en}</div>${extra}</div>`;}
+
+// ── build apply ───────────────────────────────────────────────────
+$('#applyBuild').onclick=()=>{
+  const v=$('#buildReply').value.trim();
+  const prob=$('#buildProblems'), rev=$('#buildReview');
+  prob.innerHTML='';rev.innerHTML='';
+  if(!v){toast('Empty reply — nothing changed');return;}
+  let ok=/"format"\s*:\s*"cards\.v1"/.test(v)&&/source_item/.test(v);
+  if(!ok){
+    prob.innerHTML=`<div class="problems"><h4>Reply rejected — output/ unchanged</h4>
+      <ul><li>build reply is invalid: expected JSON with "format":"cards.v1"</li>
+      <li>every card must reference an exact source_item id from the packet</li></ul></div>`;
+    toast('Validation failed');return;
+  }
+  rev.innerHTML=`<div style="margin-top:1rem">
+    ${buildCard('मैं लड़का हूँ','maĩ laṛkā hū̃','I am a boy.','I boy am','मैं (I·pron) · लड़का (boy·noun·m) · हूँ (am·verb)')}
+    ${buildCard('मैं लड़की हूँ','maĩ laṛkī hū̃','I am a girl.','I girl am','मैं (I·pron) · लड़की (girl·noun·f) · हूँ (am·verb)')}
+    <div class="row"><span class="ok">✓ 2 cards built · passed check_card_batch → output/sentences/introduce-yourself.json</span>
+    <span class="spacer"></span><button class="btn primary" data-go3="3">Check →</button></div></div>`;
+  reached[2]=true;$('[data-go3="3"]').onclick=()=>{reached[3]=true;showStage(3);};
+  toast('2 cards built');
+};
+function buildCard(hi,rom,en,lit,words){return `<div class="card"><button class="play">▶ play</button>
+  <div class="hi devanagari">❝ ${hi}</div><div class="rom">${rom} · ${en} · lit. "${lit}" · register: neutral</div>
+  <div class="words">▾ ${words}</div></div>`;}
+
+// ── audio ─────────────────────────────────────────────────────────
+$('#elBackend').onchange=e=>$('#voiceWrap').classList.toggle('hidden',!e.target.checked);
+$$('input[name=backend]')[0].onchange=()=>$('#voiceWrap').classList.add('hidden');
+$('#genAudio').onclick=()=>{
+  let p=0;const bar=$('#audioBar'),st=$('#audioStatus'),btn=$('#genAudio');
+  btn.disabled=true;
+  const iv=setInterval(()=>{p+=50;bar.style.width=p+'%';st.textContent=`synthesizing ${p/50}/2 …`;
+    if(p>=100){clearInterval(iv);st.textContent='2 of 2 clips synthesized · check re-run → green';btn.disabled=false;
+      reached[4]=true;
+      $('#doneCard').innerHTML=`<div class="card" style="margin-top:1.1rem;border-color:rgba(94,234,212,.35)">
+        <div class="cond" style="color:var(--teal);font-size:1.1rem">introduce_yourself is ready</div>
+        <div class="en">2 cards · 2 clips · checks green</div>
+        <div class="row"><button class="btn">View in Sentences</button><button class="btn">Package…</button><button class="btn">Export to Anki…</button></div></div>`;
+      toast('Audio complete · batch green');}
+  },450);
+};
+
+// ── settings drawer ───────────────────────────────────────────────
+function openD(){$('#drawer').classList.add('show');$('#drawerBg').classList.add('show');}
+function closeD(){$('#drawer').classList.remove('show');$('#drawerBg').classList.remove('show');}
+$('#openSettings').onclick=openD;$('#drawerBg').onclick=closeD;$('#closeSettings').onclick=closeD;
+$('#closeSettings2').onclick=()=>{closeD();toast('Saved to config.toml');};
+$$('.seg').forEach(seg=>$$('button',seg).forEach(b=>b.onclick=()=>{$$('button',seg).forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+
+// keyboard: Cmd/Ctrl+Enter applies in the visible packet exchange
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){
+  if(!$('[data-panel="1"]').classList.contains('hidden'))$('#applyImport').click();
+  else if(!$('[data-panel="2"]').classList.contains('hidden'))$('#applyBuild').click();
+}});
+
+showStage(0);
+</script>
+</body>
+</html>
