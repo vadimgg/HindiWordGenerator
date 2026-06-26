@@ -1,0 +1,15 @@
+[language]
+name = "Hindi"
+code = "hi"
+script = "Devanagari"
+direction = "ltr"
+
+[romanisation]
+convention = "iast-tilde"
+
+[audio.gtts]
+lang = "hi"
+
+[audio.elevenlabs]
+voice = "Aria"
+model = "eleven_multilingual_v2"

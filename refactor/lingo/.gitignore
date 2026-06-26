@@ -1,0 +1,9 @@
+/target/
+**/node_modules/
+**/dist/
+.DS_Store
+*.tmp
+
+# The compiled viewer entry point is embedded by lingo-cli.
+!apps/viewer/dist/
+!apps/viewer/dist/index.html

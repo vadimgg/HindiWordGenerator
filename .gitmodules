@@ -1,0 +1,3 @@
+[submodule "brief_common"]
+	path = brief_common
+	url = git@github.com:vadimgg/brief_common.git

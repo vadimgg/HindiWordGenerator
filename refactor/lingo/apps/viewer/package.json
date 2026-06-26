@@ -1,0 +1,17 @@
+{
+  "name": "@lingo/viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "astro check",
+    "build": "astro check && astro build"
+  },
+  "dependencies": {
+    "astro": "7.0.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.9",
+    "typescript": "6.0.3"
+  }
+}

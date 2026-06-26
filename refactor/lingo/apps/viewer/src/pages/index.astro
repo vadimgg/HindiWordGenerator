@@ -1,0 +1,141 @@
+---
+import CardView from "../components/CardView.astro";
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Read-only preview of Lingo study cards" />
+    <title>Lingo Viewer</title>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">Lingo</p>
+          <h1>Card viewer</h1>
+          <p id="summary" class="summary" aria-live="polite">Loading cards…</p>
+        </div>
+        <button id="toggle-lead" type="button" disabled>Swap lead</button>
+      </header>
+
+      <p id="error" class="state state--error" role="alert" hidden></p>
+      <p id="empty" class="state" hidden>No cards are available yet.</p>
+      <section id="cards" class="cards" aria-live="polite" aria-busy="true"></section>
+      <CardView />
+    </main>
+
+    <script>
+      import { loadSession } from "../lib/api";
+      import type { DisplayLead, ViewerCard } from "../lib/api";
+
+      const cardsElement = requireElement("cards");
+      const summaryElement = requireElement("summary");
+      const errorElement = requireElement("error");
+      const emptyElement = requireElement("empty");
+      const toggleElement = requireButton("toggle-lead");
+      const cardTemplate = requireTemplate("card-view-template");
+
+      let currentLead: DisplayLead = "romanisation";
+      let cards: ViewerCard[] = [];
+
+      void loadSession()
+        .then((session) => {
+          currentLead = session.lead;
+          cards = [...session.cards];
+          render();
+        })
+        .catch((error) => {
+          cardsElement.setAttribute("aria-busy", "false");
+          summaryElement.textContent = "Viewer unavailable";
+          errorElement.textContent = error instanceof Error ? error.message : "Unknown viewer error";
+          errorElement.hidden = false;
+        });
+
+      toggleElement.addEventListener("click", () => {
+        currentLead = currentLead === "romanisation" ? "target" : "romanisation";
+        cards = cards.map((card) =>
+          card.secondary === null
+            ? card
+            : { ...card, lead: card.secondary, secondary: card.lead },
+        );
+        render();
+      });
+
+      function render() {
+        cardsElement.replaceChildren(...cards.map(renderCard));
+        cardsElement.setAttribute("aria-busy", "false");
+        emptyElement.hidden = cards.length !== 0;
+        toggleElement.disabled = !cards.some((card) => card.secondary !== null);
+        summaryElement.textContent = `${cards.length} card${cards.length === 1 ? "" : "s"} · ${currentLead} lead`;
+      }
+
+      function renderCard(card: ViewerCard): DocumentFragment {
+        const fragment = cardTemplate.content.cloneNode(true);
+        if (!(fragment instanceof DocumentFragment)) {
+          throw new Error("card template did not clone into a document fragment");
+        }
+        const article = requireDescendant(fragment, "article");
+        article.dataset.cardId = card.id;
+        requireDescendant(fragment, ".card__lead").textContent = card.lead;
+        const secondary = requireDescendant(fragment, ".card__secondary");
+        secondary.hidden = card.secondary === null;
+        secondary.textContent = card.secondary ?? "";
+        requireDescendant(fragment, ".card__english").textContent = card.english;
+        requireDescendant(fragment, ".card__literal").textContent = card.literal;
+        requireDescendant(fragment, ".card__meta").textContent = `${card.register} · ${card.id}`;
+        const audio = requireAudio(fragment, ".card__audio");
+        audio.hidden = card.audio_url === null;
+        if (card.audio_url === null) {
+          audio.removeAttribute("src");
+        } else {
+          audio.src = card.audio_url;
+        }
+        return fragment;
+      }
+
+      function requireElement(id: string): HTMLElement {
+        const element = document.getElementById(id);
+        if (!(element instanceof HTMLElement)) {
+          throw new Error(`missing viewer element #${id}`);
+        }
+        return element;
+      }
+
+      function requireButton(id: string): HTMLButtonElement {
+        const element = document.getElementById(id);
+        if (!(element instanceof HTMLButtonElement)) {
+          throw new Error(`missing viewer button #${id}`);
+        }
+        return element;
+      }
+
+      function requireTemplate(id: string): HTMLTemplateElement {
+        const element = document.getElementById(id);
+        if (!(element instanceof HTMLTemplateElement)) {
+          throw new Error(`missing viewer template #${id}`);
+        }
+        return element;
+      }
+
+      function requireDescendant(root: ParentNode, selector: string): HTMLElement {
+        const element = root.querySelector(selector);
+        if (!(element instanceof HTMLElement)) {
+          throw new Error(`card template is missing ${selector}`);
+        }
+        return element;
+      }
+
+      function requireAudio(root: ParentNode, selector: string): HTMLAudioElement {
+        const element = root.querySelector(selector);
+        if (!(element instanceof HTMLAudioElement)) {
+          throw new Error(`card template is missing ${selector}`);
+        }
+        return element;
+      }
+    </script>
+  </body>
+</html>

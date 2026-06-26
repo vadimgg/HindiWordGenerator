@@ -1,0 +1,22 @@
+[package]
+name = "lingo-workspace-fs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lingo-application = { path = "../lingo-application" }
+lingo-domain = { path = "../lingo-domain" }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+serde_yaml.workspace = true
+toml.workspace = true
+dirs.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

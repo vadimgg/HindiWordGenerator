@@ -1,0 +1,18 @@
+[package]
+name = "lingo-audio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lingo-application = { path = "../lingo-application" }
+lingo-domain = { path = "../lingo-domain" }
+reqwest = { workspace = true, default-features = false, features = ["blocking", "json", "native-tls"] }
+secrecy.workspace = true
+serde = { workspace = true, features = ["derive"] }
+tempfile.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
