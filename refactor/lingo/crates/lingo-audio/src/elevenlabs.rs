@@ -75,10 +75,17 @@ impl AudioBackend for ElevenLabsBackend {
             })?;
         let status = response.status();
         if !status.is_success() {
+            let body = response
+                .text()
+                .unwrap_or_else(|error| format!("failed to read error response: {error}"));
             return Err(AudioAdapterError::backend(
                 self.id(),
                 classify_status(status),
-                format!("ElevenLabs returned HTTP {}", status.as_u16()),
+                format!(
+                    "ElevenLabs returned HTTP {}: {}",
+                    status.as_u16(),
+                    truncate_error_body(&body)
+                ),
             ));
         }
         if response
@@ -121,9 +128,18 @@ fn classify_status(status: StatusCode) -> AudioFailureClass {
     }
 }
 
+fn truncate_error_body(body: &str) -> String {
+    const LIMIT: usize = 500;
+    let body = body.trim();
+    if body.len() <= LIMIT {
+        return body.to_string();
+    }
+    format!("{}...", &body[..LIMIT])
+}
+
 #[cfg(test)]
 mod tests {
-    use super::classify_status;
+    use super::{classify_status, truncate_error_body};
     use lingo_domain::AudioFailureClass;
     use reqwest::StatusCode;
 
@@ -141,5 +157,13 @@ mod tests {
             classify_status(StatusCode::BAD_REQUEST),
             AudioFailureClass::InvalidRequest
         );
+    }
+
+    #[test]
+    fn truncates_long_provider_errors() {
+        let body = "x".repeat(600);
+        let truncated = truncate_error_body(&body);
+        assert!(truncated.len() < body.len());
+        assert!(truncated.ends_with("..."));
     }
 }

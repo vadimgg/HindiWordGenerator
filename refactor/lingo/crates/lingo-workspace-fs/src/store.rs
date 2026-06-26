@@ -295,7 +295,7 @@ fn starter_config(profile: &ProfileDefinition) -> String {
         profile
             .default_elevenlabs_voice
             .as_deref()
-            .unwrap_or("Aria"),
+            .unwrap_or("9BWtsMINqrJLrRacOk9x"),
         profile
             .default_elevenlabs_model
             .as_deref()

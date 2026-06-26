@@ -23,6 +23,7 @@ pub struct AudioCommand {
     pub batch: Option<BatchId>,
     pub mode: AudioMode,
     pub backend: Option<AudioBackendId>,
+    pub elevenlabs_voice: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -95,7 +96,10 @@ pub fn synthesize_audio(
                 language: context.audio.language.clone(),
                 primary,
                 fallback,
-                elevenlabs_voice: context.audio.elevenlabs_voice.clone(),
+                elevenlabs_voice: request
+                    .elevenlabs_voice
+                    .clone()
+                    .or_else(|| context.audio.elevenlabs_voice.clone()),
                 elevenlabs_model: context.audio.elevenlabs_model.clone(),
             })?;
             let audio_ref = deps.workspace.write_audio(card.id(), &audio)?;

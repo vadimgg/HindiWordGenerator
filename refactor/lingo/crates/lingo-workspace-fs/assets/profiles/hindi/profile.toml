@@ -11,5 +11,5 @@ convention = "iast-tilde"
 lang = "hi"
 
 [audio.elevenlabs]
-voice = "Aria"
+voice = "9BWtsMINqrJLrRacOk9x"
 model = "eleven_multilingual_v2"

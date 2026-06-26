@@ -117,10 +117,18 @@ pub struct CheckArgs {
 
 #[derive(Debug, Args)]
 pub struct AudioArgs {
+    #[command(subcommand)]
+    pub command: Option<AudioCommandArg>,
     #[arg(long)]
     pub batch: Option<String>,
     #[arg(long, value_enum)]
     pub backend: Option<AudioBackendArg>,
+    #[arg(
+        long,
+        value_name = "VOICE_ID",
+        help = "Use an ElevenLabs voice ID for this run only"
+    )]
+    pub voice: Option<String>,
     #[arg(long, help = "Replace audio even when a card already has it")]
     pub force: bool,
 }
@@ -129,6 +137,51 @@ pub struct AudioArgs {
 pub enum AudioBackendArg {
     Gtts,
     Elevenlabs,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum AudioCommandArg {
+    /// List ElevenLabs voices available to the configured API key.
+    Voices(AudioVoicesArgs),
+    /// Inspect or change audio voice settings.
+    Voice(AudioVoiceArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct AudioVoicesArgs {
+    #[arg(long, default_value_t = 25)]
+    pub limit: usize,
+}
+
+#[derive(Debug, Args)]
+pub struct AudioVoiceArgs {
+    #[command(subcommand)]
+    pub command: AudioVoiceCommandArg,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum AudioVoiceCommandArg {
+    /// Show the configured ElevenLabs voice.
+    Show,
+    /// Pick an ElevenLabs voice with fzf.
+    Select(AudioVoiceSelectArgs),
+    /// Set the deck's ElevenLabs voice ID.
+    Set {
+        #[arg(value_name = "VOICE_ID")]
+        voice: String,
+    },
+}
+
+#[derive(Debug, Args)]
+pub struct AudioVoiceSelectArgs {
+    #[arg(long, default_value_t = 50)]
+    pub limit: usize,
+    #[arg(long, help = "Use the selected voice for this synthesis run only")]
+    pub for_run: bool,
+    #[arg(long)]
+    pub batch: Option<String>,
+    #[arg(long, help = "Replace audio even when a card already has it")]
+    pub force: bool,
 }
 
 #[derive(Debug, Args)]
