@@ -1,0 +1,51 @@
+---
+/**
+ * WordCard section: Example Sentence.
+ *
+ * Responsible for: rendering the example sentence expandable section with
+ * Hindi sentence, romanisation, English translation, optional audio button,
+ * and optional word breakdown tokens.
+ *
+ * Dependencies: types.ts (ExampleSentence interface).
+ */
+// Responsible for: Example Sentence expandable section inside a word card
+import type { ExampleSentence } from '../../../utils/types';
+
+interface Props {
+  sentence: ExampleSentence;
+  /** Full audio src path for this sentence, e.g. '/audio/words/batch/लड़का_laṛkā/00_main.mp3'. If absent, no audio button rendered. */
+  audioSrc?: string;
+}
+const { sentence, audioSrc } = Astro.props;
+---
+
+<details class="group/det border-l-2 border-l-transparent hover:border-l-amber-400/20 hover:bg-white/[0.018] transition-colors">
+  <summary class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 cursor-pointer list-none select-none transition-colors">
+    <span class="font-title text-xs sm:text-sm font-bold tracking-[0.2em] uppercase text-slate-400 group-open/det:text-slate-200 group-hover/det:text-slate-400 transition-colors">Example</span>
+    <span class="text-slate-600 group-open/det:rotate-180 transition-transform duration-200 text-xs">▾</span>
+  </summary>
+  <div class="px-4 sm:px-6 pb-4 pt-1">
+    <div class="mb-3">
+      <span class="block font-hindi leading-snug mb-1" lang="hi" style="font-size:1.125rem;background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{sentence.hindi}</span>
+      <span class="block font-mono-dm text-teal-300/80 text-sm mb-2">{sentence.roman}</span>
+      <span class="block text-slate-300 italic" style="font-size:0.9375rem;">{sentence.english}</span>
+    </div>
+    {audioSrc && (
+      <div class="wc-audio-row">
+        <button class="wc-audio-btn" data-src={audioSrc} data-label="Play">🔊 Play</button>
+      </div>
+    )}
+    {sentence.breakdown && sentence.breakdown.length > 0 && (
+      <div class="border-t border-slate-700/30 mt-3">
+        {sentence.breakdown.map((token) => (
+          <div class="wc-ex-token flex items-baseline gap-2 py-2.5 border-b border-slate-700/20 last:border-b-0">
+            <span class="font-hindi text-amber-400 shrink-0" lang="hi" style="font-size:1rem;min-width:3.5rem;">{token.hindi}</span>
+            <span class="font-mono-dm text-teal-300/70 text-[13px] shrink-0" style="min-width:3.5rem;">{token.roman}</span>
+            <span class="text-slate-400 text-sm">— {token.meaning}</span>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</details>
+

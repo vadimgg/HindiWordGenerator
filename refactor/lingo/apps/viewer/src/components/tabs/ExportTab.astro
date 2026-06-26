@@ -1,0 +1,341 @@
+---
+// Responsible for: Deliver/Export page — AnkiConnect status, deck config, selected items, send button
+interface Props {
+  dataHealth: {
+    wordFiles: number;
+    sentenceFiles: number;
+    totalWords: number;
+    totalSentences: number;
+    wordAudioReady: number;
+    sentenceAudioReady: number;
+    sentenceTokenReady: number;
+  };
+}
+
+const { dataHealth } = Astro.props;
+
+const ankiConnectConfig = `{
+  "apiKey": null,
+  "webBindAddress": "127.0.0.1",
+  "webBindPort": 8765,
+  "webCorsOriginList": [
+    "http://127.0.0.1:4321",
+    "http://localhost:4321"
+  ]
+}`;
+---
+
+<div id="page-deliver" class="page">
+<div class="deliver-page">
+
+  <!-- Page header -->
+  <div class="deliver-header">
+    <h1 class="deliver-title">Deliver</h1>
+    <p class="deliver-subtitle">Advanced custom export for selected cards</p>
+  </div>
+
+  <!-- AnkiConnect status bar -->
+  <div class="anki-status-bar" id="deliver-status-bar">
+    <span class="anki-status-dot anki-status-dot-offline" id="deliver-status-dot"></span>
+    <span class="anki-status-label" id="deliver-status-label">
+      <strong>AnkiConnect</strong> &nbsp;Checking…
+    </span>
+    <span class="anki-status-spacer"></span>
+    <span class="anki-status-deck">localhost:8765</span>
+  </div>
+
+  <section class="data-health-panel" aria-labelledby="data-health-title">
+    <div class="data-health-head">
+      <div>
+        <span class="data-health-kicker">Data health</span>
+        <h2 id="data-health-title">Loaded and export-ready</h2>
+      </div>
+      <div class="data-health-total">
+        <span id="data-health-selected-total">{dataHealth.totalWords + dataHealth.totalSentences}</span>
+        <small>selected</small>
+      </div>
+    </div>
+
+    <div class="data-health-grid">
+      <div class="data-health-stat">
+        <span class="data-health-label">Words</span>
+        <strong>{dataHealth.totalWords}</strong>
+        <small>{dataHealth.wordFiles} {dataHealth.wordFiles === 1 ? 'file' : 'files'}</small>
+      </div>
+      <div class="data-health-stat">
+        <span class="data-health-label">Sentences</span>
+        <strong>{dataHealth.totalSentences}</strong>
+        <small>{dataHealth.sentenceFiles} {dataHealth.sentenceFiles === 1 ? 'file' : 'files'}</small>
+      </div>
+      <div class="data-health-stat">
+        <span class="data-health-label">Audio</span>
+        <strong id="data-health-audio-ready">{dataHealth.wordAudioReady + dataHealth.sentenceAudioReady}</strong>
+        <small id="data-health-audio-missing">
+          {(dataHealth.totalWords + dataHealth.totalSentences) - (dataHealth.wordAudioReady + dataHealth.sentenceAudioReady)} missing
+        </small>
+      </div>
+      <div class="data-health-stat">
+        <span class="data-health-label">Tokens</span>
+        <strong>{dataHealth.sentenceTokenReady}</strong>
+        <small>{dataHealth.totalSentences - dataHealth.sentenceTokenReady} legacy</small>
+      </div>
+    </div>
+
+    <div class="data-health-bars">
+      <div class="data-health-bar-row">
+        <span>Selected words</span>
+        <strong id="data-health-selected-words">{dataHealth.totalWords}</strong>
+      </div>
+      <div class="data-health-bar-row">
+        <span>Selected sentences</span>
+        <strong id="data-health-selected-sentences">{dataHealth.totalSentences}</strong>
+      </div>
+      <div class="data-health-bar-row">
+        <span>Selected cards missing audio</span>
+        <strong id="data-health-selected-missing-audio">
+          {(dataHealth.totalWords + dataHealth.totalSentences) - (dataHealth.wordAudioReady + dataHealth.sentenceAudioReady)}
+        </strong>
+      </div>
+      <div class="data-health-bar-row">
+        <span>Selected sentences missing word tokens</span>
+        <strong id="data-health-selected-token-issues">
+          {dataHealth.totalSentences - dataHealth.sentenceTokenReady}
+        </strong>
+      </div>
+      <div class="data-health-bar-row data-health-status-row" id="data-health-selected-status">
+        <span>Selected export readiness</span>
+        <strong id="data-health-selected-status-label">Ready</strong>
+      </div>
+    </div>
+
+    <div class="data-health-review" id="data-health-review">
+      <div class="data-health-review-head">
+        <span>Review details</span>
+        <strong id="data-health-review-count">0 issues</strong>
+      </div>
+      <p class="data-health-review-empty" id="data-health-review-empty">No selected card issues detected.</p>
+      <ul class="data-health-issue-list" id="data-health-issue-list"></ul>
+    </div>
+  </section>
+
+  <details class="anki-help-panel">
+    <summary class="anki-help-summary">
+      <span class="anki-help-icon">?</span>
+      <span class="anki-help-title">Anki setup</span>
+      <span class="anki-help-subtitle">Extension, permissions, and import config</span>
+      <span class="anki-help-chevron">▾</span>
+    </summary>
+
+    <div class="anki-help-body">
+      <div class="anki-help-grid">
+        <section class="anki-help-card">
+          <span class="anki-help-step">01</span>
+          <h2>AnkiConnect</h2>
+          <p>Install the AnkiConnect add-on in Anki, then restart Anki so the local bridge starts.</p>
+          <code>2055492159</code>
+        </section>
+
+        <section class="anki-help-card">
+          <span class="anki-help-step">02</span>
+          <h2>Allow Localhost</h2>
+          <p>In the add-on config, allow this viewer origin so the browser can talk to Anki.</p>
+          <code>http://127.0.0.1:4321</code>
+        </section>
+
+        <section class="anki-help-card">
+          <span class="anki-help-step">03</span>
+          <h2>Open Anki First</h2>
+          <p>Keep Anki open before sending. The status above should change from offline to connected.</p>
+          <code>localhost:8765</code>
+        </section>
+      </div>
+
+      <div class="anki-help-config">
+        <span class="anki-help-config-label">Typical AnkiConnect config</span>
+        <pre>{ankiConnectConfig}</pre>
+      </div>
+    </div>
+  </details>
+
+  <!-- Deck configuration -->
+  <div class="deck-config-section">
+    <span class="deck-config-section-title">Deck Configuration</span>
+    <div class="deck-config-grid">
+
+      <!-- Words deck -->
+      <div class="deck-config-block">
+        <span class="deck-config-label">Words Deck</span>
+        <div class="deck-config-inputs">
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Main deck</span>
+            <input
+              class="deck-input"
+              id="export-deck-main"
+              type="text"
+              value="Hindi"
+              placeholder="Hindi"
+            />
+          </div>
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Subdeck</span>
+            <input
+              class="deck-input"
+              id="export-deck-sub"
+              type="text"
+              value="Vocabulary"
+              placeholder="Vocabulary"
+            />
+          </div>
+        </div>
+        <div class="deck-config-preview" id="export-deck-preview">Hindi::Vocabulary</div>
+        <div class="deck-preset-row" aria-label="Word deck presets">
+          <button class="deck-preset-btn" type="button" data-deck-preset="words" data-deck-main="Hindi" data-deck-sub="Vocabulary">
+            Vocabulary
+          </button>
+          <button class="deck-preset-btn" type="button" data-deck-preset="words" data-deck-main="Hindi" data-deck-sub="Review">
+            Review
+          </button>
+          <button class="deck-preset-btn" type="button" data-deck-preset="words" data-deck-main="Hindi" data-deck-sub="Custom Words">
+            Custom
+          </button>
+        </div>
+      </div>
+
+      <!-- Sentences deck -->
+      <div class="deck-config-block">
+        <span class="deck-config-label">Sentences Deck</span>
+        <div class="deck-config-inputs">
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Main deck</span>
+            <input
+              class="deck-input"
+              id="export-sent-deck-main"
+              type="text"
+              value="Hindi"
+              placeholder="Hindi"
+            />
+          </div>
+          <div class="deck-input-wrap">
+            <span class="deck-input-sublabel">Subdeck</span>
+            <input
+              class="deck-input"
+              id="export-sent-deck-sub"
+              type="text"
+              value="Sentences01"
+              placeholder="Sentences01"
+            />
+          </div>
+        </div>
+        <div class="deck-config-preview" id="export-sent-deck-preview">Hindi::Sentences01</div>
+        <div class="deck-preset-row" aria-label="Sentence deck presets">
+          <button class="deck-preset-btn" type="button" data-deck-preset="sentences" data-deck-main="Hindi" data-deck-sub="Sentences01">
+            Sentences
+          </button>
+          <button class="deck-preset-btn" type="button" data-deck-preset="sentences" data-deck-main="Hindi" data-deck-sub="Review">
+            Review
+          </button>
+          <button class="deck-preset-btn" type="button" data-deck-preset="sentences" data-deck-main="Hindi" data-deck-sub="Custom Sentences">
+            Custom
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Options row: replace toggle + txt download -->
+    <div class="flex items-center gap-6 mt-3">
+      <label class="flex items-start gap-3 cursor-pointer group">
+        <div class="relative mt-0.5 shrink-0">
+          <input id="export-override-toggle" type="checkbox" class="sr-only peer" />
+          <div class="w-9 h-5 rounded-full bg-slate-700 peer-checked:bg-red-700/70 transition-colors"></div>
+          <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-slate-400 peer-checked:bg-red-300 peer-checked:translate-x-4 transition-all"></div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-400 group-has-[:checked]:text-red-400 transition-colors leading-tight">Replace deck</p>
+          <p class="text-[10px] text-slate-600 mt-0.5 leading-snug">Deletes existing cards, then adds selected</p>
+        </div>
+      </label>
+      <button
+        id="export-txt-btn"
+        class="text-xs text-slate-600 hover:text-slate-300 transition-colors text-left"
+      >
+        Download .txt for manual import
+      </button>
+    </div>
+  </div>
+
+  <!-- Populated state -->
+  <div id="deliver-main">
+
+    <!-- Selected items compact list -->
+    <div class="deliver-items" id="deliver-items-list">
+
+      <!-- Words section -->
+      <div class="deliver-items-section-header">
+        <span class="deliver-items-section-label">Words</span>
+        <span class="deliver-items-section-count" id="export-word-count">0</span>
+        <span class="deliver-items-section-line"></span>
+      </div>
+
+      <div class="deliver-row-list" id="export-word-rows">
+        <!-- Populated by exportPane.js -->
+      </div>
+
+      <!-- Sentences section -->
+      <div class="deliver-items-section-header">
+        <span class="deliver-items-section-label">Sentences</span>
+        <span class="deliver-items-section-count" id="export-sent-count">0</span>
+        <span class="deliver-items-section-line"></span>
+      </div>
+
+      <div class="deliver-row-list" id="export-sent-rows">
+        <!-- Populated by exportPane.js -->
+      </div>
+
+    </div>
+
+    <!-- Send to Anki hero action -->
+    <div class="deliver-action">
+      <div class="deliver-confirm-lines" id="deliver-confirm-lines">
+        <div class="deliver-confirm-line">
+          <span class="deliver-confirm-count" id="deliver-confirm-word-count">0 word cards</span>
+          <span class="deliver-confirm-arrow">→</span>
+          <span class="deliver-confirm-deck" id="deliver-confirm-deck">Hindi::Vocabulary</span>
+        </div>
+        <div class="deliver-confirm-line" id="deliver-confirm-sent-line" style="display:none;">
+          <span class="deliver-confirm-count" id="deliver-confirm-sent-count">0 sentence cards</span>
+          <span class="deliver-confirm-arrow">→</span>
+          <span class="deliver-confirm-deck" id="deliver-confirm-sent-deck">Hindi::Sentences01</span>
+        </div>
+      </div>
+      <button
+        id="export-btn"
+        disabled
+        class="send-btn"
+      >
+        <span class="send-btn-icon">⊙</span>
+        <span class="send-btn-text">Send to Anki</span>
+      </button>
+      <div id="export-feedback" class="hidden" style="margin-top:1rem;"></div>
+      <p class="deliver-action-meta" id="deliver-action-meta">
+        Select words on the Words page to begin
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Empty state (shown when nothing selected) -->
+  <div class="deliver-empty-state" id="deliver-empty" style="display:none;">
+    <div class="deliver-empty">
+      <span class="deliver-empty-icon">⊙</span>
+      <p class="deliver-empty-title">Nothing selected yet</p>
+      <p class="deliver-empty-body">
+        Go to <strong style="color:#64748b;">Words</strong> or
+        <strong style="color:#64748b;">Sentences</strong> and tap the
+        circle on any card to add it to your export.
+      </p>
+    </div>
+  </div>
+
+</div>
+</div>

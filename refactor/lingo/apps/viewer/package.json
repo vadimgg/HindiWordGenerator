@@ -1,17 +1,27 @@
 {
-  "name": "@lingo/viewer",
-  "version": "0.1.0",
-  "private": true,
+  "name": "hindi-word-generator-viewer",
   "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "check": "astro check",
-    "build": "astro check && astro build"
+    "predev": "node scripts/sync-audio.js",
+    "dev": "astro dev",
+    "prebuild": "node scripts/sync-audio.js",
+    "build": "astro build",
+    "check": "npm run check:quality && npm run check:loader && npm run check:deliver && npm run check:deck-controls && npm run check:export-gate && npm run check:audio && npm run check:anki && npm run build",
+    "check:anki": "node scripts/check-anki-preview.js",
+    "check:deliver": "node scripts/check-deliver-rows.js",
+    "check:deck-controls": "node scripts/check-deck-controls.js",
+    "check:export-gate": "node scripts/check-export-gate.js",
+    "check:audio": "node scripts/check-audio-assets.js",
+    "check:ankiconnect": "node scripts/check-ankiconnect-live.js",
+    "check:loader": "node scripts/check-loader.js",
+    "check:quality": "node scripts/check-sentence-quality.js",
+    "preview": "astro preview",
+    "sync:audio": "node scripts/sync-audio.js"
   },
   "dependencies": {
-    "astro": "7.0.2"
-  },
-  "devDependencies": {
-    "@astrojs/check": "0.9.9",
-    "typescript": "6.0.3"
+    "@astrojs/tailwind": "^5.1.0",
+    "astro": "^5.18.1",
+    "tailwindcss": "^3.4.0"
   }
 }

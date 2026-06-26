@@ -1,0 +1,162 @@
+---
+/**
+ * QA page — sentence/token/audio issue overview.
+ *
+ * Responsible for: rendering a compact quality dashboard for generated data so
+ * sentence token and audio problems are visible before export.
+ *
+ * Dependencies: none.
+ */
+// Responsible for: QA page content — issue summary and issue list
+
+interface QaIssue {
+  type: 'audio' | 'tokens';
+  cardType?: 'word' | 'sentence';
+  wordIndex?: number;
+  sentenceIndex?: number;
+  label: string;
+  hindi: string;
+  english: string;
+  groupLabel: string;
+  expected?: { hindi?: string; romanisation?: string };
+  actual?: { hindi?: string; romanisation?: string };
+}
+
+interface Props {
+  qaIssues: QaIssue[];
+  totalSentences: number;
+  totalWords: number;
+}
+
+const { qaIssues, totalSentences, totalWords } = Astro.props;
+const audioIssues = qaIssues.filter(issue => issue.type === 'audio');
+const tokenIssues = qaIssues.filter(issue => issue.type === 'tokens');
+const wordIssues = qaIssues.filter(issue => issue.cardType === 'word');
+const sentenceIssues = qaIssues.filter(issue => issue.cardType !== 'word');
+---
+
+<div id="page-qa" class="page">
+  <div class="qa-page">
+    <div class="deliver-header">
+      <h1 class="deliver-title">QA</h1>
+      <p class="deliver-subtitle">Inspect generated card readiness before export</p>
+    </div>
+
+    <section class="qa-summary-grid" aria-label="QA summary">
+      <div class="data-health-stat">
+        <span class="data-health-label">Words</span>
+        <strong>{totalWords}</strong>
+        <small>loaded</small>
+      </div>
+      <div class="data-health-stat">
+        <span class="data-health-label">Sentences</span>
+        <strong>{totalSentences}</strong>
+        <small>loaded</small>
+      </div>
+      <div class="data-health-stat">
+        <span class="data-health-label">Audio Issues</span>
+        <strong>{audioIssues.length}</strong>
+        <small>{wordIssues.length} word · {audioIssues.length - wordIssues.length} sentence</small>
+      </div>
+      <div class="data-health-stat">
+        <span class="data-health-label">Token Issues</span>
+        <strong>{tokenIssues.length}</strong>
+        <small>word alignment</small>
+      </div>
+    </section>
+
+    {qaIssues.length === 0 ? (
+      <section class="qa-empty-state">
+        <span class="qa-empty-mark">✓</span>
+        <h2>No generated data issues detected</h2>
+        <p>Sentence tokens align to word breakdowns, and loaded cards have audio paths.</p>
+      </section>
+    ) : (
+      <section class="qa-issue-panel">
+        <div class="data-health-review-head">
+          <span>Issues</span>
+          <strong>{qaIssues.length} {qaIssues.length === 1 ? 'issue' : 'issues'}</strong>
+        </div>
+        <div class="qa-filter-row" aria-label="QA issue filters">
+          <button class="qa-filter-btn is-active" type="button" data-qa-filter="all">All</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="audio">Audio</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="tokens">Tokens</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="word">Words</button>
+          <button class="qa-filter-btn" type="button" data-qa-filter="sentence">Sentences</button>
+        </div>
+        <ul class="qa-issue-list">
+          {qaIssues.map(issue => {
+            const issueKey = [
+              issue.type,
+              issue.cardType ?? 'sentence',
+              issue.wordIndex ?? issue.sentenceIndex ?? '',
+              issue.label,
+              issue.hindi,
+            ].join('|');
+            return (
+            <li
+              data-qa-issue-type={issue.type}
+              data-qa-card-type={issue.cardType ?? 'sentence'}
+              data-qa-issue-key={issueKey}
+            >
+              <div class="qa-issue-main">
+                <span class:list={['qa-issue-chip', issue.type === 'tokens' ? 'is-token' : 'is-audio']}>
+                  {issue.type === 'tokens' ? 'Tokens' : 'Audio'}
+                </span>
+                <div>
+                  <strong lang="hi">{issue.hindi}</strong>
+                  <p>{issue.english}</p>
+                  <small>{issue.groupLabel} · {issue.label}</small>
+                  {issue.cardType === 'word' ? (
+                    <div class="qa-issue-actions">
+                      <button
+                        class="qa-view-card-btn"
+                        data-qa-jump-word={issue.wordIndex}
+                        type="button"
+                      >
+                        View word
+                      </button>
+                      <button class="qa-review-btn" data-qa-review={issueKey} type="button">
+                        Mark reviewed
+                      </button>
+                    </div>
+                  ) : (
+                    <div class="qa-issue-actions">
+                      <button
+                        class="qa-view-card-btn"
+                        data-qa-jump-sentence={issue.sentenceIndex}
+                        type="button"
+                      >
+                        View sentence
+                      </button>
+                      <button class="qa-review-btn" data-qa-review={issueKey} type="button">
+                        Mark reviewed
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {issue.expected && issue.actual && (
+                <div class="qa-diff-grid">
+                  <div>
+                    <span>Expected</span>
+                    <code>{issue.expected.hindi}</code>
+                    <code>{issue.expected.romanisation}</code>
+                  </div>
+                  <div>
+                    <span>Reconstructed</span>
+                    <code>{issue.actual.hindi}</code>
+                    <code>{issue.actual.romanisation}</code>
+                  </div>
+                </div>
+              )}
+            </li>
+          )})}
+        </ul>
+        <p class="qa-issue-footnote">
+          {wordIssues.length} word {wordIssues.length === 1 ? 'issue' : 'issues'} · {sentenceIssues.length} sentence {sentenceIssues.length === 1 ? 'issue' : 'issues'}
+        </p>
+      </section>
+    )}
+  </div>
+</div>

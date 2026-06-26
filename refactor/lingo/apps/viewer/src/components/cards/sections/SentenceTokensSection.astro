@@ -1,0 +1,97 @@
+---
+/**
+ * Sentence card section: word tokens.
+ *
+ * Responsible for: rendering current-schema word tokens when present and
+ * surfacing a compact compatibility hint for older sentence batches.
+ */
+import type { SentenceToken, SentenceWord } from '../../../utils/types';
+
+interface Props {
+  tokens?: SentenceToken[];
+  words?: SentenceWord[];
+}
+
+const { tokens = [], words = [] } = Astro.props;
+const hasTokens = tokens.length > 0;
+const visibleTokens = tokens;
+const wordById = new Map(words.flatMap((word) => word.id ? [[word.id, word]] : []));
+const wordByIndex = new Map(words.map((word, index) => [index, word]));
+---
+
+<details class="group/det border-t border-slate-700/40" open={hasTokens}>
+  <summary
+    class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4
+           cursor-pointer list-none select-none
+           hover:bg-slate-800/30 transition-colors"
+  >
+    <span
+      class="font-title text-xs sm:text-sm font-medium tracking-wider uppercase
+             text-slate-400 group-open/det:text-slate-200 transition-colors"
+    >
+      Word Tokens
+    </span>
+    <span class="flex items-center gap-2">
+      <span
+        class:list={[
+          'text-[10px] font-title font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border',
+          hasTokens
+            ? 'bg-teal-900/20 text-teal-300/80 border-teal-700/30'
+            : 'bg-amber-900/20 text-amber-300/80 border-amber-700/30',
+        ]}
+      >
+        {hasTokens ? `${visibleTokens.length} shown` : 'missing'}
+      </span>
+      <span
+        class="text-slate-600 group-open/det:rotate-180
+               transition-transform duration-200 text-xs"
+      >
+        ▾
+      </span>
+    </span>
+  </summary>
+
+  <div class="px-4 sm:px-6 pb-4 pt-1">
+    {hasTokens ? (
+      <div class="flex flex-wrap gap-2">
+        {visibleTokens.map((token) => {
+          const linkedWord = token.word_id
+            ? wordById.get(token.word_id)
+            : typeof token.word_index === 'number'
+              ? wordByIndex.get(token.word_index)
+              : undefined;
+          return (
+            <span
+              class:list={[
+                'inline-flex flex-col gap-0.5 rounded-lg border px-2.5 py-2',
+                token.kind === 'word'
+                  ? 'bg-slate-800/50 border-slate-700/60'
+                  : 'bg-slate-950/40 border-slate-800/70',
+              ]}
+              title={linkedWord?.meaning}
+            >
+              <span class="word-hindi text-base font-bold leading-none" lang="hi">
+                {token.hindi}
+              </span>
+              <span class="text-[12px] text-teal-300/60 font-mono-dm leading-none">
+                {token.roman}
+              </span>
+              {linkedWord?.meaning && (
+                <span class="text-[11px] text-slate-500 leading-tight max-w-[12rem]">
+                  {linkedWord.meaning}
+                </span>
+              )}
+            </span>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="rounded-lg border border-amber-700/20 bg-amber-950/10 px-3 py-2.5">
+        <p class="text-sm text-amber-200/80 leading-relaxed">
+          This sentence batch predates word tokens. Regenerate or migrate it when
+          token-level highlighting is needed.
+        </p>
+      </div>
+    )}
+  </div>
+</details>

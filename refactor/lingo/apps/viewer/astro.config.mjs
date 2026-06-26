@@ -1,13 +1,6 @@
-import { defineConfig } from "astro/config";
+import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  output: "static",
-  build: {
-    inlineStylesheets: "always",
-  },
-  vite: {
-    build: {
-      assetsInlineLimit: 1_000_000,
-    },
-  },
+  integrations: [tailwind()],
 });

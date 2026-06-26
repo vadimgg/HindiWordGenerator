@@ -18,13 +18,14 @@ pub enum ViewerServerError {
 pub fn serve(
     port: u16,
     workspace_root: PathBuf,
+    dist_root: PathBuf,
     plan: ViewerPlan,
 ) -> Result<(), ViewerServerError> {
     let server = Server::http(("127.0.0.1", port))
         .map_err(|error| ViewerServerError::Bind(error.to_string()))?;
     let session_json = serde_json::to_string(&ViewerSessionDto::from_plan(&plan))?;
     for request in server.incoming_requests() {
-        route(request, &workspace_root, &session_json)?;
+        route(request, &workspace_root, &dist_root, &session_json)?;
     }
     Ok(())
 }
@@ -32,6 +33,7 @@ pub fn serve(
 fn route(
     request: Request,
     workspace_root: &Path,
+    dist_root: &Path,
     session_json: &str,
 ) -> Result<(), ViewerServerError> {
     let method = request.method().clone();
@@ -52,16 +54,50 @@ fn route(
             "application/json; charset=utf-8",
             head_only,
         )?,
-        "/" | "/index.html" => {
-            respond_text(request, INDEX_HTML, "text/html; charset=utf-8", head_only)?
-        }
+        "/" | "/index.html" => serve_static(request, dist_root, "index.html", head_only)?,
         _ => {
             if let Some(relative) = path.strip_prefix("/audio/") {
                 serve_audio(request, workspace_root, relative, head_only)?;
             } else {
-                request.respond(Response::empty(StatusCode(404)))?;
+                serve_static(request, dist_root, path.trim_start_matches('/'), head_only)?;
             }
         }
+    }
+    Ok(())
+}
+
+fn serve_static(
+    request: Request,
+    dist_root: &Path,
+    relative: &str,
+    head_only: bool,
+) -> Result<(), ViewerServerError> {
+    if !is_safe_relative_path(relative) {
+        request.respond(Response::empty(StatusCode(400)))?;
+        return Ok(());
+    }
+    let path = dist_root.join(relative);
+    let Some(content_type) = content_type_for(relative) else {
+        request.respond(Response::empty(StatusCode(404)))?;
+        return Ok(());
+    };
+    if head_only {
+        let status = if path.is_file() {
+            StatusCode(200)
+        } else {
+            StatusCode(404)
+        };
+        request.respond(with_content_type(Response::empty(status), content_type))?;
+        return Ok(());
+    }
+    match fs::read(path) {
+        Ok(bytes) => {
+            request.respond(with_content_type(Response::from_data(bytes), content_type))?
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            request.respond(Response::empty(StatusCode(404)))?
+        }
+        Err(error) => return Err(ViewerServerError::Io(error)),
     }
     Ok(())
 }
@@ -129,6 +165,30 @@ fn with_content_type<R: std::io::Read>(response: Response<R>, value: &str) -> Re
     }
 }
 
+fn content_type_for(relative: &str) -> Option<&'static str> {
+    if relative.ends_with(".html") {
+        Some("text/html; charset=utf-8")
+    } else if relative.ends_with(".js") {
+        Some("text/javascript; charset=utf-8")
+    } else if relative.ends_with(".css") {
+        Some("text/css; charset=utf-8")
+    } else if relative.ends_with(".svg") {
+        Some("image/svg+xml")
+    } else if relative.ends_with(".json") {
+        Some("application/json; charset=utf-8")
+    } else if relative.ends_with(".png") {
+        Some("image/png")
+    } else if relative.ends_with(".jpg") || relative.ends_with(".jpeg") {
+        Some("image/jpeg")
+    } else if relative.ends_with(".webp") {
+        Some("image/webp")
+    } else if relative.ends_with(".woff2") {
+        Some("font/woff2")
+    } else {
+        None
+    }
+}
+
 #[derive(Serialize)]
 struct ViewerSessionDto {
     lead: String,
@@ -168,8 +228,6 @@ impl From<&ViewerCard> for ViewerCardDto {
         }
     }
 }
-
-const INDEX_HTML: &str = include_str!("../../../apps/viewer/dist/index.html");
 
 #[cfg(test)]
 mod tests {

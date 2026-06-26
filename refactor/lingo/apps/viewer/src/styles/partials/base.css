@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLOUR PALETTE — edit this section to restyle everything
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Inline script / linguistic highlights ─────────────────────────────── */
+  --hl-devanagari : #fcd34d;   /* amber-300  — Hindi/Sanskrit script   */
+  --hl-cyrillic   : #67e8f9;   /* cyan-300   — Russian                 */
+  --hl-hebrew     : #6ee7b7;   /* emerald-300 — Hebrew                 */
+  --hl-language   : #38bdf8;   /* sky-400    — Sanskrit, English, …    */
+  --hl-country    : #fb923c;   /* orange-400 — American, Indian, …     */
+  --hl-romanised  : #5eead4;   /* teal-300   — 'vṛddha', 'baṛā', …    */
+
+  /* ── Grammatical gender ────────────────────────────────────────────────── */
+  --color-masc    : #93c5fd;   /* blue-300   — masculine labels & forms */
+  --color-fem     : #f9a8d4;   /* pink-300   — feminine labels & forms  */
+
+  /* ── Card accent colours ───────────────────────────────────────────────── */
+  --color-hindi   : #fbbf24;   /* amber-400  — big Hindi word + example script */
+  --color-roman   : #5eead4;   /* teal-300   — romanisation lines       */
+}
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+
+body {
+  background: radial-gradient(ellipse at 30% 20%, #0d1829 0%, #020617 70%);
+  background-attachment: fixed;
+}
+

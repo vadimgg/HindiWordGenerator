@@ -1,0 +1,39 @@
+---
+/**
+ * WordCard section: Sound Alikes.
+ *
+ * Responsible for: rendering the sound alikes expandable section with mnemonic items.
+ *
+ * Dependencies: cardHelpers.ts (langColor), types.ts (SoundAlike interface).
+ */
+// Responsible for: Sound Alikes expandable section inside a word card
+import { langColor } from '../../../utils/cardHelpers';
+import type { SoundAlike } from '../../../utils/types';
+
+interface Props { sound_alikes: SoundAlike[]; }
+const { sound_alikes } = Astro.props;
+---
+
+<details class="group/det border-l-2 border-l-transparent hover:border-l-amber-400/20 hover:bg-white/[0.018] transition-colors">
+  <summary class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 cursor-pointer list-none select-none transition-colors">
+    <span class="font-title text-xs sm:text-sm font-bold tracking-[0.2em] uppercase text-slate-400 group-open/det:text-slate-200 group-hover/det:text-slate-400 transition-colors">Sound Alikes</span>
+    <span class="text-slate-600 group-open/det:rotate-180 transition-transform duration-200 text-xs">▾</span>
+  </summary>
+  <div class="px-4 sm:px-6 pb-4 pt-1 space-y-3">
+    {sound_alikes.map((sa) => (
+      <div class="bg-[#1e293b] rounded-[10px] p-3 sm:p-4 border border-slate-700/50">
+        <div class="flex flex-wrap items-baseline gap-1.5 mb-1">
+          <span class="font-mono-dm text-teal-300/80 text-[15px]">{sa.part}</span>
+          <span class="text-slate-600 text-sm mx-0.5">sounds like</span>
+          <span class="text-slate-200 text-sm italic">{sa.association}</span>
+          {sa.language && (
+            <span class:list={['text-[11px] font-title font-semibold uppercase tracking-wide', langColor(sa.language)]}>({sa.language})</span>
+          )}
+        </div>
+        {sa.note && (
+          <p class="text-[14px] leading-relaxed text-slate-300 mt-1">{sa.note}</p>
+        )}
+      </div>
+    ))}
+  </div>
+</details>
