@@ -68,7 +68,7 @@ function updateNavButtons(name) {
 export function switchTab(name) {
   activeTab = name;
 
-  const PAGES = ['words', 'sentences', 'deliver', 'qa'];
+  const PAGES = ['words', 'sentences', 'studio', 'deliver', 'qa'];
   PAGES.forEach(p => {
     const pageEl = document.getElementById(`page-${p}`);
     if (pageEl) pageEl.classList.toggle('is-active', p === name);

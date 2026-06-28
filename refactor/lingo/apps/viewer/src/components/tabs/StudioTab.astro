@@ -1,0 +1,41 @@
+---
+/**
+ * Studio page — the in-browser generation workspace (raw → import → build →
+ * check → audio), a friendly front-end for the CLI packet loop.
+ *
+ * Responsible for: rendering the static page shell only. All content (pipeline
+ * rail, stepper, stage panels, packet exchange, settings drawer) is rendered
+ * and driven client-side by scripts/ui/studio.js, which talks to the Rust viewer
+ * server's /api/studio/* endpoints via scripts/studio/api.js.
+ *
+ * The endpoints are served by crates/lingo-cli/src/studio.rs (orchestration) and
+ * crates/lingo-cli/src/viewer_server.rs (routing). See
+ * docs/viewer/generation-experience.md §9 for the contract.
+ *
+ * Dependencies: studio.js (wired from main.js), studio.css (via global.css).
+ */
+// Responsible for: Studio page shell — header + containers that studio.js fills
+---
+
+<div id="page-studio" class="page">
+  <div class="st-root" id="st-root">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1 class="page-title">Studio</h1>
+        <p class="page-subtitle">Turn raw text into finished cards — copy the packet, paste your model's reply, validate locally.</p>
+      </div>
+    </div>
+
+    <!-- Pipeline rail (lingo status) — filled by studio.js -->
+    <div class="st-panel st-rail" id="st-rail" role="region" aria-label="Pipeline status"></div>
+
+    <!-- Stepper for the focused batch — filled by studio.js -->
+    <div class="st-stepper" id="st-stepper" role="tablist" aria-label="Pipeline stages"></div>
+
+    <!-- Active stage panel — filled by studio.js -->
+    <div id="st-stage" aria-live="polite"></div>
+
+  </div>
+</div>

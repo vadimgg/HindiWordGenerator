@@ -1031,6 +1031,7 @@ dependencies = [
  "reqwest",
  "secrecy",
  "serde",
+ "serde_json",
  "tempfile",
  "thiserror",
 ]

@@ -78,8 +78,7 @@ let sentCards = [];
  * @returns {void}
  */
 export function initSearch() {
-  wordCards = [...document.querySelectorAll('[data-word-card]')];
-  sentCards = [...document.querySelectorAll('[data-sentence-card]')];
+  refreshSearchCaches();
 
   document.querySelectorAll('[data-search-input]').forEach(input => {
     input.addEventListener('input', () => {
@@ -101,6 +100,11 @@ export function initSearch() {
 
   window.addEventListener('selectionchange', applyFilter);
   applyFilter();
+}
+
+export function refreshSearchCaches() {
+  wordCards = [...document.querySelectorAll('[data-word-card]')];
+  sentCards = [...document.querySelectorAll('[data-sentence-card]')];
 }
 
 /**

@@ -55,6 +55,13 @@ This is what keeps Lingo local and trustworthy: your accepted cards live on your
 machine, every model reply is checked before it's accepted, and audio, packages,
 and Anki decks are all derived from that accepted card data.
 
+> **Prefer a GUI?** The local viewer ships a **Studio** tab that runs this exact
+> three-beat loop in your browser — it copies the packet for you, gives you a
+> paste box with inline validation, and walks the whole `raw → import → build →
+> check → audio` pipeline with buttons instead of commands. It still never calls
+> a model; you paste the reply yourself. See
+> [Generate in the browser: the Studio](#generate-in-the-browser-the-studio).
+
 ## Requirements
 
 | You need | For |
@@ -229,6 +236,11 @@ lingo viewer --no-open          # don't auto-open the browser
 lingo viewer --port 5000        # use a different port
 ```
 
+The viewer also has a **Studio** tab — a guided, in-browser version of the whole
+generation pipeline. If you'd rather not touch the terminal for `import` /
+`build` / `check` / `audio`, jump to
+[Generate in the browser: the Studio](#generate-in-the-browser-the-studio).
+
 ### 7. Package or export
 
 ```bash
@@ -278,6 +290,65 @@ lingo build --batch introduce-yourself --apply reply.json
 ```
 
 Same validation, same outputs — just without the editor in the loop.
+
+## Generate in the browser: the Studio
+
+The **Studio** is the third way to drive the pipeline — neither the editor loop
+nor hand-scripting, but a guided UI inside the viewer. It's the friendliest path
+if you'd rather click than type, and it surfaces every option the `import`,
+`build`, `check`, and `audio` commands accept.
+
+Open it the same way you open the viewer, then click the **✎ Studio** tab:
+
+```bash
+lingo viewer
+```
+
+It talks only to the local viewer server, and — like everything else in Lingo —
+**it never calls a model for you**. The generative steps are still the manual
+copy-paste loop; the Studio just makes that loop pleasant.
+
+### What you see
+
+- **Pipeline rail** — the live, graphical version of `lingo status`. One row per
+  batch with a dot for each stage (`raw · import · build · check · audio`), the
+  same "what's next" hint, a **Problems only** filter, and a **⚙ Settings**
+  drawer for the per-deck `config.toml` knobs (display lead, audio backend,
+  ElevenLabs voice).
+- **Stepper** — moves you through the five stages for the selected batch; stages
+  you haven't earned yet are locked.
+
+### The five stages
+
+1. **Raw** — paste your source text, drop a file onto the box, or pick an
+   existing file from `raw/`. Saving writes `raw/<batch>.md` for you (the one
+   step the CLI can't do) and opens the import packet. The batch id, title, and
+   subtitle fields map to `--batch`, `--title`, and `--subtitle`.
+2. **Import** — the **Packet Exchange**: the import packet is shown read-only and
+   auto-copied to your clipboard; paste it into ChatGPT/Claude, paste the YAML
+   reply into the box, and hit **Apply**. The server validates it (exactly like
+   the CLI) and writes `input/sentences/<batch>.yaml` only if it passes. Bad
+   replies come back with the problems listed inline; nothing is overwritten.
+3. **Build** — the same Packet Exchange for the build prompt; a valid JSON reply
+   becomes `output/sentences/<batch>.json` after passing `check_card_batch`. The
+   accepted cards render with their word-by-word breakdown.
+4. **Check** — runs the deterministic checks and shows the report (errors block,
+   the "missing audio" warning is expected until you do the next step).
+5. **Audio** — pick the backend (gTTS or ElevenLabs), optionally a voice and
+   **Force**, then synthesize. When it finishes, the batch goes green and hands
+   you off to **View in Sentences**, **Package…**, or **Export to Anki…**.
+
+`⌘/Ctrl + Enter` applies the reply in either packet stage. Anything you can do
+here you could also do from the terminal — the Studio and the CLI call the same
+validated use cases, so you can mix and match freely.
+
+> One caveat: while a long `lingo audio` run is synthesizing, the viewer server
+> is busy and won't serve other pages until it finishes. And a batch you generate
+> in the Studio appears in the read-only **Sentences** tab only after you restart
+> `lingo viewer` (that tab is a snapshot from launch).
+
+For the full design and the API contract behind the Studio, see
+[`docs/viewer/`](docs/viewer/).
 
 ## Editing the prompts themselves
 
@@ -395,7 +466,7 @@ so the data never assumes a level. You can also flip it per viewer session with
 | `lingo build` | Reviewed source → enriched card JSON (packet loop). |
 | `lingo check` | Deterministic validation of the cards. |
 | `lingo audio` | Synthesize missing sentence audio. |
-| `lingo viewer` | Serve the local review/preview app. |
+| `lingo viewer` | Serve the local review/preview app (incl. the **Studio** generation UI). |
 | `lingo package` | Bundle cards + audio into a portable folder. |
 | `lingo export` | Build an Anki `.apkg`. |
 | `lingo lang` | Inspect / edit language profiles and prompts. |

@@ -1,24 +1,17 @@
 ---
 /**
- * Sentences page — page header, filter panel, grouped sentence cards.
+ * Sentences page shell.
  *
- * Responsible for: rendering the Sentences page with collapsible filter panel,
- * source/topic dividers, and sentence cards with sel-circle selection buttons.
- *
- * Dependencies: SentenceCard.astro, types.ts (SentenceGroup).
+ * Responsible for: stable containers and controls for the live Sentences
+ * renderer. Sentence card markup is owned by scripts/ui/liveSentences.js so
+ * Studio-generated cards can appear without restarting the viewer.
  */
-// Responsible for: Sentences page content — header, filter panel, group dividers, sentence cards
-import SentenceCard from '../SentenceCard.astro';
-import type { SentenceGroup } from '../../utils/types';
+// Responsible for: Sentences page shell for the live renderer
 
 interface Props {
   allSentences: any[];
-  sentenceGroups: SentenceGroup[];
 }
-const { allSentences, sentenceGroups } = Astro.props;
-
-// Build flat index for sentence IDs matching the pattern in SentenceList.astro
-let globalIndex = 0;
+const { allSentences } = Astro.props;
 ---
 
 <div id="page-sentences" class="page mode-web">
@@ -30,7 +23,7 @@ let globalIndex = 0;
         Sentences
         <span class="page-selection-badge is-hidden" id="ps-selection-badge">0 selected</span>
       </h1>
-      <p class="page-subtitle">
+      <p class="page-subtitle" id="ps-subtitle">
         {allSentences.length === 0
           ? 'No sentences loaded yet'
           : `${allSentences.length} ${allSentences.length === 1 ? 'sentence' : 'sentences'}`}
@@ -70,14 +63,9 @@ let globalIndex = 0;
         />
         <button class="pw-filter-search-clear" data-search-clear aria-label="Clear search">✕</button>
       </div>
-      {sentenceGroups.length > 0 && (
-        <div class="pw-filter-group-row" id="ps-filter-chips">
+        <div class="pw-filter-group-row hidden" id="ps-filter-chips">
           <button class="pw-filter-chip is-active" data-group-chip="all">All</button>
-          {sentenceGroups.map(group => (
-            <button class="pw-filter-chip" data-group-chip={group.label}>{group.label}</button>
-          ))}
         </div>
-      )}
       <div class="pw-filter-results">
         <span class="pw-filter-count" id="ps-filter-count">
           Showing <strong>{allSentences.length}</strong> sentences
@@ -86,69 +74,12 @@ let globalIndex = 0;
       </div>
     </div>
 
-    {allSentences.length === 0 ? (
+    <div id="ps-live-body">
       <div class="py-24 text-center">
         <p class="text-zinc-600 text-sm mb-2">No sentences loaded yet.</p>
-        <p class="text-zinc-700 text-xs">Generate sentence batches into <code class="text-zinc-600">output/sentences/</code>, then refresh.</p>
+        <p class="text-zinc-700 text-xs">Generate sentence batches in Studio, then open this tab.</p>
       </div>
-    ) : (
-      <>
-        <!-- Drag-to-select hint -->
-        <p class="drag-select-hint">Drag to select multiple</p>
-
-        <!-- Source/topic groups -->
-        {sentenceGroups.map((group) => {
-          const groupId = `cgw-s-${group.label.toLowerCase().replace(/\s+/g, '-')}`;
-          return (
-            <>
-              {/* Group divider header */}
-              <div class="card-group-wrapper" id={groupId}>
-                <div class="card-group-divider">
-                  <div class="card-group-header" data-group-toggle={groupId}>
-                    <span
-                      class="card-group-checkbox"
-                      role="checkbox"
-                      aria-checked="false"
-                      aria-label={`Select all in ${group.label}`}
-                      data-group-checkbox={groupId}
-                    ></span>
-                    <span class="card-group-label">{group.label}</span>
-                    <span class="card-group-line"></span>
-                    <span class="card-group-count">
-                      {group.sentences.length} {group.sentences.length === 1 ? 'sentence' : 'sentences'}
-                      {group.batches?.length > 1 ? ` · ${group.batches.length} batches` : ''}
-                    </span>
-                    <button
-                      class="quick-export-btn"
-                      type="button"
-                      data-quick-export="sentences"
-                      data-quick-export-title={group.label}
-                    >
-                      Quick export
-                    </button>
-                    <span class="card-group-chevron">▾</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sentence cards */}
-              <div class="card-list" data-group={groupId}>
-                {group.sentences.map((sentence) => {
-                  const idx = globalIndex++;
-                  return (
-                    <SentenceCard index={idx} {...sentence} audio={sentence.audio} audioBatch={sentence.audioBatch} selCircle={true} />
-                  );
-                })}
-              </div>
-            </>
-          );
-        })}
-
-        <div id="sentences-no-results" class="hidden py-20 text-center">
-          <p class="text-zinc-600 text-sm">No sentences match your search.</p>
-        </div>
-      </>
-    )}
+    </div>
 
   </div><!-- /.web-card-area -->
 

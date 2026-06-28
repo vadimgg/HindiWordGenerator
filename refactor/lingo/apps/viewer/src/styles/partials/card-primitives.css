@@ -91,6 +91,106 @@
 .word-roman { color: var(--color-roman); }
 
 
+/* ─── Sentence word-by-word breakdown (stacked lexeme panels) ───────────── */
+
+.sc-word-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* One panel per word — lexeme block on the left, meaning + chips + note right.
+   Fill matches the WordCard FORMS sub-cards (bg #1e293b, slate-700/50 border). */
+.sc-word {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, max-content) 1fr;
+  gap: 0.3rem 1.25rem;
+  align-items: start;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(51, 65, 85, 0.5);     /* slate-700/50 */
+  border-radius: 10px;
+  background: #1e293b;                           /* slate-800 — same as forms chips */
+  transition: border-color 0.12s, background-color 0.12s;
+}
+.sc-word:hover {
+  border-color: rgba(71, 85, 105, 0.7);        /* slate-600 */
+  background: #233146;
+}
+
+/* Left: the lexeme identity */
+.sc-word-lex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.sc-word-deva {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sc-word-roman {
+  color: var(--color-roman);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+/* Right: gloss + metadata, then explanation, then usage note */
+.sc-word-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.sc-word-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+/* Primary gloss — the word's translation ("I", "boy", "am"). */
+.sc-word-meaning {
+  color: #f1f5f9;          /* slate-100 */
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+/* Secondary explanation — definition that followed the dash. */
+.sc-word-detail {
+  color: #94a3b8;          /* slate-400 */
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Chips reuse the WordCard grammar-badge classes (emitted inline); this is just
+   the wrapping container. */
+.sc-word-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sc-word-note {
+  color: #64748b;          /* slate-500 */
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.5;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(51, 65, 85, 0.35);
+}
+
+/* Narrow screens: stack the lexeme above the body */
+@media (max-width: 480px) {
+  .sc-word { grid-template-columns: 1fr; }
+}
+
+
 /* ─── Word selection ────────────────────────────────────────────────────── */
 
 /* Deselect button on cards — hidden until selection-mode is active */

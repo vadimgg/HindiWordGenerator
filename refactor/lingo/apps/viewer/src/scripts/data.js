@@ -49,6 +49,26 @@ export const getHoverData = () => window.__APP_DATA__?.hoverData ?? [];
 export const getAllSentences = () => window.__APP_DATA__?.allSentences ?? [];
 
 /**
+ * Replaces sentence data after the local viewer server reports new generated
+ * output. This keeps export/search modules on the same source of truth as the
+ * freshly rendered Sentences tab.
+ *
+ * @param {{ allSentences: object[], sentenceGroups: object[], sentenceSearchIndex: object[], dataHealth?: object }} data
+ */
+export function replaceSentenceData(data) {
+  window.__APP_DATA__ = window.__APP_DATA__ || {};
+  window.__APP_DATA__.allSentences = data.allSentences || [];
+  window.__APP_DATA__.sentenceGroups = data.sentenceGroups || [];
+  window.__APP_DATA__.sentenceSearchIndex = data.sentenceSearchIndex || [];
+  if (data.dataHealth) {
+    window.__APP_DATA__.dataHealth = {
+      ...(window.__APP_DATA__.dataHealth || {}),
+      ...data.dataHealth,
+    };
+  }
+}
+
+/**
  * Returns build-time health totals for loaded card data.
  * @returns {{ wordFiles:number, sentenceFiles:number, totalWords:number, totalSentences:number, wordAudioReady:number, sentenceAudioReady:number, sentenceTokenReady:number }}
  */

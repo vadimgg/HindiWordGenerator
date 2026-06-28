@@ -46,7 +46,7 @@ impl Composition {
         let uv = which::which("uv").unwrap_or_else(|_| PathBuf::from("uv"));
         let mut audio_builder = AudioCatalogBuilder::new().add_gtts(uv)?;
         if let Some(name) = context.audio.elevenlabs_key_env.as_deref() {
-            if let Ok(value) = std::env::var(name) {
+            if let Some(value) = crate::secrets::resolve(workspace.layout().root().path(), name) {
                 let client = reqwest::blocking::Client::builder()
                     .timeout(Duration::from_secs(90))
                     .build()?;

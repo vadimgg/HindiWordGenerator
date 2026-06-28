@@ -7,6 +7,8 @@ mod composition;
 mod exit;
 mod interaction;
 mod output;
+mod secrets;
+mod studio;
 mod viewer_server;
 
 use clap::{CommandFactory, FromArgMatches};

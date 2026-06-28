@@ -4,6 +4,7 @@ import Layout      from '../layouts/Layout.astro';
 import NavBar      from '../components/NavBar.astro';
 import WordsTab    from '../components/tabs/WordsTab.astro';
 import SentencesTab from '../components/tabs/SentencesTab.astro';
+import StudioTab   from '../components/tabs/StudioTab.astro';
 import ExportTab   from '../components/tabs/ExportTab.astro';
 import QATab       from '../components/tabs/QATab.astro';
 import { loadGeneratedData } from '../utils/loadGeneratedData.js';
@@ -36,6 +37,7 @@ const {
 
       <WordsTab allWords={allWords} vocabFilesCount={wordFiles.length} wordGroups={wordGroups} />
       <SentencesTab allSentences={allSentences} sentenceGroups={sentenceGroups} />
+      <StudioTab />
       <ExportTab dataHealth={dataHealth} />
       <QATab qaIssues={qaIssues} totalSentences={allSentences.length} totalWords={allWords.length} />
 

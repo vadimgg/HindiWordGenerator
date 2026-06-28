@@ -30,6 +30,9 @@ import { initAudio }            from './ui/audio.js';
 import { initDataHealth }       from './ui/dataHealth.js';
 import { initQA }               from './ui/qa.js';
 import { initQuickExport }      from './ui/quickExport.js';
+import { initPackageExport }    from './ui/packageExport.js';
+import { initStudio }           from './ui/studio.js';
+import { initLiveSentences }    from './ui/liveSentences.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initSelection();          // seed selection state from all words
@@ -42,5 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initDataHealth();         // Deliver data readiness counts
   initQA();                 // QA issue jump actions
   initQuickExport();        // source/group-level quick exports to Anki
+  initPackageExport();      // Deliver tab: export a portable (Grasp-compatible) package
+  initLiveSentences();      // refresh generated sentence cards from the local viewer server
+  initStudio();             // Generation Studio tab (mock-driven, not yet API-wired)
   initTabs();               // last: fires initial tabchange event after all modules are ready
 });

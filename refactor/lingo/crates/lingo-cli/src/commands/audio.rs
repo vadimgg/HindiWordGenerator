@@ -65,6 +65,7 @@ fn synthesize(args: AudioArgs, composition: &Composition, output: &Output) -> Co
             },
             backend,
             elevenlabs_voice: args.voice,
+            cards: Vec::new(),
         },
     )?;
     output.audio(&report);
@@ -146,6 +147,7 @@ fn select_voice(
                 },
                 backend: Some(AudioBackendId::ElevenLabs),
                 elevenlabs_voice: Some(selected.voice_id),
+                cards: Vec::new(),
             },
         )?;
         output.audio(&report);

@@ -24,6 +24,9 @@ pub struct AudioCommand {
     pub mode: AudioMode,
     pub backend: Option<AudioBackendId>,
     pub elevenlabs_voice: Option<String>,
+    /// When non-empty, only these cards are (re)synthesized; everything else in
+    /// the batch is left untouched. Empty means "the whole batch".
+    pub cards: Vec<CardId>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -76,6 +79,10 @@ pub fn synthesize_audio(
         let mut card_results = Vec::new();
         let mut changed = false;
         for card in cards.cards_mut() {
+            // A non-empty selection narrows synthesis to just those cards.
+            if !request.cards.is_empty() && !request.cards.contains(card.id()) {
+                continue;
+            }
             if request.mode == AudioMode::MissingOnly && card.audio().is_some() {
                 counts.skipped += 1;
                 card_results.push(AudioCardResult {

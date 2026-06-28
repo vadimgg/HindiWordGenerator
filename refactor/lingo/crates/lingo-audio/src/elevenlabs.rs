@@ -84,7 +84,7 @@ impl AudioBackend for ElevenLabsBackend {
                 format!(
                     "ElevenLabs returned HTTP {}: {}",
                     status.as_u16(),
-                    truncate_error_body(&body)
+                    humanize_error_body(&body)
                 ),
             ));
         }
@@ -137,9 +137,40 @@ fn truncate_error_body(body: &str) -> String {
     format!("{}...", &body[..LIMIT])
 }
 
+/// Pull the human-readable message out of an ElevenLabs error body. Their API
+/// nests it under `detail.message` (e.g. "Free users cannot use library voices
+/// via the API"); `detail` may also be a plain string or an array of field
+/// errors. Falls back to the raw, truncated body when nothing matches.
+fn humanize_error_body(body: &str) -> String {
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(body) {
+        if let Some(detail) = value.get("detail") {
+            if let Some(message) = detail.get("message").and_then(|m| m.as_str()) {
+                return message.trim().to_string();
+            }
+            if let Some(text) = detail.as_str() {
+                return text.trim().to_string();
+            }
+            if let Some(items) = detail.as_array() {
+                let joined = items
+                    .iter()
+                    .filter_map(|item| item.get("msg").and_then(|m| m.as_str()))
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                if !joined.is_empty() {
+                    return joined;
+                }
+            }
+        }
+        if let Some(message) = value.get("message").and_then(|m| m.as_str()) {
+            return message.trim().to_string();
+        }
+    }
+    truncate_error_body(body)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{classify_status, truncate_error_body};
+    use super::{classify_status, humanize_error_body, truncate_error_body};
     use lingo_domain::AudioFailureClass;
     use reqwest::StatusCode;
 
@@ -165,5 +196,19 @@ mod tests {
         let truncated = truncate_error_body(&body);
         assert!(truncated.len() < body.len());
         assert!(truncated.ends_with("..."));
+    }
+
+    #[test]
+    fn extracts_human_message_from_provider_error() {
+        let body = r#"{"detail":{"type":"payment_required","code":"paid_plan_required","message":"Free users cannot use library voices via the API. Please upgrade your subscription to use this voice.","status":"payment_required"}}"#;
+        assert_eq!(
+            humanize_error_body(body),
+            "Free users cannot use library voices via the API. Please upgrade your subscription to use this voice."
+        );
+    }
+
+    #[test]
+    fn falls_back_to_raw_body_when_unstructured() {
+        assert_eq!(humanize_error_body("upstream timeout"), "upstream timeout");
     }
 }

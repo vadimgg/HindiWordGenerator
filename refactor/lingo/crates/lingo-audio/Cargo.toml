@@ -11,6 +11,7 @@ lingo-domain = { path = "../lingo-domain" }
 reqwest = { workspace = true, default-features = false, features = ["blocking", "json", "native-tls"] }
 secrecy.workspace = true
 serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 tempfile.workspace = true
 thiserror.workspace = true
 

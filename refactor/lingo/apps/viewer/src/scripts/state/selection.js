@@ -68,6 +68,17 @@ export function setSentenceSelected(idx, on) {
 }
 
 /**
+ * Re-seeds sentence selection after live sentence data is rendered.
+ *
+ * @param {number} count - Number of sentence cards now available.
+ * @returns {void}
+ */
+export function replaceSentenceSelection(count) {
+  selectedSentences = new Set(Array.from({ length: count }, (_, index) => index));
+  notifySelectionChanged();
+}
+
+/**
  * Returns true if the word at the given index is currently selected.
  * @param {number} idx - Word index in the allWords array.
  * @returns {boolean}
