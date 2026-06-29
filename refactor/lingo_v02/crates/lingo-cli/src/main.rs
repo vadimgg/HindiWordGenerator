@@ -3,14 +3,15 @@
 
 mod viewer;
 
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::builder::styling::{AnsiColor, Styles};
+use clap::{Args, CommandFactory, FromArgMatches, Parser, Subcommand, ValueEnum};
 use lingo_application::ports::{
     LibraryStore, PageRequest, ReorderSentences, SentenceQuery, SentenceSelection, SentenceSort,
     UpdateSentence, WordQuery,
 };
 use lingo_application::{
     ApplyEnrich, ApplyExtract, AudioCommand, AudioDeps, AudioMode, EnrichDeps, ExportDeps,
-    ExportRequest, ExtractDeps, ImportDeps, ImportPackage, ImportedSentence, PackageDeps,
+    ExportRequest, ExtractDeps, ImportDeps, ImportPackage, ImportedSentence, CommandHint, PackageDeps,
     PackageFormat, PackageRequest, PrepareEnrich, PrepareExtract, StatusDeps, apply_enrich,
     apply_extract, export_anki, import_package, list_library, list_words, package, prepare_enrich,
     prepare_extract, reorder_sentences, status, synthesize_audio, update_sentence,
@@ -24,31 +25,44 @@ use lingo_domain::{
 use lingo_prompt::HandlebarsPromptEngine;
 use lingo_workspace_fs::{FsWorkspace, get_config_value, set_config_value};
 use std::error::Error;
+use std::ffi::OsString;
+use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Lingo — a sentence-centric language-learning library.
-///
-/// Lingo turns raw foreign-language text into studyable sentences and stores
-/// them in a local SQLite library (`library.db`). The canonical workflow:
-///
-///   1. extract  raw text            → draft sentences      (via an LLM packet)
-///   2. enrich   drafts              → translation + breakdown (via an LLM packet)
-///   3. audio    sentences           → spoken MP3s (gTTS)
-///   4. organize reorder / re-title / edit fields
-///   5. package  → portable JSON or SQLite (for Grasp); export → Anki .apkg
-///
-/// You can also `import` a package produced by `package`. Run with no command to
-/// open the local web viewer.
-///
-/// The LLM steps are manual by default: copy the printed packet into ChatGPT or
-/// Claude, then apply the reply. Use `--out <file> --watch` to hand the packet to
-/// an agent (Codex / Claude Code) that writes `reply.md` in place.
 #[derive(Debug, Parser)]
-#[command(name = "lingo", version, propagate_version = true)]
+#[command(
+    name = "lingo",
+    version,
+    propagate_version = true,
+    about = "Build a local SQLite sentence library from raw learning material",
+    long_about = "A local, sentence-centric pipeline: raw text -> draft rows -> enriched study sentences -> audio -> package/export. Lingo stores progress in library.db and emits prompt packets for ChatGPT or Claude; it never calls a model server."
+)]
 struct Cli {
+    #[arg(
+        long,
+        global = true,
+        conflicts_with = "color",
+        help = "Disable ANSI color"
+    )]
+    no_color: bool,
+    #[arg(
+        long,
+        global = true,
+        value_enum,
+        default_value_t = ColorArg::Auto,
+        help = "Control ANSI color output"
+    )]
+    color: ColorArg,
     #[command(subcommand)]
     command: Option<Command>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+enum ColorArg {
+    Auto,
+    Always,
+    Never,
 }
 
 #[derive(Debug, Subcommand)]
@@ -278,23 +292,152 @@ struct ExportArgs {
     destination: PathBuf,
 }
 
+#[derive(Clone, Copy, Debug)]
+struct Output {
+    color: bool,
+}
+
+impl Output {
+    const fn new(color: bool) -> Self {
+        Self { color }
+    }
+
+    fn heading(&self, value: &str) -> String {
+        self.paint(value, "1;36")
+    }
+
+    fn ok(&self, value: &str) -> String {
+        self.paint(value, "32")
+    }
+
+    fn warn(&self, value: &str) -> String {
+        self.paint(value, "33")
+    }
+
+    fn dim(&self, value: &str) -> String {
+        self.paint(value, "2")
+    }
+
+    fn command(&self, value: &str) -> String {
+        self.paint(value, "36")
+    }
+
+    fn error(&self, value: &str) -> String {
+        self.paint(value, "1;31")
+    }
+
+    fn path(&self, path: &Path) -> String {
+        self.dim(&path.display().to_string())
+    }
+
+    fn paint(&self, value: &str, code: &str) -> String {
+        if self.color {
+            format!("\x1b[{code}m{value}\x1b[0m")
+        } else {
+            value.to_string()
+        }
+    }
+
+    fn next_hint(&self, hint: Option<CommandHint>) {
+        if let Some(hint) = hint {
+            println!("\n  {} {}", self.warn("next"), self.command(hint.as_str()));
+        }
+    }
+}
+
 fn main() -> std::process::ExitCode {
-    match run(Cli::parse()) {
+    let cli = parse_cli();
+    let output = Output::new(color_enabled(&cli));
+    match run(cli, &output) {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("{error}");
+            eprintln!("{}", output.error(&error.to_string()));
             std::process::ExitCode::from(1)
         }
     }
 }
 
-fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
+fn parse_cli() -> Cli {
+    let color = clap_color_choice(std::env::args_os());
+    let command = Cli::command().color(color).styles(help_styles());
+    let matches = command.get_matches();
+    Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit())
+}
+
+fn clap_color_choice(args: impl IntoIterator<Item = OsString>) -> clap::ColorChoice {
+    let mut saw_no_color = false;
+    let mut selected = None;
+    let mut iter = args.into_iter().skip(1);
+    while let Some(arg) = iter.next() {
+        let value = arg.to_string_lossy();
+        if value == "--no-color" {
+            saw_no_color = true;
+        } else if value == "--color" {
+            selected = iter.next().and_then(|next| color_choice_from_value(&next));
+        } else if let Some(next) = value.strip_prefix("--color=") {
+            selected = color_choice_from_str(next);
+        }
+    }
+    if saw_no_color {
+        clap::ColorChoice::Never
+    } else {
+        selected.unwrap_or(clap::ColorChoice::Auto)
+    }
+}
+
+fn color_choice_from_value(value: &OsString) -> Option<clap::ColorChoice> {
+    value.to_str().and_then(color_choice_from_str)
+}
+
+fn color_choice_from_str(value: &str) -> Option<clap::ColorChoice> {
+    match value {
+        "always" => Some(clap::ColorChoice::Always),
+        "never" => Some(clap::ColorChoice::Never),
+        "auto" => Some(clap::ColorChoice::Auto),
+        _ => None,
+    }
+}
+
+fn color_enabled(cli: &Cli) -> bool {
+    if cli.no_color {
+        return false;
+    }
+    match cli.color {
+        ColorArg::Always => true,
+        ColorArg::Never => false,
+        ColorArg::Auto => {
+            if std::env::var_os("NO_COLOR").is_some() {
+                return false;
+            }
+            let force = std::env::var("CLICOLOR_FORCE").is_ok_and(|value| value != "0");
+            let disabled = std::env::var("CLICOLOR").is_ok_and(|value| value == "0");
+            force || (!disabled && std::io::stdout().is_terminal())
+        }
+    }
+}
+
+fn help_styles() -> Styles {
+    Styles::styled()
+        .header(AnsiColor::Cyan.on_default().bold())
+        .usage(AnsiColor::Cyan.on_default().bold())
+        .literal(AnsiColor::Green.on_default())
+        .placeholder(AnsiColor::Yellow.on_default())
+        .valid(AnsiColor::Green.on_default())
+        .invalid(AnsiColor::Red.on_default())
+        .error(AnsiColor::Red.on_default().bold())
+        .context(AnsiColor::Yellow.on_default())
+        .context_value(AnsiColor::Yellow.on_default().bold())
+}
+
+fn run(cli: Cli, output: &Output) -> Result<(), Box<dyn Error>> {
     // No subcommand → open the local viewer.
     let command = cli.command.unwrap_or(Command::Viewer(ViewerArgs { port: 4321 }));
     match command {
         Command::Init(args) => {
             let workspace = FsWorkspace::init(args.directory, &args.profile)?;
-            println!("initialized {}", workspace.layout().root().display());
+            println!("{}  {}", output.heading("Workspace"), output.path(workspace.layout().root()));
+            println!("\n  {} library.db ready", output.ok("✓"));
+            println!("  {} config.toml ready", output.ok("✓"));
         }
         Command::Extract(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
@@ -307,11 +450,14 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
             if let Some(out) = &args.out {
                 let prep = prepare_extract(&deps, PrepareExtract { run_id: run_id.clone(), raw: raw.clone(), collection: collection.clone(), section: section.clone(), batch: None })?;
                 write_packet(out, &prep.packet)?;
-                println!("run: {}\nprompt -> {}", prep.run_id, out.display());
+                println!("{}  {}\n", output.heading("Extract"), prep.run_id);
+                println!("  prompt  {}", output.path(out));
+                println!("  reply   {}", output.path(&reply_path(out)));
+                println!("\n  {} Paste the packet into ChatGPT or Claude, then save its reply.", output.warn("▸"));
                 if args.watch {
                     let reply = watch_for_reply(&reply_path(out))?;
                     let report = apply_extract(&deps, ApplyExtract { run_id, reply, collection, section, batch_id: None })?;
-                    println!("created {} draft sentence(s)", report.created);
+                    println!("\n{}  {} draft sentence(s)", output.heading("Created"), report.created);
                 }
                 return Ok(());
             }
@@ -322,7 +468,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
             }
             let Some(reply) = args.apply else { return Ok(()); };
             let report = apply_extract(&deps, ApplyExtract { run_id, reply: std::fs::read_to_string(reply)?, collection, section, batch_id: None })?;
-            println!("created {} draft sentence(s)", report.created);
+            println!("{}  {} draft sentence(s)", output.heading("Created"), report.created);
         }
         Command::Enrich(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
@@ -331,24 +477,28 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
             if args.reset {
                 let run = args.run.map(RunId::parse).transpose()?;
                 let report = lingo_application::reset_enrichment_claim(&deps, lingo_application::ResetEnrich { run_id: run })?;
-                println!("reset {} sentence(s)", report.reset);
+                println!("{}  {} sentence(s)", output.heading("Reset"), report.reset);
                 return Ok(());
             }
             if let Some(reply) = args.apply {
                 let run = args.run.ok_or_else(|| std::io::Error::other("--run is required with --apply"))?;
                 let report = apply_enrich(&deps, ApplyEnrich { run_id: RunId::parse(run)?, reply: std::fs::read_to_string(reply)? })?;
-                println!("enriched {} sentence(s)", report.updated);
+                println!("{}  {} sentence(s)", output.heading("Enriched"), report.updated);
                 return Ok(());
             }
             let run_id = run_id("enrich")?;
             let prep = prepare_enrich(&deps, PrepareEnrich { run_id: run_id.clone(), selection: SentenceSelection::All, limit: args.limit, force: args.force })?;
             if let Some(out) = &args.out {
                 write_packet(out, &prep.packet)?;
-                println!("run: {}\nclaimed: {}\nprompt -> {}", run_id, prep.claimed, out.display());
+                println!("{}  {}\n", output.heading("Enrich"), run_id);
+                println!("  claimed {}", prep.claimed);
+                println!("  prompt  {}", output.path(out));
+                println!("  reply   {}", output.path(&reply_path(out)));
+                println!("\n  {} Paste the packet into ChatGPT or Claude, then save its reply.", output.warn("▸"));
                 if args.watch {
                     let reply = watch_for_reply(&reply_path(out))?;
                     let report = apply_enrich(&deps, ApplyEnrich { run_id, reply })?;
-                    println!("enriched {} sentence(s)", report.updated);
+                    println!("\n{}  {} sentence(s)", output.heading("Enriched"), report.updated);
                 }
                 return Ok(());
             }
@@ -359,7 +509,10 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
             let pkg = read_package(&args.from)?;
             let files = workspace.audio_files();
             let report = import_package(&ImportDeps { library: &workspace, context: &workspace, audio_files: &files }, pkg)?;
-            println!("imported {} sentence(s), {} audio", report.imported, report.audio);
+            println!("{}\n", output.heading("Import"));
+            println!("  sentences {}", report.imported);
+            println!("  audio     {}", report.audio);
+            output.next_hint(report.next.command_hint());
         }
         Command::Ls(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
@@ -384,15 +537,40 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                 })).collect::<Vec<_>>();
                 println!("{}", serde_json::to_string_pretty(&rows)?);
             } else {
+                println!("{}\n", output.heading("Sentences"));
                 for sentence in page.sentences {
-                    println!("{}\t{}\t{}", sentence.id(), sentence.status().wire_name(), sentence.target().as_str());
+                    println!(
+                        "  {}  {}  {}",
+                        output.dim(sentence.id().as_str()),
+                        output.command(sentence.status().wire_name()),
+                        sentence.english().map(|v| v.as_str()).unwrap_or("")
+                    );
+                    println!("      {}", sentence.target().as_str());
+                    if let Some(romanisation) = sentence.romanisation() {
+                        println!("      {}", output.dim(romanisation.as_str()));
+                    }
+                    println!();
                 }
             }
         }
         Command::Show(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
             let sentence = workspace.get_sentence(&SentenceId::parse(args.id)?)?;
-            println!("{}\n{}\n{}", sentence.id(), sentence.target(), sentence.english().map(|v| v.as_str()).unwrap_or(""));
+            println!("{}  {}\n", output.heading("Sentence"), output.dim(sentence.id().as_str()));
+            println!("  status  {}", output.command(sentence.status().wire_name()));
+            if let Some(section) = sentence.section() {
+                println!("  section {}", section.as_str());
+            }
+            println!("\n  {}", sentence.target());
+            if let Some(romanisation) = sentence.romanisation() {
+                println!("  {}", output.dim(romanisation.as_str()));
+            }
+            if let Some(english) = sentence.english() {
+                println!("\n  {}", english.as_str());
+            }
+            if let Some(literal) = sentence.literal() {
+                println!("  {}", output.dim(literal.as_str()));
+            }
         }
         Command::Words(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
@@ -406,8 +584,25 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                 })).collect::<Vec<_>>();
                 println!("{}", serde_json::to_string_pretty(&rows)?);
             } else {
+                println!("{}\n", output.heading("Words"));
                 for word in page.words {
-                    println!("{}\t{}\t{}", word.word.form().as_str(), word.sentence_count, word.meanings.iter().map(|m| m.as_str()).collect::<Vec<_>>().join(", "));
+                    println!(
+                        "  {}  {} sentence(s)",
+                        word.word.form().as_str(),
+                        word.sentence_count
+                    );
+                    if let Some(roman) = word.word.roman() {
+                        println!("      {}", output.dim(roman.as_str()));
+                    }
+                    println!(
+                        "      {}",
+                        word.meanings
+                            .iter()
+                            .map(|m| m.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                    println!();
                 }
             }
         }
@@ -422,7 +617,10 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                 voice: None,
                 model: None,
             })?;
-            println!("updated {} skipped {}", report.updated, report.skipped);
+            println!("{}\n", output.heading("Audio"));
+            println!("  updated {}", output.ok(&report.updated.to_string()));
+            println!("  skipped {}", output.dim(&report.skipped.to_string()));
+            output.next_hint(report.next.command_hint());
         }
         Command::Organize(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
@@ -442,7 +640,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                         title: None,
                     };
                     let report = update_sentence(&workspace, request)?;
-                    println!("updated {}", report.sentence.id());
+                    println!("{}  {}", output.heading("Updated"), report.sentence.id());
                 }
                 OrganizeCommand::Move { id, to } => {
                     let id = SentenceId::parse(id)?;
@@ -456,7 +654,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                     let index = to.saturating_sub(1).min(ordered.len());
                     ordered.insert(index, id);
                     let report = reorder_sentences(&workspace, ReorderSentences { collection, ordered_ids: ordered })?;
-                    println!("reordered {} sentence(s)", report.moved);
+                    println!("{}  {} sentence(s)", output.heading("Reordered"), report.moved);
                 }
             }
         }
@@ -468,7 +666,8 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                 ConfigCommand::Get { key: None } => print!("{}", std::fs::read_to_string(&config_file)?),
                 ConfigCommand::Set { key, value } => {
                     set_config_value(&config_file, &key, &value)?;
-                    println!("{key} = {value}   (config.toml updated)");
+                    println!("{}  config.toml\n", output.heading("Settings"));
+                    println!("  {} = {}", output.command(&key), value);
                 }
             }
         }
@@ -480,7 +679,12 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                 destination: args.destination,
                 format: match args.format { PackageFormatArg::Json => PackageFormat::Json, PackageFormatArg::Db => PackageFormat::Db },
             })?;
-            println!("packaged {} sentence(s) -> {}", report.sentences, report.artifact.path.display());
+            println!("{}\n", output.heading("Package"));
+            println!("  sentences {}", report.sentences);
+            println!("  files     {}", report.artifact.files);
+            println!("  bytes     {}", report.artifact.bytes);
+            println!("  path      {}", output.path(&report.artifact.path));
+            output.next_hint(report.next.command_hint());
         }
         Command::Export(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
@@ -490,13 +694,24 @@ fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
                 deck: args.deck,
                 destination: args.destination,
             })?;
-            println!("exported {} sentence(s) -> {}", report.sentences, report.artifact.path.display());
+            println!("{}\n", output.heading("Export"));
+            println!("  sentences {}", report.sentences);
+            println!("  files     {}", report.artifact.files);
+            println!("  bytes     {}", report.artifact.bytes);
+            println!("  path      {}", output.path(&report.artifact.path));
         }
         Command::Status => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
             let report = status(&StatusDeps { library: &workspace, context: &workspace })?;
-            println!("sentences {} (draft {} enriching {} enriched {})", report.summary.sentences, report.summary.draft, report.summary.enriching, report.summary.enriched);
-            if let Some(hint) = report.next.command_hint() { println!("next: {}", hint.as_str()); }
+            println!("{}\n", output.heading("Status"));
+            println!("  collections {}", report.summary.collections);
+            println!("  sentences   {}", report.summary.sentences);
+            println!("  draft       {}", report.summary.draft);
+            println!("  enriching   {}", report.summary.enriching);
+            println!("  enriched    {}", report.summary.enriched);
+            println!("  words       {}", report.summary.words);
+            println!("  audio       {}", report.summary.audio);
+            output.next_hint(report.next.command_hint());
         }
         Command::Viewer(args) => {
             let workspace = FsWorkspace::discover(std::env::current_dir()?)?;
