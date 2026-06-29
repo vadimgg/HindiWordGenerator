@@ -1,3 +1,6 @@
+-- v0.2 architecture schema file.
+-- Fresh databases created from this clean schema start at meta.schema_version = 1.
+
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE meta (

@@ -21,6 +21,10 @@ Run `lingo config <subcommand> --help` for details.
 
 ## Common keys
 
+The v0.2 config schema uses `target`, `library`, `display`, `audio`, and
+`publish`. New config must not expose prototype `collection`, `batch`, `package`,
+or `export` sections.
+
 ```toml
 [target]
 profile = "hindi"          # language profile

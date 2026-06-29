@@ -7,8 +7,8 @@ How the tool is actually used, end to end. For the command reference see
 The pipeline is always the same progression:
 
 ```
-raw material → sentences → enriched → (QA) → audio → published
-   extract       apply       enrich    qa   approve   audio    publish
+raw material → draft sentences → enriched → QA checked → approved → audio → published
+   extract       apply             enrich      qa           approve    audio    publish
 ```
 
 Every model-facing stage is the same loop: **lingo writes a task → you/an agent
@@ -56,7 +56,7 @@ lingo apply                  # applies the corrections; shows a before/after dif
 # 4. approve: curate what is ready for study
 lingo ls --deck ch01 --unapproved
 lingo approve sen-ch01-01
-#   Repeat for rows you approve, or approve quickly in the viewer.
+#   Repeat for rows you approve, or approve the whole deck when appropriate.
 #   → Next: lingo audio ch01
 
 # 5. audio: generate speech for approved sentences missing it
@@ -137,16 +137,17 @@ each pass small.
 
 ---
 
-## Workflow C — the web viewer
+## Workflow C — the web viewer (deferred)
 
-`lingo viewer` (or just `lingo`) serves a local UI over the same library. The
-"Generate" buttons create the **same runs**; a textarea is just another place to
-paste a reply; "Apply" calls the **same** use case. There is no second code path —
-the UI is a third actor on the same loop, so anything done in the UI is visible to
-the CLI and vice versa.
+`lingo viewer` will serve a local UI over the same library after the CLI-first
+refactor has the application use cases in place. The future "Generate" buttons
+must create the **same runs**; a textarea is just another place to paste a reply;
+"Apply" calls the **same** use case. There is no second code path — the UI is a
+third actor on the same loop, so anything done in the UI is visible to the CLI
+and vice versa.
 
-Use the viewer for browsing, reordering, approving sentences, and quick edits; use
-the CLI for the bulk extract→enrich→QA→approve→audio→publish pipeline.
+For now, use the CLI for the full extract→enrich→QA→approve→audio→publish
+pipeline.
 
 ---
 
@@ -157,7 +158,7 @@ the CLI for the bulk extract→enrich→QA→approve→audio→publish pipeline.
 | Don't know what to do next | `lingo status` |
 | A reply failed validation | Fix the reply file, `lingo apply runs/<run>/` again (the run stays pending) |
 | Sentences stuck in `enriching` (abandoned run) | `lingo enrich --reset` |
-| Started an extract you don't want | `lingo runs clean --abandoned` (drops the empty deck too) |
+| Started an extract you don't want | `lingo runs clean --abandoned` (marks it abandoned; reports any empty deck it drops) |
 | Don't remember which runs are open | `lingo runs ls` |
 | Setup seems broken (missing audio backend, dirs) | `lingo doctor` |
 | A whole deck is wrong | `lingo deck delete <slug>` |

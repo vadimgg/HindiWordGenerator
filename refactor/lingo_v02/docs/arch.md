@@ -4,9 +4,9 @@ Entry point for the `arch/` design pack — the architecture source for the
 CLI-first Lingo rebuild. It locks the schema and code-architecture decisions that
 affect implementation.
 
-Claude owns CLI and UI docs. This pack owns architecture, persistence,
-crate/module boundaries, state machines, domain model, run/apply behavior,
-reusable mechanics, and schema design.
+CLI/workflow docs own user-facing behavior. This pack owns architecture,
+persistence, crate/module boundaries, state machines, domain model, run/apply
+behavior, reusable mechanics, and schema design.
 
 ## Locked architecture decisions
 
@@ -14,7 +14,7 @@ reusable mechanics, and schema design.
 |---|---|
 | Canonical store | SQLite `library.db` is the authoring source of truth. |
 | MySQL | Appendix only. Do not implement a MySQL adapter for the personal CLI. |
-| Prototype compatibility | Do not preserve `collection/batch/section` internals. Rebuild cleanly around `deck`. |
+| Prototype compatibility | None. Do not migrate old prototype databases or preserve `collection/batch/section` internals. Rebuild cleanly around `deck`. |
 | Library identity | `meta.library_id` is generated at init and carried in package manifests. |
 | Sentence lifecycle | Persist only `draft | enriched`. Do **not** persist `enriching`. |
 | Visible `enriching` | Derived from pending `runs` + `run_sentences` claims. |
@@ -34,9 +34,9 @@ reusable mechanics, and schema design.
 | Schema version | Clean rebuild starts at `meta.schema_version = 1`. |
 | Crates | Start with a small workspace and split by dependency pressure, not symmetry. |
 | `apply` | Full validation before write, one SQLite transaction, dry-run, idempotent re-apply. |
-| Publish selection | `study`/`anki` default to approved active sentences only; `--include-unapproved` may include enriched inactive rows. |
+| Publish selection | `study`/`anki` default to approved enriched sentences only; `--include-unapproved` may include enriched unapproved rows. |
 | Package/db export | Lossless: export all sentences and preserve approval, QA, authority, tokens, audio metadata, and origin. |
-| Import approval | Same-library restore preserves approval/QA. Cross-library import defaults to inactive + unchecked; explicit trust can preserve approval/QA. |
+| Import approval | New-format package restore preserves approval/QA for the same library. Cross-library package import defaults to inactive + unchecked; explicit trust can preserve approval/QA. |
 | Workflow | Approval is an explicit conceptual step: draft → enrich → QA recommended → approve → audio → publish. |
 
 ## Files

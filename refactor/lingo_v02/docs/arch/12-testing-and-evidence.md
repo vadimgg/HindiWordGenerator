@@ -54,7 +54,7 @@ Use fake repository and fake workspace.
 | approve | rejects draft, approves enriched, unapproves selected rows |
 | audio | missing/stale selection policy |
 | publish | study/anki default to approved enriched rows; package exports all |
-| import | cross-library import resets approval/QA; same-library restore preserves |
+| import | cross-library new-format package import resets approval/QA; same-library package restore preserves |
 
 ## SQLite tests
 
@@ -104,7 +104,7 @@ Use temp DB fixtures and real transactions.
 
 | Area | Evidence |
 |---|---|
-| package | export then import/restore round-trip |
+| package | export then new-format import/restore round-trip |
 | package field list | active, qa_checked_at, authority, tokens, origin, timestamps preserved |
 | package draft | draft sentences are exported |
 | package unapproved | unapproved enriched sentences are exported |
@@ -121,7 +121,7 @@ Use temp DB fixtures and real transactions.
 | Anki | GUID derived from sentence ID |
 | Anki matrix | same selection matrix as study: skip draft, skip unapproved by default, skip missing audio, include enriched inactive only with explicit policy |
 | import dry-run | reports duplicate target/different English conflict |
-| import approval policy | cross-library resets approval/QA; trusted/same-library preserves |
+| import approval policy | cross-library new-format package import resets approval/QA; trusted/same-library preserves |
 | missing audio | package includes null; study/anki skip/report |
 
 ## Study export fixture
@@ -174,6 +174,6 @@ the same source data must produce a schema-compatible output.
 [ ] audio fingerprints use profile/backend/voice/model/lang/text
 [ ] study/anki default to active approved enriched rows
 [ ] package export/import round-trips approval, QA, authority, tokens, origin
-[ ] cross-library import resets approval/QA by default
+[ ] cross-library new-format package import resets approval/QA by default
 [ ] MySQL appendix is not wired into implementation
 ```

@@ -20,13 +20,14 @@ the source of truth. Lingo never calls a model — instead each model-facing sta
 writes a **prompt file** and reads back a **reply file**:
 
 ```
-          claim work        you / agent / web          validate + commit
+          claim work          you / agent            validate + commit
 state ──────────────▶ task.md ──────────▶ reply.{yaml,json} ──────────▶ library.db
-        (lingo writes)                                       (lingo applies)
+        (lingo writes)                                     (lingo applies)
 ```
 
-A human pasting into ChatGPT, a coding agent reading/writing files, and the web
-viewer are the **same three commands** with a different actor in the middle.
+A human pasting into ChatGPT and a coding agent reading/writing files are the
+same commands with a different actor in the middle. The future viewer must use
+the same application use cases once it is rebuilt.
 
 ---
 
@@ -66,7 +67,9 @@ Options:
 > render Unicode poorly. The target-language text itself (Devanagari, kana, …) is
 > never transliterated by `--ascii` — only the UI chrome.
 
-- With **no command**, `lingo` opens the local viewer (see [`cli/viewer.md`](./cli/viewer.md)).
+- With **no command**, Phase 1 should behave like `lingo status` if a library is
+  present, or print help if not. The viewer default is deferred until the viewer
+  is rebuilt on the new use cases.
 - Color is auto-disabled when output is not a terminal, or when `NO_COLOR` is set.
 - `--json` is available on every command that reports state; it emits the same
   data with no ANSI codes and always includes a terminal state — `next`, `done`,
@@ -91,6 +94,7 @@ Build (direct, no model):
 
 Produce:
   approve   Approve or unapprove enriched sentences for study
+  unapprove Remove approval from enriched sentences
   audio     Synthesize speech for sentences missing it
   publish   Export a deck or the library: package | study | anki
 
@@ -106,7 +110,7 @@ Workspace:
   init      Create a new library
   config    Read or write library settings
   doctor    Check setup and find recoverable problems
-  viewer    Serve the local web viewer (default when no command is given)
+  viewer    Serve the local web viewer (deferred until rebuilt on new use cases)
 
 Options:
       --color <WHEN>  auto | always | never  [default: auto]
@@ -260,6 +264,7 @@ Produce:
 | Command | Purpose |
 |---|---|
 | [`approve`](./cli/approve.md) | Approve or unapprove enriched sentences for study |
+| [`unapprove`](./cli/approve.md) | Remove approval from enriched sentences |
 | [`audio`](./cli/audio.md) | Generate speech for sentences missing it |
 | [`publish`](./cli/publish.md) | Export `package` / `study` / `anki` |
 

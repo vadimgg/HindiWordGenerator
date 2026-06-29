@@ -326,18 +326,23 @@ WHERE id = ? AND status = 'pending';
 COMMIT;
 ```
 
-## Schema migration policy
+## Schema evolution policy
 
-Before real production data exists, reset cleanly.
+For this refactor, there is **no migration from the prototype schema**. Phase 1
+creates only the clean v0.2 schema. If an existing prototype database is opened,
+the CLI should fail with a clear "unsupported old library" message instead of
+trying to upgrade it.
 
-After v0.2 has real data:
+Do not keep old and new schemas live in parallel. Do not add compatibility views,
+dual-write paths, or old table readers.
+
+After v0.2 has real data, future schema changes may use normal versioned
+upgrades:
 
 ```text
 1. backup library.db
-2. run migration inside transaction where SQLite allows it
+2. run one clean versioned upgrade inside a transaction where SQLite allows it
 3. verify meta.schema_version
 4. run doctor checks
-5. keep migration fixtures
+5. keep fixtures for that v0.2+ upgrade
 ```
-
-Do not keep old and new schemas live in parallel unless protecting real user data.

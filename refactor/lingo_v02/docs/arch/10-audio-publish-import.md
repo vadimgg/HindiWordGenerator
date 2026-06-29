@@ -189,7 +189,8 @@ pub struct PackageManifest {
 }
 ```
 
-Package sentence JSON must preserve every field needed for backup/restore:
+New-format package sentence JSON must preserve every field needed for
+backup/restore:
 
 ```rust
 pub struct PackageSentence {
@@ -310,11 +311,14 @@ Default policy is safe re-approval for external content:
 
 | Source | Sentence IDs | `active` | `qa_checked_at` | Origin |
 |---|---|---|---|---|
-| same `source_library_id` as destination | preserve | preserve | preserve | preserve/restore |
+| same `source_library_id` as destination | preserve | preserve | preserve | preserve/new-format restore |
 | different or missing `source_library_id` | allocate local IDs | `false` | `NULL` | imported source fields |
 | external with explicit trust | allocate local IDs | preserve if enriched | preserve | imported source fields |
 
-A true disaster restore from package into an empty workspace should be a restore workflow that seeds the destination `meta.library_id` from the package before importing. Plain cross-library import should not silently bless imported approvals.
+A true disaster restore from a new-format package into an empty workspace should
+be a restore workflow that seeds the destination `meta.library_id` from the
+package before importing. Plain cross-library import should not silently bless
+imported approvals.
 
 ## Import dry-run report
 

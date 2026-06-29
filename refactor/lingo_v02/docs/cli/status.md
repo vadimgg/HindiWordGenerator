@@ -55,8 +55,8 @@ Most urgent first, at most three shown:
 1. A **pending run** waiting for a reply to apply.
 2. **Draft** sentences ready to enrich.
 3. **Enriched but not QA'd** sentences ready for `qa`.
-4. **QA'd but unapproved** sentences ready for curation (`lingo approve <deck>`,
-   `lingo ls --unapproved`, or the viewer).
+4. **QA'd but unapproved** sentences ready for curation (`lingo approve <deck>`
+   or `lingo ls --unapproved`).
 5. Approved sentences **missing audio**.
 6. Approved sentences with audio → `publish`.
 7. Nothing left → `Done:` message.

@@ -1,8 +1,9 @@
 # `lingo import`
 
-Merge an existing Lingo package directory into this library. Direct and
-immediate — no model, no run (unlike [`extract`](./extract.md), which is the
-model path for *raw* material).
+Merge an existing **new-format** Lingo package directory into this library.
+Direct and immediate — no model, no run (unlike [`extract`](./extract.md), which
+is the model path for *raw* material). This is not a prototype database migration
+command.
 
 See [`CLI.md`](../CLI.md) for the shared color/output legend.
 
@@ -14,7 +15,7 @@ Merge an existing lingo package into this library.
 Usage: lingo import [OPTIONS] <PACKAGE>
 
 Arguments:
-  <PACKAGE>  A lingo.package directory (the output of `lingo publish --format package`)
+  <PACKAGE>  A new-format lingo.package directory (from `lingo publish --format package`)
 
 Options:
       --force            Re-import duplicate sentences and replace existing audio
@@ -52,12 +53,13 @@ otherwise an import could silently mark unreviewed content as "approved for stud
 
 | Source | Approval / QA |
 |---|---|
-| **same library** (package's `library_id` matches this library — i.e. a backup restore) | **preserved** |
+| **same library** (new-format package's `library_id` matches this library — i.e. a backup restore) | **preserved** |
 | **different library** (a package from elsewhere) | **reset**: imported unapproved + QA `unchecked`, so you re-approve here |
 | different library, with `--trust-approval` | preserved where the row is `enriched` |
 
-A disaster-recovery restore into an empty library is a restore flow that seeds this
-library's `library_id` from the package first, so it counts as "same library."
+A disaster-recovery restore into an empty library is a new-format restore flow
+that seeds this library's `library_id` from the package first, so it counts as
+"same library."
 
 ## Example
 

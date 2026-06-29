@@ -16,7 +16,7 @@ Usage: lingo runs <SUBCOMMAND>
 
 Subcommands:
   ls                  List runs and their status
-  clean [--abandoned] Remove run directories
+  clean [--abandoned] Tidy run directories
 
 Run `lingo runs <subcommand> --help` for details.
 ```
@@ -44,26 +44,27 @@ Status comes from the DB (authoritative); the folder's `run.json` mirrors it.
 Usage: lingo runs clean [OPTIONS]
 
 Options:
-      --abandoned   Also remove pending/failed runs AND any empty deck they created
+      --abandoned   Mark abandoned runs and remove only safe folders
 ```
 
 - **`lingo runs clean`** (safe tidy-up): removes only **applied** run directories.
   Their work is already committed to the library, so nothing is lost.
-- **`lingo runs clean --abandoned`**: also removes runs whose reply was never
-  applied, and **garbage-collects any deck left with zero applied sentences**
-  (e.g. an `extract` you started and never finished). This is the cleanup path for
-  abandoned empty decks.
+- **`lingo runs clean --abandoned`**: marks abandoned pending/failed runs in the
+  DB, then removes only run folders that have no reply file. A pending run with a
+  reply file is never deleted silently; the output tells you to apply or inspect
+  it. If an abandoned `extract` left an empty deck, the empty deck is dropped only
+  when it has zero applied sentences and the report names it explicitly.
 
 ```bash
-lingo runs clean              # remove finished runs
-lingo runs clean --abandoned  # also drop never-applied runs + their empty decks
+lingo runs clean              # remove finished run folders
+lingo runs clean --abandoned  # mark abandoned runs; remove only safe folders
 ```
 
 Sample output:
 
 ```
 ✓ Removed 1 applied run
-~ Removed 2 abandoned runs · dropped 1 empty deck (ch03)
+~ Marked 2 abandoned runs · removed 1 empty run folder · dropped 1 empty deck (ch03)
 
 Next: lingo status
 ```

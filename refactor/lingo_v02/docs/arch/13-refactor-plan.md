@@ -2,7 +2,10 @@
 
 ## Principle
 
-Rebuild in vertical slices. Do not migrate every command horizontally before proving one full path through domain, repository, workspace, handoff, service, and CLI.
+Rebuild in vertical slices. Do not port every command horizontally before proving
+one full path through domain, repository, workspace, handoff, service, and CLI.
+There is no backward-compatibility work for prototype databases or old command
+surfaces.
 
 ## Phase 0 — Freeze architecture vocabulary
 
@@ -62,7 +65,7 @@ Implement:
 - run file write/read/repair;
 - flat audio path policy;
 - atomic write verification;
-- built-in template lookup from `crates/lingo-handoff/templates/`;
+- built-in template lookup from `crates/lingo-service/templates/`;
 - workspace override lookup from `prompts/`;
 - extract task rendering;
 - extract reply parser;
@@ -94,7 +97,7 @@ Evidence:
 
 ```bash
 cargo test -p lingo-domain
-cargo test -p lingo-db
+cargo test -p lingo-sqlite
 cargo test -p lingo-cli init_extract_apply_status_ls_show
 ```
 
@@ -213,17 +216,18 @@ Anki GUID derives from sentence ID
 
 Implement:
 
-- `lingo import`;
+- `lingo import` for new-format packages only;
 - package validation;
-- same-library restore vs cross-library import approval policy;
+- same-library restore vs cross-library import approval policy for new-format
+  packages;
 - slug conflict handling;
 - origin preservation.
 
 Evidence:
 
 ```text
-same-library import preserves sentence IDs, approval, QA, authority, tokens, audio, origin
-cross-library import resets approval/QA by default
+same-library new-format package restore preserves sentence IDs, approval, QA, authority, tokens, audio, origin
+cross-library new-format package import resets approval/QA by default
 invalid package states, including approved draft rows, are rejected
 ```
 
@@ -248,7 +252,7 @@ runs clean never deletes unapplied work without an explicit safe policy
 deck delete removes DB rows and flat sentence audio files for that deck
 ```
 
-## Phase 9 — Delete obsolete vocabulary and compatibility shims
+## Phase 9 — Delete obsolete vocabulary and prototype code
 
 Delete or rewrite prototype code:
 
@@ -257,9 +261,10 @@ Delete or rewrite prototype code:
 - old deck-folder audio paths;
 - old status enum with active/enriching;
 - old apply paths that bypass strict run validation;
-- old import code that lacks durable origin/approval policy.
+- old import code that lacks durable origin/approval policy;
+- any old-schema migration or compatibility branch.
 
-Do not enrich legacy code scheduled for deletion.
+Do not enrich prototype code scheduled for deletion.
 
 ## Implementation stop rules
 

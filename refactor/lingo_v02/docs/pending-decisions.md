@@ -44,8 +44,9 @@ The arch pack resolved the model gaps that previously blocked CLI docs:
   ids are durable and survive run cleanup.
 - **Approval gate:** `active` means approved for study, is allowed only when
   `status = enriched`, and is the default selection for `study`/`anki`.
-- **Import policy:** same-library restore preserves approval/QA; cross-library
-  import resets approval/QA unless `--trust-approval` is used.
+- **Import policy:** same-library new-format package restore preserves
+  approval/QA; cross-library package import resets approval/QA unless
+  `--trust-approval` is used.
 - **Derived enriching:** persisted sentence lifecycle is only `draft | enriched`;
   `enriching` is derived from pending enrich runs.
 
@@ -55,7 +56,8 @@ Done:
 
 - `cli/publish.md` — approved-only default for `study`/`anki` +
   `--include-unapproved`; `package`/`db` lossless.
-- `cli/import.md` — origin recording + same-library/cross-library approval policy.
+- `cli/import.md` — origin recording + new-format same-library/cross-library
+  approval policy.
 - `package-and-agents.md` — truth/in-flight/derived layout and export shapes.
 - `cli/show.md` / `cli/ls.md` — origin, approval badge, and derived `enriching`.
 - `cli/status.md` + `workflows.md` — explicit approval step before audio/publish.

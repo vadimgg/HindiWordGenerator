@@ -156,7 +156,7 @@ SQLite repository adapter. Owns schema, row codecs, transactions, and connection
 crates/lingo-sqlite/src/
   lib.rs
   connection.rs
-  migrations.rs
+  schema.rs
   schema.sql
   row/
     mod.rs
@@ -189,7 +189,7 @@ crates/lingo-sqlite/src/
 Owns:
 
 - `PRAGMA` setup;
-- migrations/schema initialization;
+- clean schema initialization;
 - `BEGIN IMMEDIATE` write transactions;
 - strict row decoding from DB wire names to domain enums;
 - `run_sentences` claim queries;

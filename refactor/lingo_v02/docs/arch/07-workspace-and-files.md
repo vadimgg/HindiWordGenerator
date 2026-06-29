@@ -92,10 +92,12 @@ impl WorkspaceLayout {
 
 ## Prompt template lookup
 
-Built-in templates live in crate source and are versioned with the binary:
+Built-in templates live in crate source and are versioned with the binary. In the
+first refactor pass they live under `lingo-service`; split them to
+`lingo-handoff` only when the boundary earns its own crate.
 
 ```text
-crates/lingo-handoff/templates/
+crates/lingo-service/templates/
   extract.md.hbs
   enrich.md.hbs
   qa.md.hbs

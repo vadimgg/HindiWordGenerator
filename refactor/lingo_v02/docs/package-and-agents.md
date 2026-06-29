@@ -122,7 +122,7 @@ study-facing shapes are below.
 
 ### `package` — JSON interchange (`lingo.package/v2`)
 
-Lossless, diffable, round-trippable backup and agent-exchange format. One
+Lossless, diffable, round-trippable new-format backup and agent-exchange format. One
 self-describing JSON file per sentence, a manifest with sha256 integrity, and an
 audio folder. **Never skips a sentence** — missing audio is exported as
 `"audio": null`. Package export preserves approval, QA state, field authority,

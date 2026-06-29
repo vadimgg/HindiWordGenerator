@@ -172,7 +172,7 @@ Use templates for display and instructions, not truth. Reply codecs and validato
 Built-in templates live in:
 
 ```text
-crates/lingo-handoff/templates/
+crates/lingo-service/templates/
   extract.md.hbs
   enrich.md.hbs
   qa.md.hbs

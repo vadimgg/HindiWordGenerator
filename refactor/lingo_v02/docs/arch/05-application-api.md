@@ -289,7 +289,7 @@ Default policy:
 
 ```text
 source_library_id == destination library_id
-  -> preserve sentence IDs, active, and qa_checked_at for backup restore/sync
+  -> preserve sentence IDs, active, and qa_checked_at for new-format package restore/sync
 
 source_library_id != destination library_id
   -> allocate local sentence IDs for new imported rows

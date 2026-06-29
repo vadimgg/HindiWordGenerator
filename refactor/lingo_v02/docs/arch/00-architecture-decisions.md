@@ -51,7 +51,13 @@ prompts/ optional user-owned prompt overrides
 
 ## Decision: no prototype compatibility
 
-There is no production data to protect. Do not keep compatibility aliases like `BatchId`, old `collections`, legacy `sections`, or old folder layouts unless the user explicitly says real data must be migrated.
+There is no production data to protect. Do not keep compatibility aliases like
+`BatchId`, old `collections`, old `sections`, old schema readers, old database
+migrations, or old folder layouts. The refactor is a clean rebuild.
+
+If old prototype data is ever needed, handle it outside the new runtime with a
+one-off throwaway conversion script. Do not add backward-compatible branches to
+the product code.
 
 The clean model is:
 
@@ -63,13 +69,14 @@ Run -> run_sentences
 
 ## Decision: library identity is durable
 
-Every initialized library gets a generated `meta.library_id`. Package exports include it as `source_library_id`.
+Every initialized library gets a generated `meta.library_id`. New-format package
+exports include it as `source_library_id`.
 
 Use it only for identity decisions, especially import:
 
 ```text
-same source_library_id      -> same-library restore/sync rules may preserve approval and QA
-different/missing source id -> cross-library import rules reset approval by default
+same source_library_id      -> new-format same-library restore may preserve approval and QA
+different/missing source id -> new-format cross-library import resets approval by default
 ```
 
 `library_id` is not a user-visible title and should not be reused across independent libraries.
@@ -345,7 +352,8 @@ SQLite cannot express this as a valid partial unique index because the predicate
 
 ## Decision: package is the lossless round-trip format
 
-Package JSON must preserve enough data that backup -> import/restore does not silently downgrade a library:
+New-format package JSON must preserve enough data that backup -> import/restore
+does not silently downgrade a library:
 
 ```text
 id

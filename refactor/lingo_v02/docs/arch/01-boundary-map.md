@@ -105,7 +105,7 @@ Every implementation slice that touches a boundary should name evidence:
 | service does not import CLI | dependency audit / Cargo tree |
 | domain does not import store/workspace | dependency audit |
 | repository port is real | fake repository used in service tests |
-| SQLite schema authority | round-trip and migration tests |
+| SQLite schema authority | schema initialization, version, and round-trip tests |
 | run.json is mirror | repair/rederive test |
 | audio path is deterministic | deck rename leaves audio path stable test |
 | approval invariant | active draft rejected at domain and DB layers |

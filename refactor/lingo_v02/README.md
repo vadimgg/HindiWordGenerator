@@ -1,16 +1,24 @@
-# Lingo Rust refactor
+# Lingo Rust refactor direction
 
-This workspace implements the sentence-centric SQLite library described in the refactor docs. The Astro viewer/UI has intentionally been left out of this phase; the CLI and Rust crates are the product surface.
+This workspace is a pre-refactor Rust baseline. The files under `docs/` describe
+the intended sentence-centric SQLite refactor direction; the current code has not
+fully implemented that direction yet.
 
-The canonical runtime state is `library.db`. JSON packages and Anki packages are derived publishers, not source-of-truth files.
+The target design makes `library.db` the canonical runtime state. JSON packages,
+study packages, and Anki packages are derived publishers, not source-of-truth
+files.
+
+The CLI is the first product surface for the refactor. The viewer is deferred
+until it can call the same application use cases as the CLI; do not treat the
+current prototype viewer as part of the Phase 1 contract.
 
 Documentation:
 
 - `docs/CLI.md` — CLI reference hub (per-command pages under `docs/cli/`)
 - `docs/workflows.md` — how the tool is used end to end
 - `docs/package-and-agents.md` — on-disk layout, exports, and coding-agent flow
-- `docs/schema.md` — the `library.db` schema
-- `docs/pending-decisions.md` — open schema/architecture decisions + queued doc work
+- `docs/schema.md` — prose schema overview; exact SQL lives in `docs/arch/schema_v02.sql`
+- `docs/pending-decisions.md` — reconciliation notes + queued implementation checks
 
 Run:
 
