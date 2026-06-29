@@ -21,10 +21,11 @@ Arguments:
 Options:
       --format <FORMAT>   package | study | anki | db  [default: package]
       --dest <PATH>       Output path (default: out/<deck> or the configured dest)
-      --force             Overwrite the destination if it already exists
-      --allow-unqa        Publish even if some sentences have not been QA'd
-      --json              Machine-readable output
-  -h, --help              Print help
+      --force               Overwrite the destination if it already exists
+      --include-unapproved  Include enriched-but-unapproved rows in study/anki
+      --allow-unqa          Publish even if some sentences have not been QA'd
+      --json                Machine-readable output
+  -h, --help                Print help
 ```
 
 Help colors: `publish`/flags **green**, `[DECK]`/`<FORMAT>`/`<PATH>` **yellow**,
@@ -32,19 +33,24 @@ headers **bold cyan**.
 
 ## Formats
 
-| `--format` | Audience | Default scope | Missing audio | Round-trip |
-|---|---|---|---|---|
-| `package` *(default)* | backup, agents, re-import | the deck (or library) | **included**, `"audio": null` | yes (`import`) |
-| `study` | the custom iOS app | **whole library** | skipped + reported | one-way load |
-| `anki` | Anki | the deck | skipped + reported | one-way |
-| `db` | power users | the deck (or library) | included | n/a |
+| `--format` | Audience | Default scope | Default selection | Missing audio | Round-trip |
+|---|---|---|---|---|---|
+| `package` *(default)* | backup, agents, re-import | the deck (or library) | **all rows** (lossless) | **included**, `"audio": null` | yes (`import`) |
+| `study` | the custom iOS app | **whole library** | **approved only** | skipped + reported | one-way load |
+| `anki` | Anki | the deck | **approved only** | skipped + reported | one-way |
+| `db` | power users | the deck (or library) | all rows | included | n/a |
 
 Key behaviors:
 
-- **`package` never skips a sentence** — it's a lossless backup and the re-import
-  source, so a sentence missing audio is exported with `"audio": null`, not
-  dropped. `study` and `anki` feed study sessions, so they skip-and-report missing
-  audio.
+- **Approval is the gate for study targets.** `study` and `anki` export only
+  **approved** enriched sentences by default — so only things you reviewed reach
+  your phone / Anki. `--include-unapproved` additionally includes
+  enriched-but-unapproved rows; `draft` rows are never studyable and are always
+  excluded.
+- **`package` and `db` are lossless** — they export *every* selected sentence and
+  preserve approval, QA, field authority, tokens, audio metadata, and origin, so a
+  backup→restore round-trips exactly. A sentence missing audio is exported with
+  `"audio": null`, not dropped.
 - **`study` defaults to the whole library**; `lingo publish <deck> --format study`
   exports one deck. It emits a loose folder: `study.sqlite` + an `audio/` sidecar,
   against a stable versioned schema.

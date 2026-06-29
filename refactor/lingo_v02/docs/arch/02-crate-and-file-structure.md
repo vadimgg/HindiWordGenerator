@@ -55,7 +55,7 @@ crates/lingo-domain/src/
 Owns:
 
 - `DeckSlug`, `SentenceId`, `RunId`, `ProfileId`;
-- sentence lifecycle, active flag, QA state;
+- sentence lifecycle, approval state, QA state, sentence origin;
 - field authority rules;
 - target edit impact classification;
 - token and word-key invariants;

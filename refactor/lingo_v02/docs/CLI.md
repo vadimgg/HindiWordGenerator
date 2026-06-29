@@ -42,8 +42,8 @@ viewer are the **same three commands** with a different actor in the middle.
 - **Word** — derived lexicon across all sentences.
 - **Run** — one prompt→reply handoff (a directory under `runs/` + a DB row).
 
-> The schema may still call a deck a "batch" internally; the CLI never shows
-> "batch" outside `--json`, `doctor`, and debug output.
+> New code and docs use `deck`. If prototype code still mentions "batch",
+> replace it during the refactor; that vocabulary is not part of the v0.2 model.
 
 ---
 
@@ -90,6 +90,7 @@ Build (direct, no model):
   edit      Hand-edit a sentence (edited fields become human-authored)
 
 Produce:
+  approve   Approve or unapprove enriched sentences for study
   audio     Synthesize speech for sentences missing it
   publish   Export a deck or the library: package | study | anki
 
@@ -135,20 +136,24 @@ Color is **semantic**: the same kind of information is always the same color. Wi
 | Sentence id, file paths, romanisation, gloss, secondary detail | dim | `2` |
 | Errors, `!` | bold red | `1;31` |
 
-Status badges:
+Lifecycle/status badges:
 
 | Status | Meaning | Color |
 |---|---|---|
 | `draft` | extracted, not yet enriched | dim |
 | `enriching` | claimed by an open enrich run | yellow |
 | `enriched` | has romanisation, gloss, breakdown | green |
-| `active` | curated/approved in the viewer | bold green |
+Approval badge:
+
+| Badge | Meaning | Color |
+|---|---|---|
+| `✓approved` | approved for study/export | bold green |
 
 Audio markers:
 
 | Marker | Meaning | Color |
 |---|---|---|
-| `♪ audio/ch01/sen-….mp3` | present | dim |
+| `♪ audio/sen-….mp3` | present | dim |
 | `♪ missing` | not generated yet | red |
 | `♪ copied` | copied during import/publish | green |
 | `♪ skipped` | left as-is (duplicate / already exists) | yellow |
@@ -180,7 +185,7 @@ Example (colors annotated):
   + sen-ch01-01  enriched  I am a student.        ← + green · id dim · enriched green
       मैं एक छात्र हूँ।                              ← target cyan
       maĩ ek chātra hū̃.                            ← romanisation dim
-      ♪ audio/ch01/sen-ch01-01.mp3                  ← present, dim
+      ♪ audio/sen-ch01-01.mp3                       ← present, dim
 ```
 
 ### The `Next:` line  *(the self-teaching contract)*
@@ -254,6 +259,7 @@ Produce:
 
 | Command | Purpose |
 |---|---|
+| [`approve`](./cli/approve.md) | Approve or unapprove enriched sentences for study |
 | [`audio`](./cli/audio.md) | Generate speech for sentences missing it |
 | [`publish`](./cli/publish.md) | Export `package` / `study` / `anki` |
 

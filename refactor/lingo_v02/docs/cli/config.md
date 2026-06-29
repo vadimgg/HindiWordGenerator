@@ -25,8 +25,8 @@ Run `lingo config <subcommand> --help` for details.
 [target]
 profile = "hindi"          # language profile
 
-[collection]
-title = "Lingo Sentences"  # default deck title
+[library]
+title = "Lingo Sentences"  # default library / Anki root title
 language = "hi"
 
 [display]

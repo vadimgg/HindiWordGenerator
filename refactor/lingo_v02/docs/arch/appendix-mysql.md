@@ -11,9 +11,10 @@ Use this only if Lingo later becomes a hosted or multi-user system.
 - Use `utf8mb4` for target-language text.
 - Use `DATETIME(6)` instead of ISO text timestamps if the hosted service owns conversion.
 - Use `ENUM` cautiously; migrations become heavier than SQLite text checks.
-- Use `SELECT ... FOR UPDATE` in transactions where SQLite uses `BEGIN IMMEDIATE`.
+- MySQL can use `SELECT ... FOR UPDATE` where SQLite uses `BEGIN IMMEDIATE`, but the service invariant is the same.
 - WAL guidance does not apply.
 - A hosted system would need user/library ownership columns not present in the personal CLI schema.
+- This translation mirrors origin and approval invariants, but it is not executable evidence for the CLI.
 
 ## DDL
 
@@ -45,6 +46,12 @@ CREATE TABLE sentences (
   status ENUM('draft','enriched') NOT NULL DEFAULT 'draft',
   active BOOLEAN NOT NULL DEFAULT FALSE,
   qa_checked_at DATETIME(6) NULL,
+  origin ENUM('generated','imported','manual') NOT NULL DEFAULT 'generated',
+  source_label TEXT,
+  source_extract_run_id VARCHAR(128),
+  source_library_id VARCHAR(128),
+  source_package_id VARCHAR(128),
+  source_sentence_id VARCHAR(128),
   target TEXT NOT NULL,
   romanisation TEXT,
   english TEXT,
@@ -57,8 +64,15 @@ CREATE TABLE sentences (
   KEY sentences_status_updated(status, updated_at),
   KEY sentences_active_deck(active, deck_id, position),
   KEY sentences_target_identity(deck_id, target_identity_key),
+  KEY sentences_origin(origin, source_library_id, source_package_id),
   CONSTRAINT fk_sentences_deck FOREIGN KEY(deck_id) REFERENCES decks(id) ON DELETE CASCADE,
-  CHECK (position > 0)
+  CHECK (position > 0),
+  CHECK (active = FALSE OR status = 'enriched'),
+  CHECK (
+    (origin = 'generated' AND source_library_id IS NULL AND source_package_id IS NULL AND source_sentence_id IS NULL)
+    OR (origin = 'imported' AND source_library_id IS NOT NULL AND source_package_id IS NOT NULL AND source_sentence_id IS NOT NULL)
+    OR (origin = 'manual' AND source_extract_run_id IS NULL AND source_library_id IS NULL AND source_package_id IS NULL AND source_sentence_id IS NULL)
+  )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE sentence_field_authority (
@@ -136,7 +150,6 @@ CREATE TABLE sentence_audio (
   KEY sentence_audio_fingerprint(input_fingerprint),
   CONSTRAINT fk_audio_sentence FOREIGN KEY(sentence_id) REFERENCES sentences(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 ```
 
 ## Hosted-system additions not in this schema

@@ -169,6 +169,29 @@ Do not repeat format literals in validators, tests, or templates. Templates call
 
 Use templates for display and instructions, not truth. Reply codecs and validators define the actual accepted contract.
 
+Built-in templates live in:
+
+```text
+crates/lingo-handoff/templates/
+  extract.md.hbs
+  enrich.md.hbs
+  qa.md.hbs
+```
+
+Workspace overrides live in:
+
+```text
+prompts/
+  extract.md.hbs
+  enrich.md.hbs
+  qa.md.hbs
+```
+
+`HandoffPort::render_task` checks workspace overrides first and falls back to the
+built-in template. The refined templates are product behavior: add golden tests
+for rendered `task.md` output so prompt regressions fail before a model ever sees
+the task.
+
 Template data should be typed:
 
 ```rust

@@ -36,7 +36,7 @@ Help colors: `enrich`/flags **green**, `[DECK]`/`<N>` **yellow**, headers **bold
 | Flag | Effect |
 |---|---|
 | `--limit` | Cap how many drafts are claimed — keeps the prompt inside the model's context window. |
-| `--force` | Re-run enrichment on `enriched` rows (e.g. after improving the prompt). `authority: human` fields still untouched; clears `qa_checked_at`. |
+| `--force` | Re-run enrichment on `enriched` rows (e.g. after improving the prompt). `authority: human` fields still untouched; clears `qa_checked_at`; if study-facing fields or tokens change, clears approval too. |
 | `--reset` | Recovery: a crashed/abandoned run can leave rows in `enriching`. This returns them to `draft`. |
 | `--print` / `--watch` | As in [`extract`](./extract.md). |
 

@@ -156,8 +156,8 @@ pub enum TestSentence {
 impl TestSentence {
     pub fn id(self) -> SentenceId {
         match self {
-            Self::First => SentenceId::parse("sen-test-01").unwrap(),
-            Self::Second => SentenceId::parse("sen-test-02").unwrap(),
+            Self::First => SentenceId::parse("sen-01jx9m7q8v6f2x4k9d3p1r0t5w").unwrap(),
+            Self::Second => SentenceId::parse("sen-01jx9m7q8v6f2x4k9d3p1r0t5x").unwrap(),
         }
     }
 }

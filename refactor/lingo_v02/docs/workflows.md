@@ -4,11 +4,11 @@ How the tool is actually used, end to end. For the command reference see
 [`CLI.md`](./CLI.md); for the on-disk layout see
 [`package-and-agents.md`](./package-and-agents.md).
 
-The pipeline is always the same five stages:
+The pipeline is always the same progression:
 
 ```
 raw material → sentences → enriched → (QA) → audio → published
-   extract       apply       enrich    qa     audio    publish
+   extract       apply       enrich    qa   approve   audio    publish
 ```
 
 Every model-facing stage is the same loop: **lingo writes a task → you/an agent
@@ -51,13 +51,19 @@ lingo apply
 # 3. qa (optional but recommended): catch model mistakes
 lingo qa ch01
 lingo apply                  # applies the corrections; shows a before/after diff
+#   → Next: lingo ls --deck ch01 --unapproved
+
+# 4. approve: curate what is ready for study
+lingo ls --deck ch01 --unapproved
+lingo approve sen-ch01-01
+#   Repeat for rows you approve, or approve quickly in the viewer.
 #   → Next: lingo audio ch01
 
-# 4. audio: generate speech for sentences missing it
+# 5. audio: generate speech for approved sentences missing it
 lingo audio ch01
 #   → Next: lingo publish ch01 --format study --dest out/study
 
-# 5. publish: export to your study target
+# 6. publish: export to your study target
 lingo publish --format study --dest out/study     # whole library → iOS app
 lingo publish ch01 --format anki --dest out/ch01.apkg
 ```
@@ -98,6 +104,7 @@ Rules:
   - If apply reports a validation error, FIX THE REPLY FILE and re-apply.
     Do not start a new run.
   - Run `lingo qa <deck>` before publishing; apply its corrections.
+  - Approve the enriched rows you want to study before audio/publish.
 ```
 
 Why this is safe even when the agent's context gets large:
@@ -138,8 +145,8 @@ paste a reply; "Apply" calls the **same** use case. There is no second code path
 the UI is a third actor on the same loop, so anything done in the UI is visible to
 the CLI and vice versa.
 
-Use the viewer for browsing, reordering, curating (`active`), and quick edits; use
-the CLI for the bulk extract→enrich→audio→publish pipeline.
+Use the viewer for browsing, reordering, approving sentences, and quick edits; use
+the CLI for the bulk extract→enrich→QA→approve→audio→publish pipeline.
 
 ---
 
@@ -169,6 +176,8 @@ lingo enrich ch01
 lingo apply
 lingo qa ch01
 lingo apply
+lingo ls --deck ch01 --unapproved
+lingo approve sen-ch01-01
 lingo audio ch01
 lingo publish --format study --dest out/study
 lingo publish ch01 --format anki --dest out/ch01.apkg

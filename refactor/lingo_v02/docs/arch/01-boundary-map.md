@@ -42,7 +42,8 @@ lingo-cli     -> SQL, prompt parsing internals, direct DB mutations
 | Concept | Authority | Derived/read views |
 |---|---|---|
 | Deck metadata | `decks` table | CLI status/list output, package manifest |
-| Sentence text/lifecycle/active/QA | `sentences` table | CLI blocks, study/Anki cards |
+| Sentence text/lifecycle/approval/QA | `sentences` table | CLI blocks, study/Anki cards |
+| Sentence origin/provenance | `sentences.origin` + source columns | show/import/package reports |
 | Field authority | `sentence_field_authority` | task prompts, show output |
 | Token breakdown | `sentence_tokens` | words view, package/study export |
 | In-flight model claim | `runs` + `run_sentences` | visible `enriching`, `runs ls` |
@@ -51,6 +52,7 @@ lingo-cli     -> SQL, prompt parsing internals, direct DB mutations
 | Audio provenance | `sentence_audio` + file existence | stale/missing audio report |
 | Audio file path | deterministic policy `audio/<sentence-id>.mp3` | CLI/show/publish path strings |
 | Published artifacts | `out/` | Regenerated from DB + audio |
+| Package source identity | package manifest (`source_library_id`, `package_id`) | import approval policy decisions |
 | Config | `config.toml` parsed into typed config | command defaults |
 
 ## Reporting ownership
@@ -106,3 +108,6 @@ Every implementation slice that touches a boundary should name evidence:
 | SQLite schema authority | round-trip and migration tests |
 | run.json is mirror | repair/rederive test |
 | audio path is deterministic | deck rename leaves audio path stable test |
+| approval invariant | active draft rejected at domain and DB layers |
+| origin is durable | run cleanup does not erase sentence origin |
+| package round-trip | package preserves approval, QA, authority, tokens, origin |

@@ -19,8 +19,11 @@ Arguments:
             Omit to apply the single pending run.
 
 Options:
-      --json     Machine-readable output
-  -h, --help     Print help
+      --dry-run   Validate the reply and report what would change; commit nothing
+      --oldest    Apply the oldest pending run (deterministic, for scripts/agents)
+      --all       Apply all pending runs in created order
+      --json      Machine-readable output
+  -h, --help      Print help
 ```
 
 Help colors: `apply`/flags **green**, `[TARGET]` **yellow**, headers **bold cyan**.
@@ -32,25 +35,63 @@ Help colors: `apply`/flags **green**, `[TARGET]` **yellow**, headers **bold cyan
 | `lingo apply runs/ch01-enrich-9b2c/` | Applies that run. |
 | `lingo apply runs/ch01-enrich-9b2c/reply.json` | Same — a reply path resolves to its run. |
 | `lingo apply` (one run pending) | Applies it. |
-| `lingo apply` (several pending) | Lists them and asks you to name one. |
+| `lingo apply` (several pending, interactive TTY) | Lists them so you can pick one. |
+| `lingo apply` (several pending, `--json` / non-TTY) | **Never prompts** — returns a `blocked` result (see below). |
+| `lingo apply --oldest` | Applies the oldest pending run deterministically. |
+| `lingo apply --all` | Applies every pending run in created order. |
 | `lingo apply` (none pending) | Says so and prints the real `Next:`. |
 
 The run's `run.json` carries `stage` and `deck`; the DB `runs` row is authoritative
 for status. See [`package-and-agents.md`](../package-and-agents.md) for the run
 shape and truth precedence.
 
-## Validation is strict and re-tryable
+## Deterministic for agents (never prompts in `--json`)
 
-`apply` rejects off-contract replies with a specific error and **leaves the run
-pending** so you can fix the file and apply again — it never half-commits and
-never starts a new run:
+In non-interactive mode with several pending runs, `apply` does not ask — it
+returns a `blocked` result with exit code `3` (see the result contract and exit
+codes in [`CLI.md`](../CLI.md)):
+
+```json
+{ "blocked": { "reason": "multiple_pending_runs",
+               "fix": "lingo apply runs/ch01-enrich-9b2c/" },
+  "pending_runs": ["ch01-enrich-9b2c", "ch02-qa-1d4e"] }
+```
+
+An agent then picks one (or uses `--oldest` / `--all`). Humans get the same
+information as a listed choice.
+
+## Validation is strict, transactional, and re-tryable
+
+- Validates the **entire** reply before writing anything; commits in **one SQLite
+  transaction** — it never half-commits.
+- A bad reply **leaves the run pending** (records the validation error) so you fix
+  the file and apply again — it never starts a new run:
 
 ```
 ! reply.json: sentence "sen-ch01-03" has a breakdown token not present in target
   Fix the file and run: lingo apply runs/ch01-enrich-9b2c/
 ```
 
-It also refuses to overwrite any `authority: human` field and reports the attempt.
+- Refuses to overwrite any `authority: human` field and reports the attempt.
+- **Idempotent:** re-applying a run whose reply is byte-identical to what was
+  already applied is a no-op; applying a *different* reply to an already-applied
+  run is rejected (`already_applied_different_reply`).
+
+## `--dry-run`
+
+Validates and reports what *would* change without touching the library — ideal
+for agents to check a reply before committing:
+
+```
+Valid reply.
+
+Would update:
+  12 sentences enriched
+  94 token rows replaced
+  0 human-authored fields touched
+
+Next: lingo apply runs/ch01-enrich-9b2c/
+```
 
 ## Example
 

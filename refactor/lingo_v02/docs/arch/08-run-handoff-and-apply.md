@@ -75,6 +75,7 @@ Before validating, load all facts needed to reject bad replies without writing:
 pub struct ApplyValidationSnapshot {
     pub run: RunWithSentences,
     pub deck: Option<Deck>,
+    pub library: LibraryIdentity,
     pub sentences: Vec<Sentence>,
     pub field_authority: FieldAuthorityRows,
     pub profile: Box<dyn LanguageProfileSnapshot>,
@@ -92,7 +93,8 @@ Validate that:
 - optional learner-provided fields are marked with correct authority;
 - no duplicate target identity exists inside the reply;
 - generated IDs are assigned by Lingo, not trusted from model unless explicitly part of package import;
-- raw source/deck context matches the run.
+- raw source/deck context matches the run;
+- generated sentence origin can be constructed from the run id and source label.
 
 Extract should not mix in package-import duplicate rules. Import is a separate direct workflow.
 
@@ -166,7 +168,7 @@ pub fn apply_run_transaction(&self, commit: ApplyRunCommit) -> Result<ApplyCommi
     run.reject_if_not_pending_or_idempotent(&commit.reply_sha256)?;
 
     match commit.stage_payload {
-        ApplyStageCommit::Extract(payload) => tx.apply_extract(payload)?,
+        ApplyStageCommit::Extract(payload) => tx.apply_extract(payload)?, // creates origin=generated
         ApplyStageCommit::Enrich(payload) => tx.apply_enrich(payload)?,
         ApplyStageCommit::Qa(payload) => tx.apply_qa(payload)?,
     }
@@ -176,6 +178,30 @@ pub fn apply_run_transaction(&self, commit: ApplyRunCommit) -> Result<ApplyCommi
     Ok(commit.report)
 }
 ```
+
+## Approval invalidation during apply
+
+Stage commits must explicitly report whether they changed study-facing content that had been approved.
+
+```rust
+pub enum ApprovalInvalidation {
+    None,
+    ClearedBecauseDraft,
+    ClearedBecauseAutomatedContentChanged,
+}
+```
+
+Rules:
+
+```text
+extract apply -> new rows are unapproved by default
+enrich apply from draft -> rows become enriched but unapproved
+enrich --force with changed fields/tokens -> clear active
+QA clean stamp -> keep active
+QA corrections that change fields/tokens -> clear active
+```
+
+The transaction must leave no row with `active = true` and `status = draft`.
 
 ## Validation failure
 
@@ -189,6 +215,6 @@ The agent fixes the same reply file and re-applies the same run.
 
 ## Runs cleanup
 
-`runs clean` without abandoned mode deletes only applied run folders. DB rows may remain as provenance.
+`runs clean` without abandoned mode deletes only applied run folders. DB rows may remain as run participation history. Sentence origin does not depend on them.
 
-`runs clean --abandoned` may mark pending/reset runs abandoned or delete them, depending on chosen retention policy. If deleting DB rows, `run_sentences` cascades. Never delete a pending run with a reply file silently; the report should name it.
+`runs clean --abandoned` may mark pending/reset runs abandoned or delete them, depending on chosen retention policy. If deleting DB rows, `run_sentences` cascades. This must not erase sentence origin because origin is stored on `sentences`. Never delete a pending run with a reply file silently; the report should name it.

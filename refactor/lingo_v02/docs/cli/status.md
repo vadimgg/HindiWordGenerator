@@ -31,14 +31,14 @@ my-hindi-library          (hi · 3 decks)
 Decks
   ch01   Complete Hindi · Chapter 01   12 sentences   8 enriched · 4 draft     ♪ 4 missing
   ch02   Complete Hindi · Chapter 02    9 sentences   9 enriching              ♪ 9 missing
-  hb     Hindi Basics                   6 sentences   6 enriched · QA'd         ♪ 0 missing
+  hb     Hindi Basics                   6 sentences   6 enriched · QA'd · 6 approved   ♪ 0 missing
 
-Total   27 sentences · 14 enriched · 9 enriching · 4 draft · 13 audio missing
+Total   27 sentences · 14 enriched · 9 enriching · 4 draft · 6 approved · 13 audio missing
 
 What to do next
   1  lingo apply runs/ch02-enrich-3a7f/   ch02 has a reply waiting
   2  lingo enrich ch01                    4 draft sentences ready
-  3  lingo audio                          13 sentences missing audio
+  3  lingo qa ch01                        8 enriched sentences need QA
 
 Next: lingo apply runs/ch02-enrich-3a7f/
 ```
@@ -55,9 +55,11 @@ Most urgent first, at most three shown:
 1. A **pending run** waiting for a reply to apply.
 2. **Draft** sentences ready to enrich.
 3. **Enriched but not QA'd** sentences ready for `qa`.
-4. Sentences **missing audio**.
-5. Everything enriched + audio present → `publish`.
-6. Nothing left → `Done:` message.
+4. **QA'd but unapproved** sentences ready for curation (`lingo approve <deck>`,
+   `lingo ls --unapproved`, or the viewer).
+5. Approved sentences **missing audio**.
+6. Approved sentences with audio → `publish`.
+7. Nothing left → `Done:` message.
 
 ## `--json`
 
@@ -65,8 +67,8 @@ Most urgent first, at most three shown:
 {
   "library": "my-hindi-library",
   "language": "hi",
-  "decks": [ { "slug": "ch01", "sentences": 12, "enriched": 8, "draft": 4, "audio_missing": 4 } ],
-  "totals": { "sentences": 27, "enriched": 14, "enriching": 9, "draft": 4, "audio_missing": 13 },
+  "decks": [ { "slug": "ch01", "sentences": 12, "enriched": 8, "draft": 4, "approved": 0, "audio_missing": 4 } ],
+  "totals": { "sentences": 27, "enriched": 14, "enriching": 9, "draft": 4, "approved": 6, "audio_missing": 13 },
   "pending_runs": ["ch02-enrich-3a7f"],
   "next": "lingo apply runs/ch02-enrich-3a7f/"
 }
@@ -74,5 +76,5 @@ Most urgent first, at most three shown:
 
 ## See also
 
-[`ls`](./ls.md) · [`deck`](./deck.md) · [`runs`](./runs.md) ·
+[`ls`](./ls.md) · [`approve`](./approve.md) · [`deck`](./deck.md) · [`runs`](./runs.md) ·
 [`workflows.md`](../workflows.md)

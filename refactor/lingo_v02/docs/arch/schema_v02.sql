@@ -8,6 +8,7 @@ CREATE TABLE meta (
 INSERT INTO meta(key, value) VALUES
   ('format', 'lingo.library/v2'),
   ('schema_version', '1'),
+  ('library_id', 'lib-' || lower(hex(randomblob(16)))),
   ('created_with_lingo_version', '0.2.0'),
   ('language_profile', 'hindi');
 
@@ -34,6 +35,14 @@ CREATE TABLE sentences (
     CHECK (active IN (0, 1)),
   qa_checked_at TEXT,
 
+  origin TEXT NOT NULL DEFAULT 'generated'
+    CHECK (origin IN ('generated', 'imported', 'manual')),
+  source_label TEXT,
+  source_extract_run_id TEXT,
+  source_library_id TEXT,
+  source_package_id TEXT,
+  source_sentence_id TEXT,
+
   target TEXT NOT NULL,
   romanisation TEXT,
   english TEXT,
@@ -45,7 +54,25 @@ CREATE TABLE sentences (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
 
-  UNIQUE(deck_id, position)
+  UNIQUE(deck_id, position),
+  CHECK (active = 0 OR status = 'enriched'),
+  CHECK (
+    (origin = 'generated'
+      AND source_library_id IS NULL
+      AND source_package_id IS NULL
+      AND source_sentence_id IS NULL)
+    OR
+    (origin = 'imported'
+      AND source_library_id IS NOT NULL
+      AND source_package_id IS NOT NULL
+      AND source_sentence_id IS NOT NULL)
+    OR
+    (origin = 'manual'
+      AND source_extract_run_id IS NULL
+      AND source_library_id IS NULL
+      AND source_package_id IS NULL
+      AND source_sentence_id IS NULL)
+  )
 ) STRICT;
 
 CREATE INDEX sentences_by_deck_order ON sentences(deck_id, position);
@@ -54,6 +81,7 @@ CREATE INDEX sentences_by_active ON sentences(active, deck_id, position) WHERE a
 CREATE INDEX sentences_needing_qa ON sentences(deck_id, position)
   WHERE status = 'enriched' AND qa_checked_at IS NULL;
 CREATE INDEX sentences_by_target_identity ON sentences(deck_id, target_identity_key);
+CREATE INDEX sentences_by_origin ON sentences(origin, source_library_id, source_package_id);
 
 CREATE TABLE sentence_field_authority (
   sentence_id TEXT NOT NULL REFERENCES sentences(id) ON DELETE CASCADE,

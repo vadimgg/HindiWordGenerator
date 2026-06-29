@@ -23,6 +23,12 @@ CREATE TABLE sentences (
   status ENUM('draft','enriched') NOT NULL DEFAULT 'draft',
   active BOOLEAN NOT NULL DEFAULT FALSE,
   qa_checked_at DATETIME(6) NULL,
+  origin ENUM('generated','imported','manual') NOT NULL DEFAULT 'generated',
+  source_label TEXT,
+  source_extract_run_id VARCHAR(128),
+  source_library_id VARCHAR(128),
+  source_package_id VARCHAR(128),
+  source_sentence_id VARCHAR(128),
   target TEXT NOT NULL,
   romanisation TEXT,
   english TEXT,
@@ -35,8 +41,15 @@ CREATE TABLE sentences (
   KEY sentences_status_updated(status, updated_at),
   KEY sentences_active_deck(active, deck_id, position),
   KEY sentences_target_identity(deck_id, target_identity_key),
+  KEY sentences_origin(origin, source_library_id, source_package_id),
   CONSTRAINT fk_sentences_deck FOREIGN KEY(deck_id) REFERENCES decks(id) ON DELETE CASCADE,
-  CHECK (position > 0)
+  CHECK (position > 0),
+  CHECK (active = FALSE OR status = 'enriched'),
+  CHECK (
+    (origin = 'generated' AND source_library_id IS NULL AND source_package_id IS NULL AND source_sentence_id IS NULL)
+    OR (origin = 'imported' AND source_library_id IS NOT NULL AND source_package_id IS NOT NULL AND source_sentence_id IS NOT NULL)
+    OR (origin = 'manual' AND source_extract_run_id IS NULL AND source_library_id IS NULL AND source_package_id IS NULL AND source_sentence_id IS NULL)
+  )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE sentence_field_authority (

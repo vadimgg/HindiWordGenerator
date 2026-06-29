@@ -11,9 +11,12 @@ Draft
   └─ import incomplete sentence -> Draft
 
 Enriched
-  ├─ edit semantic target -> Draft + derived fields invalidated
-  ├─ enrich --force apply -> Enriched with new AI fields, QA cleared
-  ├─ apply QA -> Enriched + qa_checked_at set
+  ├─ approve -> Enriched + active
+  ├─ unapprove -> Enriched + inactive
+  ├─ edit semantic target -> Draft + derived fields invalidated + active cleared
+  ├─ enrich --force apply with changed fields/tokens -> Enriched + QA cleared + active cleared
+  ├─ apply QA clean result -> Enriched + qa_checked_at set + active unchanged
+  ├─ apply QA corrections -> Enriched + qa_checked_at set + active cleared if study-facing fields changed
   └─ edit active flag -> Enriched, active changed
 ```
 
@@ -54,6 +57,60 @@ pub fn visible_status(
 }
 ```
 
+## Approval state machine
+
+Approval is stored as `active`, but the domain name is approval.
+
+```text
+Unapproved
+  ├─ approve enriched sentence -> Approved
+  └─ approve draft sentence -> error CannotApproveDraft
+
+Approved
+  ├─ unapprove -> Unapproved
+  ├─ semantic target edit -> Unapproved + Draft
+  ├─ automated content rewrite -> Unapproved + Enriched
+  └─ audio-only edit / no-content edit / QA clean stamp -> Approved
+```
+
+Hard invariant:
+
+```text
+Approved => lifecycle == Enriched
+```
+
+QA is not hard-required for approval. Publish warns, not blocks, when approved selected rows are unQA'd.
+
+## Origin creation transitions
+
+Origin is durable and survives run cleanup.
+
+```text
+Apply extract run
+  -> create sentence with origin = generated
+  -> source_extract_run_id = run id string
+  -> source_label = raw path/deck source when available
+  -> add run_sentences rows as run participation history
+
+Manual add sentence
+  -> create sentence with origin = manual
+  -> source_label optional
+
+Import package, cross-library default
+  -> create sentence with origin = imported
+  -> source_library_id = package.source_library_id
+  -> source_package_id = package.package_id
+  -> source_sentence_id = package sentence id
+  -> active = false
+  -> qa_checked_at = NULL
+
+Import package, same-library restore
+  -> preserve sentence id, active, qa_checked_at, authority, tokens, and origin
+  -> update/restore from package data according to import conflict policy
+```
+
+Do not infer origin from the presence or absence of `run_sentences` rows.
+
 ## Claim state machine
 
 Claiming work creates a run and run-sentence rows; it does not mutate sentence lifecycle.
@@ -64,15 +121,16 @@ No pending claim
   └─ prepare QA -> pending QA run + run_sentences
 
 Pending claim
-  ├─ apply valid reply -> run applied, rows kept as provenance
+  ├─ apply valid reply -> run applied, rows kept as participation history
   ├─ reset run -> run reset, rows kept or deleted by policy
-  ├─ clean abandoned -> run abandoned/deleted, rows cascade
+  ├─ clean abandoned -> run abandoned/deleted, rows cascade if deleted
   └─ apply invalid reply -> run remains pending, validation_error set
 ```
 
-A sentence must not have two pending enrich claims at once. Enforce with service validation and a SQLite partial unique index if practical.
+A sentence must not have two pending enrich claims at once. The following index is **illustrative only** and is not valid SQLite:
 
 ```sql
+-- illustrative only; invalid SQLite because partial indexes cannot contain subqueries
 CREATE UNIQUE INDEX one_pending_enrich_claim_per_sentence
 ON run_sentences(sentence_id)
 WHERE run_id IN (
@@ -80,7 +138,7 @@ WHERE run_id IN (
 );
 ```
 
-SQLite does not allow subqueries in partial index predicates, so enforce this with transaction validation:
+The real invariant lives in the same `BEGIN IMMEDIATE` transaction that creates the claim:
 
 ```sql
 SELECT rs.sentence_id
@@ -91,6 +149,8 @@ WHERE r.stage = 'enrich'
   AND rs.sentence_id IN (...selected...)
 LIMIT 1;
 ```
+
+Implementation evidence must include a double-claim concurrency test.
 
 ## Run lifecycle
 
@@ -151,15 +211,16 @@ impl Run {
      same hash -> idempotent AlreadyApplied report
      different hash -> validation error
 7. Parse reply into typed stage DTO.
-8. Load validation snapshot: deck, sentences, claims, human fields.
+8. Load validation snapshot: deck, sentences, claims, human fields, origin/source context, profile.
 9. Validate entire reply without writing.
 10. If dry-run, return ApplyPreview.
 11. BEGIN IMMEDIATE.
 12. Re-check run status/hash and claim set.
 13. Apply stage-specific mutations.
-14. Update runs row last: status/applied_at/reply_sha256.
-15. COMMIT.
-16. Return typed report.
+14. Enforce approval invariant and clear active if this mutation invalidated approval.
+15. Update runs row last: status/applied_at/reply_sha256.
+16. COMMIT.
+17. Return typed report.
 ```
 
 ## Apply decision types
@@ -219,15 +280,54 @@ impl QaState {
 
 Applying a QA reply stamps every sentence in the QA run, including clean rows with no corrections.
 
+QA correction policy:
+
+```text
+clean/no corrections      -> active unchanged
+correction changes fields -> active cleared, because approval applied to old content
+human field rejected      -> active unchanged for that rejected field
+```
+
+## Target edit impact classifier
+
+Classifier inputs:
+
+```rust
+pub struct TargetEditClassifierInput<'a> {
+    pub profile: &'a dyn LanguageProfile,
+    pub before: &'a TargetText,
+    pub after: &'a TargetText,
+    pub audio_backend: Option<AudioBackendId>,
+    pub audio_voice: Option<&'a AudioVoice>,
+    pub audio_model: Option<&'a AudioModel>,
+}
+```
+
+Rule:
+
+```text
+before_identity = profile.target_identity_key(before)
+after_identity  = profile.target_identity_key(after)
+
+if before_identity != after_identity:
+    SemanticChange
+else if audio_fingerprint_input(before) != audio_fingerprint_input(after):
+    AudioOnlyChange
+else:
+    NoContentChange
+```
+
+For a sentence with no existing audio, `AudioOnlyChange` still means enrichment/QA/tokens/approval stay valid; there is simply no stale file yet.
+
 ## Target edit invalidation
 
 ```text
 NoContentChange
-  -> keep lifecycle, QA, tokens, audio
+  -> keep lifecycle, QA, tokens, audio, active
 
 AudioOnlyChange
-  -> keep lifecycle, QA, tokens
-  -> mark audio stale
+  -> keep lifecycle, QA, tokens, active
+  -> audio becomes stale by fingerprint mismatch
 
 SemanticChange + default policy
   -> clear AI-authored romanisation, english, literal, register
@@ -235,8 +335,8 @@ SemanticChange + default policy
   -> clear tokens
   -> clear qa_checked_at
   -> set lifecycle = draft
-  -> mark audio stale
-  -> active unchanged
+  -> clear active because active implies enriched
+  -> audio becomes stale by fingerprint mismatch
 ```
 
 Sample domain operation:
@@ -257,9 +357,9 @@ pub fn invalidate_after_semantic_target_change(
 
     sentence.clear_tokens();
     sentence.clear_qa();
-    sentence.set_lifecycle(SentenceLifecycle::Draft);
-    sentence.mark_audio_stale();
-    // active intentionally unchanged
+    sentence.downgrade_to_draft(); // also clears approval
+    sentence.mark_audio_stale_by_fingerprint();
+    report.approval_cleared_because_draft();
 }
 ```
 
@@ -277,11 +377,47 @@ pub enum AudioState {
 
 `lingo audio` default selection is `MissingOrStale`. `--force` selects all rows in scope.
 
+## Publish selection state
+
+Study-facing selection:
+
+```text
+Default study/anki selection:
+  status = enriched
+  active = true
+
+With include-unapproved:
+  status = enriched
+  active = true or false
+
+Never include draft rows in study/anki.
+```
+
+Package/db selection is lossless and can include draft, inactive, unQA'd, and missing-audio rows.
+
+## Status ranking
+
+Default ranking should treat approval as a real gap:
+
+```text
+1. pending reply that can be applied
+2. draft sentences ready to enrich
+3. enriched but not QA'd sentences ready for QA
+4. enriched but unapproved sentences ready for approval
+5. approved sentences missing or stale audio
+6. approved sentences ready to publish
+7. done
+```
+
+QA remains recommended, not required by approval or schema.
+
 ## Publish quality gate
 
 ```text
-package/db: no QA gate; include everything losslessly
-study/anki: warn if unQA'd; skip/report missing audio; --allow-unqa suppresses warning
+package/db: export everything losslessly
+study/anki default: approved enriched rows only
+study/anki with include-unapproved: enriched rows regardless of active
+study/anki: warn if selected rows are unQA'd; skip/report missing audio
 ```
 
 No hard block for unQA'd sentences in a personal tool.

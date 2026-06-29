@@ -18,15 +18,15 @@ my-hindi-library/
       run.json
 
   audio/              # derived internal audio, flat by sentence id
-    sen-ch01-01.mp3
-    sen-ch01-02.mp3
+    sen-01jx9m7q8v6f2x4k9d3p1r0t5w.mp3
+    sen-01jx9m7q8v6f2x4k9d3p1r0t5x.mp3
 
   out/                # derived publish artifacts
     ch01/
     study/
     ch01.apkg
 
-  prompts/            # optional user overrides
+  prompts/            # optional user overrides for prompt templates
 ```
 
 ## File categories
@@ -89,6 +89,31 @@ impl WorkspaceLayout {
 ```
 
 `audio_path` must not accept deck slug.
+
+## Prompt template lookup
+
+Built-in templates live in crate source and are versioned with the binary:
+
+```text
+crates/lingo-handoff/templates/
+  extract.md.hbs
+  enrich.md.hbs
+  qa.md.hbs
+```
+
+Workspace overrides are optional:
+
+```text
+prompts/
+  extract.md.hbs
+  enrich.md.hbs
+  qa.md.hbs
+```
+
+`HandoffPort::render_task` must check `prompts/` first and fall back to built-in
+templates. Missing workspace overrides are normal. Invalid workspace templates
+should fail with a clear path in the error and should not silently fall back,
+because that would hide user edits.
 
 ## Audio path policy
 

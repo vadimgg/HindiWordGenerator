@@ -24,9 +24,8 @@ my-hindi-library/
       task.md         #   the prompt packet (paste this / agent reads this)
       reply.yaml      #   the model's answer goes here
       run.json        #   { stage, deck, status, reply, created }
-  audio/              # DERIVED — generated speech, foldered by deck
-    ch01/
-      sen-ch01-01.mp3
+  audio/              # DERIVED — generated speech, flat by sentence id
+    sen-ch01-01.mp3
   out/                # DERIVED — publish artifacts
     ch01/             #   package (json) export of one deck
     study/            #   study (sqlite) export of the whole library
@@ -126,14 +125,17 @@ study-facing shapes are below.
 Lossless, diffable, round-trippable backup and agent-exchange format. One
 self-describing JSON file per sentence, a manifest with sha256 integrity, and an
 audio folder. **Never skips a sentence** — missing audio is exported as
-`"audio": null`.
+`"audio": null`. Package export preserves approval, QA state, field authority,
+tokens/breakdown, audio metadata, origin, and import provenance so backup→restore
+round-trips exactly.
 
 ```
 out/ch01/
   manifest.json            # format, language, decks[], counts, sha256 integrity
   sentences/
     sen-ch01-01.json       # full record: target, romanisation, english, literal,
-    sen-ch01-02.json       #   register, authority, breakdown, tags, audio, provenance
+    sen-ch01-02.json       #   register, approval, QA state, authority,
+                           #   breakdown, tags, audio, origin/provenance
   audio/
     sen-ch01-01.mp3
   README.txt
@@ -155,6 +157,10 @@ out/study/
   audio/
     ch01/sen-ch01-01.mp3
 ```
+
+> Internal audio is stored flat (`audio/<sentence-id>.mp3`); exports are free to
+> re-organize it (here, per-deck folders) for the consuming app. The export path
+> is export-local, not the authoring path.
 
 ```sql
 study_meta(study_schema_version, library_title, language, generated_at)

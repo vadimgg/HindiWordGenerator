@@ -27,8 +27,9 @@ same runs, its textareas are another place to paste a reply, and "Apply" calls t
 same use case. Anything done in the UI is immediately visible to the CLI, and vice
 versa — there is no separate data path.
 
-Use the viewer for browsing, reordering, curating (marking sentences `active`), and
-quick edits; use the CLI for the bulk extract → enrich → audio → publish pipeline.
+Use the viewer for browsing, reordering, approving sentences for study, and quick
+edits; use the CLI for the bulk extract → enrich → QA → approve → audio → publish
+pipeline.
 
 ## Example
 

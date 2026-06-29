@@ -31,14 +31,15 @@ lingo show sen-ch01-01
 Sample output:
 
 ```
-sen-ch01-01   enriched · QA'd   (ch01 · Complete Hindi · Chapter 01)
+sen-ch01-01   enriched · QA'd · ✓approved   (ch01 · Complete Hindi · Chapter 01)
 
   English       I am a student.
   Target        मैं एक छात्र हूँ।
   Romanisation  maĩ ek chātra hū̃.            (human)
   Literal       I / one / student / am
   Register      standard
-  Audio         audio/ch01/sen-ch01-01.mp3
+  Audio         audio/sen-ch01-01.mp3
+  Origin        generated
   Tags          beginner, identity
 
   Words
@@ -55,11 +56,15 @@ surface **cyan**, roman & gloss **dim**, the "in N sentences" count **dim**.
 
 ## Notes
 
+- The header shows the three independent axes: lifecycle (`draft`/`enriching`/
+  `enriched`), QA (`QA'd` or not), and approval (`✓approved`).
+- `Origin` is `generated`, `imported`, or `manual`; an imported sentence also shows
+  its source library/package so you can trace where it came from.
 - Fields the learner authored are flagged `(human)` so you can see what `enrich`
   and `qa` won't touch.
 - "in N sentences" links the word to the lexicon ([`words`](./words.md)).
-- `--json` returns the full record including `authority`, `breakdown`, and
-  `provenance`.
+- `--json` returns the full record including approval, `qa_checked_at`, `origin`,
+  `authority`, and `breakdown`.
 
 ## `Next:`
 

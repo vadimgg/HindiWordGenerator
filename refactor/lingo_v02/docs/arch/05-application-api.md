@@ -51,8 +51,10 @@ impl<'a> LingoServices<'a> {
     pub fn prepare_qa(&self, req: PrepareQaRequest) -> Result<RunPreparedReport, AppError>;
     pub fn apply(&self, req: ApplyRequest) -> Result<ApplyReport, AppError>;
     pub fn edit_sentence(&self, req: EditSentenceRequest) -> Result<EditSentenceReport, AppError>;
+    pub fn approve_sentences(&self, req: ApproveSentencesRequest) -> Result<ApprovalReport, AppError>;
     pub fn generate_audio(&self, req: AudioGenerateRequest) -> Result<AudioGenerateReport, AppError>;
     pub fn publish(&self, req: PublishRequest) -> Result<PublishReport, AppError>;
+    pub fn import_package(&self, req: ImportPackageRequest) -> Result<ImportReport, AppError>;
 }
 ```
 
@@ -65,6 +67,7 @@ The repository port is a real boundary because service tests use a fake and SQLi
 ```rust
 pub trait LibraryRepository {
     fn initialize_schema(&self, req: InitializeSchemaRequest) -> Result<(), RepoError>;
+    fn library_identity(&self) -> Result<LibraryIdentity, RepoError>;
     fn library_summary(&self) -> Result<LibrarySummary, RepoError>;
     fn list_decks(&self) -> Result<DeckRows, RepoError>;
     fn get_deck_by_slug(&self, slug: &DeckSlug) -> Result<Deck, RepoError>;
@@ -81,10 +84,12 @@ pub trait LibraryRepository {
     fn apply_run_transaction(&self, command: ApplyRunCommit) -> Result<ApplyCommitReport, RepoError>;
 
     fn edit_sentence(&self, command: EditSentenceCommit) -> Result<EditCommitReport, RepoError>;
+    fn approve_sentences(&self, command: ApprovalCommit) -> Result<ApprovalCommitReport, RepoError>;
     fn set_audio(&self, command: SetAudioCommand) -> Result<(), RepoError>;
     fn mark_audio_stale(&self, sentence: &SentenceId) -> Result<(), RepoError>;
 
     fn import_package_transaction(&self, command: ImportPackageCommit) -> Result<ImportCommitReport, RepoError>;
+    fn publish_snapshot(&self, query: PublishSnapshotQuery) -> Result<PublishSnapshot, RepoError>;
 }
 ```
 
@@ -182,9 +187,118 @@ pub enum ActiveChange {
     SetActive,
     SetInactive,
 }
+
+pub enum DerivedFieldPolicy {
+    InvalidateWhenStale,
+    PreserveWithWarning,
+}
 ```
 
 No boolean mode arguments in service APIs.
+
+## Approval use case
+
+Approval is exposed as a use case so CLI and UI can share the same rules.
+
+```rust
+pub struct ApproveSentencesRequest {
+    pub scope: SentenceApprovalScope,
+    pub action: ApprovalAction,
+}
+
+pub enum SentenceApprovalScope {
+    Sentence(SentenceId),
+    Deck(DeckSlug),
+    Query(SentenceQuery),
+}
+
+pub enum ApprovalAction {
+    Approve,
+    Unapprove,
+}
+
+pub struct ApprovalReport {
+    pub approved: Vec<SentenceId>,
+    pub unapproved: Vec<SentenceId>,
+    pub rejected: Vec<ApprovalRejection>,
+    pub terminal: TerminalDirective,
+}
+
+pub enum ApprovalRejection {
+    CannotApproveDraft { id: SentenceId },
+    MissingRequiredEnrichment { id: SentenceId, missing: MissingEnrichmentFields },
+}
+```
+
+`approve_sentences` does not require QA. It can return warnings for unQA'd rows if the CLI wants to surface them.
+
+## Publish request and selection
+
+```rust
+pub struct PublishRequest {
+    pub scope: PublishScope,
+    pub format: PublishFormat,
+    pub dest: Option<OutputRelativePath>,
+    pub overwrite: OverwritePolicy,
+    pub selection: PublishSelectionPolicy,
+    pub qa_warning: QaWarningPolicy,
+}
+
+pub enum PublishSelectionPolicy {
+    Default,
+    ApprovedOnly,
+    IncludeUnapproved,
+}
+
+pub enum QaWarningPolicy {
+    Warn,
+    SuppressWarning,
+}
+```
+
+Rules by format:
+
+```text
+Package/Db -> ignore selection filter and export losslessly unless caller explicitly asks for a filtered DB copy.
+Study/Anki default -> approved enriched rows only.
+Study/Anki include-unapproved -> all enriched rows in scope.
+Draft rows are never included in Study/Anki.
+```
+
+## Import request and approval policy
+
+```rust
+pub struct ImportPackageRequest {
+    pub package: PackagePath,
+    pub mode: ImportMode,
+    pub approval_policy: ImportApprovalPolicy,
+}
+
+pub enum ImportMode {
+    DryRun,
+    Commit,
+}
+
+pub enum ImportApprovalPolicy {
+    Default,
+    TrustPackageApproval,
+}
+```
+
+Default policy:
+
+```text
+source_library_id == destination library_id
+  -> preserve sentence IDs, active, and qa_checked_at for backup restore/sync
+
+source_library_id != destination library_id
+  -> allocate local sentence IDs for new imported rows
+  -> active = false
+  -> qa_checked_at = NULL
+  -> store imported origin fields
+```
+
+`TrustPackageApproval` may preserve external `active` and `qa_checked_at`, but package validation must still enforce `active => enriched`.
 
 ## Terminal directive
 
@@ -203,6 +317,7 @@ pub enum NextAction {
     ExtractExample { raw: WorkspaceRelativePath, deck: DeckSlug },
     EnrichDeck { deck: DeckSlug },
     QaDeck { deck: DeckSlug },
+    ApproveDeck { deck: DeckSlug },
     Audio { deck: Option<DeckSlug> },
     Publish { deck: Option<DeckSlug>, format: PublishFormat, dest: Option<OutputRelativePath> },
     ShowSentence { id: SentenceId },
@@ -251,6 +366,8 @@ pub fn status(app: &LingoServices<'_>, _req: StatusRequest) -> Result<StatusRepo
     })
 }
 ```
+
+`StatusReport` should include approval counts separately from lifecycle counts.
 
 ## Apply use case sketch
 

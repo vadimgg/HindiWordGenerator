@@ -14,7 +14,9 @@ Usage: lingo ls [OPTIONS]
 
 Options:
       --deck <SLUG>       Show only this deck
-      --status <STATUS>   draft | enriching | enriched | active
+      --status <STATUS>   draft | enriching | enriched
+      --approved          Only approved sentences
+      --unapproved        Only enriched-but-unapproved sentences
       --missing-audio     Only sentences without audio
       --id <ID>           Show a specific sentence id (repeatable)
       --json              Machine-readable output
@@ -23,6 +25,10 @@ Options:
 
 Help colors: `ls`/flags **green**, `<SLUG>`/`<STATUS>`/`<ID>` **yellow**, headers
 **bold cyan**.
+
+`--status` filters lifecycle. `enriching` is a *derived* status (a sentence claimed
+by a pending enrich run), not a stored value — but you can still filter on it.
+Approval is a separate axis, filtered with `--approved` / `--unapproved`.
 
 ## Examples
 
@@ -41,7 +47,7 @@ Deck ch01   Complete Hindi · Chapter 01
   sen-ch01-01  enriched  I am a student.
       मैं एक छात्र हूँ।
       maĩ ek chātra hū̃.
-      ♪ audio/ch01/sen-ch01-01.mp3
+      ♪ audio/sen-ch01-01.mp3
   sen-ch01-02  draft     She is my teacher.
       वह मेरी अध्यापिका हैं।
       ♪ missing
@@ -76,4 +82,4 @@ incomplete sentence, or the next pipeline step if the filter implies one.
 ## See also
 
 [`show`](./show.md) · [`status`](./status.md) · [`words`](./words.md) ·
-[`edit`](./edit.md)
+[`edit`](./edit.md) · [`approve`](./approve.md)

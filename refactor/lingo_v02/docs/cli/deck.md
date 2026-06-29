@@ -2,7 +2,7 @@
 
 Inspect and manage decks. Decks are created automatically by [`extract`](./extract.md)
 and [`import`](./import.md) — this command lists, inspects, renames, and removes
-them. (Internally a deck is a "batch" row; the CLI only ever says "deck".)
+them.
 
 See [`CLI.md`](../CLI.md) for the shared color/output legend.
 
@@ -48,7 +48,7 @@ the deck's state (enrich / qa / audio / publish).
 Usage: lingo deck set [OPTIONS] <SLUG>
 
 Options:
-      --title <TITLE>      Set the collection title
+      --title <TITLE>      Set the deck title
       --subtitle <TEXT>    Set the chapter/lesson label
       --slug <SLUG>        Rename the deck slug (must not already exist)
       --clear-title        Remove the title
@@ -72,10 +72,11 @@ Options:
       --force    Delete even if the deck has applied sentences
 ```
 
-Removes the deck, its `audio/<slug>/` folder, and its pending runs. **Refuses** to
-delete a deck that has applied sentences unless `--force` — so cleaning up an
-abandoned empty deck is safe, but dropping real work is deliberate. (For sweeping
-abandoned empty decks in bulk, see [`runs clean --abandoned`](./runs.md).)
+Removes the deck, its pending runs, and audio files for its sentences from the
+flat `audio/<sentence-id>.mp3` store. **Refuses** to delete a deck that has
+applied sentences unless `--force` — so cleaning up an abandoned empty deck is
+safe, but dropping real work is deliberate. (For sweeping abandoned empty decks
+in bulk, see [`runs clean --abandoned`](./runs.md).)
 
 ```
 ! Deck ch01 has 12 sentences. Re-run with --force to delete them.

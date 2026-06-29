@@ -119,12 +119,14 @@ pub enum PublishFormat {
 }
 ```
 
-| Format | Scope default | Missing audio | QA gate | Round-trip |
-|---|---|---|---|---|
-| package | deck or library | include as `null` | none | yes |
-| db | deck or library | include metadata | none | no/import not needed |
-| study | whole library | skip/report | warn | no |
-| anki | deck | skip/report | warn | no |
+| Format | Scope default | Selection default | Missing audio | QA gate | Round-trip |
+|---|---|---|---|---|---|
+| package | deck or library | all rows | include as `null` | none | yes |
+| db | deck or library | all rows unless caller filters | include metadata | none | raw copy |
+| study | whole library | approved enriched rows | skip/report | warn | no |
+| anki | deck | approved enriched rows | skip/report | warn | no |
+
+`--include-unapproved` may include enriched inactive rows for `study`/`anki`; draft rows remain excluded because they are not studyable.
 
 ## Publish snapshot
 
@@ -134,13 +136,28 @@ The service builds a snapshot from the repository, then passes it to a publisher
 pub struct PublishSnapshot {
     pub generated_at: UtcTimestamp,
     pub library: LibraryInfo,
+    pub source_library_id: LibraryId,
     pub decks: Vec<PublishDeck>,
     pub sentences: Vec<PublishSentence>,
     pub tokens: Vec<PublishToken>,
     pub audio: Vec<PublishAudio>,
     pub warnings: Vec<PublishWarning>,
 }
+
+pub struct PublishSentence {
+    pub id: SentenceId,
+    pub deck: DeckId,
+    pub lifecycle: SentenceLifecycle,
+    pub approval: ApprovalState,
+    pub qa: QaState,
+    pub origin: SentenceOrigin,
+    pub text: SentenceText,
+    pub authority: FieldAuthoritySet,
+    pub tags: SentenceTags,
+}
 ```
+
+Study/Anki snapshots should already be filtered by the service. Package/db snapshots are lossless by default.
 
 ## Package writer
 
@@ -150,23 +167,63 @@ Package is lossless and round-trippable.
 out/ch01/
   manifest.json
   sentences/
-    sen-ch01-01.json
+    sen-01jx9m7q8v6f2x4k9d3p1r0t5w.json
   audio/
-    sen-ch01-01.mp3
+    sen-01jx9m7q8v6f2x4k9d3p1r0t5w.mp3
   README.txt
 ```
 
-Package audio can also be flat by sentence ID. The manifest maps sentence to optional audio path.
+Package audio can be flat by sentence ID. The manifest maps sentence to optional audio path.
 
 ```rust
 pub struct PackageManifest {
     pub format: PackageFormatVersion,
+    pub package_id: PackageId,
+    pub source_library_id: LibraryId,
     pub generated_at: UtcTimestamp,
     pub language: LanguageCode,
+    pub profile_id: ProfileId,
     pub decks: Vec<PackageDeckManifest>,
     pub counts: PackageCounts,
     pub integrity: PackageIntegrity,
 }
+```
+
+Package sentence JSON must preserve every field needed for backup/restore:
+
+```rust
+pub struct PackageSentence {
+    pub format: PackageSentenceFormat,
+    pub id: SentenceId,
+    pub deck_slug: DeckSlug,
+    pub position: SentencePosition,
+    pub lifecycle: SentenceLifecycle,
+    pub approval: ApprovalState,
+    pub qa_checked_at: Option<UtcTimestamp>,
+    pub origin: SentenceOrigin,
+    pub text: SentenceText,
+    pub authority: FieldAuthoritySet,
+    pub tags: SentenceTags,
+    pub tokens: SentenceTokenBreakdown,
+    pub audio: Option<PackageAudio>,
+    pub created_at: UtcTimestamp,
+    pub updated_at: UtcTimestamp,
+}
+```
+
+Required round-trip fields:
+
+```text
+id
+status/lifecycle
+active/approval
+qa_checked_at
+origin and source fields
+field authority
+tokens/breakdown
+tags
+audio metadata and optional audio file
+created_at/updated_at
 ```
 
 Every artifact the user trusts should be read back and verified.
@@ -217,6 +274,8 @@ CREATE TABLE word_sentences (
 ) STRICT;
 ```
 
+Default selection for study export is active approved rows only. The export may include a manifest warning count for unQA'd selected rows, but QA does not block.
+
 Study export can organize audio however the app prefers. That path is export-local, not authoring truth.
 
 ## Anki writer
@@ -229,7 +288,7 @@ pub fn anki_note_guid(sentence: &SentenceId) -> NoteGuid {
 }
 ```
 
-A deck rename should update deck placement/name on export, not duplicate cards.
+Default selection for Anki export is active approved rows only. A deck rename should update deck placement/name on export, not duplicate cards.
 
 ## Import
 
@@ -240,25 +299,50 @@ Import rules:
 - package may contain one or many decks;
 - preserve deck slugs unless collision requires deduping the deck slug;
 - dedupe sentences by profile-normalized target identity within destination deck;
-- preserve source package ID as provenance only, not current identity;
+- write durable imported origin fields on every new imported sentence;
 - copy audio to `audio/<new-sentence-id>.mp3`;
 - compute fresh audio fingerprint for copied audio from imported metadata and current profile;
-- `--dry-run` reports additions, duplicates, and conflicts.
+- `--dry-run` reports additions, duplicates, conflicts, and approval/QA policy effects.
+
+## Import approval policy
+
+Default policy is safe re-approval for external content:
+
+| Source | Sentence IDs | `active` | `qa_checked_at` | Origin |
+|---|---|---|---|---|
+| same `source_library_id` as destination | preserve | preserve | preserve | preserve/restore |
+| different or missing `source_library_id` | allocate local IDs | `false` | `NULL` | imported source fields |
+| external with explicit trust | allocate local IDs | preserve if enriched | preserve | imported source fields |
+
+A true disaster restore from package into an empty workspace should be a restore workflow that seeds the destination `meta.library_id` from the package before importing. Plain cross-library import should not silently bless imported approvals.
 
 ## Import dry-run report
 
 ```rust
 pub struct ImportPreview {
     pub package: PackageName,
+    pub source_library_id: Option<LibraryId>,
+    pub approval_policy: ImportApprovalPolicy,
     pub decks: Vec<ImportDeckPreview>,
     pub conflicts: Vec<ImportConflict>,
+    pub approval_effects: ImportApprovalEffects,
 }
 
 pub enum ImportConflict {
     SameTargetDifferentEnglish {
         existing: SentenceId,
-        incoming_source_id: Option<String>,
+        incoming_source_id: SourceSentenceId,
     },
     UnsupportedPackageVersion { found: String },
+    ActiveDraftInPackage { source_sentence_id: SourceSentenceId },
+}
+
+pub struct ImportApprovalEffects {
+    pub approvals_preserved: usize,
+    pub approvals_reset: usize,
+    pub qa_preserved: usize,
+    pub qa_reset: usize,
 }
 ```
+
+Package validation rejects invalid package states such as `active=true` on a draft sentence.

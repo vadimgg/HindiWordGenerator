@@ -21,6 +21,8 @@ The rebuild should keep those instincts, but simplify and harden the model:
 
 - remove `collection`, `batch`, and `section` as internal product vocabulary;
 - make `deck` the only product unit below library;
+- make `active` a real approval gate, not a display status;
+- make sentence origin durable instead of deriving it from old runs;
 - remove durable `enriching` status from sentences;
 - make pending runs and `run_sentences` the only authority for in-flight work;
 - remove slug-coupled audio paths;
@@ -30,7 +32,7 @@ The rebuild should keep those instincts, but simplify and harden the model:
 
 ## Decision: SQLite remains the authoring truth
 
-`library.db` is the canonical authoring store. It owns decks, sentences, field authority, tokens, run state, run claims, QA stamps, and audio provenance.
+`library.db` is the canonical authoring store. It owns decks, sentences, sentence origin, approval state, field authority, tokens, run state, run claims, QA stamps, and audio provenance.
 
 Derived artifacts:
 
@@ -55,9 +57,22 @@ The clean model is:
 
 ```text
 Library -> Deck -> Sentence
+Sentence -> origin / authority / tokens / approval / audio metadata
 Run -> run_sentences
-Sentence -> tokens / authority / audio metadata
 ```
+
+## Decision: library identity is durable
+
+Every initialized library gets a generated `meta.library_id`. Package exports include it as `source_library_id`.
+
+Use it only for identity decisions, especially import:
+
+```text
+same source_library_id      -> same-library restore/sync rules may preserve approval and QA
+different/missing source id -> cross-library import rules reset approval by default
+```
+
+`library_id` is not a user-visible title and should not be reused across independent libraries.
 
 ## Decision: sentence lifecycle is durable readiness only
 
@@ -89,12 +104,13 @@ pending claim exists but sentence.status = draft
 
 The database can always answer visible status by joining `sentences`, `run_sentences`, and pending enrich `runs`.
 
-## Decision: curation and QA are separate axes
+## Decision: approval and QA are separate axes
 
-Curation:
+Approval:
 
 ```sql
 sentences.active INTEGER NOT NULL DEFAULT 0 CHECK(active IN (0,1))
+CHECK (active = 0 OR status = 'enriched')
 ```
 
 QA:
@@ -103,7 +119,7 @@ QA:
 sentences.qa_checked_at TEXT NULL
 ```
 
-A sentence can be:
+Allowed states include:
 
 ```text
 draft + inactive
@@ -112,7 +128,76 @@ enriched + active + not QA'd
 enriched + active + QA'd
 ```
 
-`active` is not lifecycle. `qa_checked_at` is not lifecycle.
+Disallowed state:
+
+```text
+draft + active
+```
+
+QA remains warn-only. A user can approve an enriched sentence before QA. Study/Anki publish should warn if selected approved sentences are not QA'd, but should not hard-block.
+
+## Decision: approval is the study gate
+
+`active = true` means “approved for study.”
+
+Study-facing exports:
+
+```text
+study: active enriched rows by default
+anki:  active enriched rows by default
+```
+
+Package/db exports are lossless and export everything.
+
+An explicit override such as `--include-unapproved` may include enriched inactive rows for study/Anki, but draft rows are still not studyable because they lack required enrichment/tokens.
+
+## Decision: approval must be invalidated by lifecycle downgrade
+
+Any operation that sets `status = draft` must also set `active = 0` in the same domain operation and database transaction.
+
+This resolves the target-edit tension:
+
+```text
+Semantic target edit -> lifecycle draft -> active cleared
+Audio-only target edit -> lifecycle unchanged -> active unchanged
+No-content target edit -> lifecycle unchanged -> active unchanged
+```
+
+Automated model rewrites that change study-facing content after approval should clear approval even if lifecycle remains `enriched`:
+
+```text
+enrich --force with changed fields/tokens -> active cleared
+QA correction that changes fields/tokens -> active cleared
+QA clean stamp only -> active unchanged
+```
+
+Manual edits to enriched rows may keep approval because the user is the actor making the change. The edit report should make that visible, and the user may pass the normal inactive/active operation if they want to re-review.
+
+## Decision: sentence origin is durable
+
+Origin is not derived from `run_sentences` because run cleanup can delete those rows.
+
+```rust
+pub enum SentenceOrigin {
+    Generated(GeneratedOrigin),
+    Imported(ImportedOrigin),
+    Manual(ManualOrigin),
+}
+```
+
+Rules:
+
+```text
+generated -> optional source_extract_run_id, optional source_label
+imported  -> source_library_id + source_package_id + source_sentence_id required
+manual    -> no source run/package/sentence fields
+```
+
+`source_extract_run_id` is informational, not a foreign key. It may outlive the old run row.
+
+`source_label` is a display label such as `raw/ch01.md` or package title. It is not identity.
+
+No extra source timestamp is stored on the sentence. `sentences.created_at` records when the sentence entered this library. Package manifests preserve package generation timestamps.
 
 ## Decision: `run_sentences` is canonical
 
@@ -120,7 +205,7 @@ enriched + active + QA'd
 
 - For `enrich` and `qa`, rows are inserted when the run is prepared/claimed.
 - For `extract`, rows are inserted at apply time for the sentences created by that run.
-- Rows remain after apply/reset as provenance unless the run is intentionally deleted.
+- Rows may remain after apply/reset as run participation history, but sentence origin does not depend on them.
 
 Do not store these columns on `sentences`:
 
@@ -143,22 +228,22 @@ No deck slug in the path. Deck slugs are mutable. Sentence IDs are permanent. Au
 
 Exports may arrange audio differently if useful for a target format, but the authoring workspace should never move audio files merely because a deck slug changed.
 
-## Decision: IDs are opaque
+## Decision: real sentence IDs are opaque `sen-<ulid>` values
 
-IDs may be human-readable at creation time:
+Generated sentence IDs use a slug-free format such as:
 
 ```text
-sen-ch01-01
-ch01-enrich-9b2c
+sen-01jx9m7q8v6f2x4k9d3p1r0t5w
 ```
 
-But code must not parse meaning out of them. A sentence ID's slug-looking segment records where the sentence was born, not where it currently lives. A deck rename does not rename sentence IDs, run IDs, Anki GUIDs, study progress keys, or audio filenames.
+The prefix tells humans the kind of ID. The remaining bytes are opaque. Code must not parse a deck slug, position, or timestamp from the ID. If an example in CLI docs shows `sen-ch01-01`, treat it as illustrative sample output only, not the durable ID format.
 
 Forbidden API:
 
 ```rust
 sentence_id.deck_slug();
 sentence_id.position();
+sentence_id.created_at_from_ulid();
 run_id.stage();
 ```
 
@@ -181,15 +266,21 @@ pub enum TargetEditImpact {
 }
 ```
 
+Classifier:
+
+```text
+SemanticChange   = profile.target_identity_key(before) != profile.target_identity_key(after)
+AudioOnlyChange  = identity same, but profile/audio fingerprint input changes
+NoContentChange  = identity same and audio input/fingerprint same
+```
+
 Default policy:
 
 | Impact | Action |
 |---|---|
 | `NoContentChange` | No invalidation. |
-| `AudioOnlyChange` | Mark audio stale; keep enrichment and QA. |
-| `SemanticChange` | Clear AI-authored derived fields, clear tokens, clear QA, mark audio stale, set lifecycle to `draft`. Preserve human fields with warnings. |
-
-Do **not** automatically set `active = false`. Curation is a user decision. A user edit might make a sentence more trustworthy, not less.
+| `AudioOnlyChange` | Keep lifecycle, QA, tokens, and approval; audio becomes stale by fingerprint mismatch. |
+| `SemanticChange` | Clear AI-authored derived fields, clear tokens, clear QA, mark audio stale, set lifecycle to `draft`, clear approval. Preserve human fields with warnings. |
 
 ## Decision: profile participates in normalization
 
@@ -234,12 +325,67 @@ Guarantees:
 ```text
 read full reply
 parse into typed stage DTO
-validate against a DB snapshot
-if --dry-run: report preview and write nothing
-if commit: one SQLite transaction
-idempotent same-reply re-apply
-reject already-applied different reply
-record reply_sha256, applied_at, validation_error
+load validation snapshot
+validate entire reply before writing
+if dry-run, write nothing
+if commit, write inside one SQLite transaction
+record reply_sha256 and applied_at
+same reply after applied is idempotent
+changed reply after applied is rejected
+failed validation leaves run pending and records validation error
 ```
 
-No model reply ever writes directly to the database.
+No stage-specific command writes model output directly to tables.
+
+## Decision: one pending enrich claim is transaction-enforced
+
+A sentence must not be in two pending enrich runs at once.
+
+SQLite cannot express this as a valid partial unique index because the predicate needs a join to `runs`. The invariant lives in the `BEGIN IMMEDIATE` claim transaction. The implementation must include a double-claim concurrency test.
+
+## Decision: package is the lossless round-trip format
+
+Package JSON must preserve enough data that backup -> import/restore does not silently downgrade a library:
+
+```text
+id
+status
+active
+qa_checked_at
+origin and source fields
+field authority
+tokens/breakdown
+tags
+audio metadata and optional audio file
+created_at/updated_at
+```
+
+Study and Anki are one-way study targets. They are allowed to filter and reshape.
+
+## Decision: import defaults to safe re-approval
+
+Import rules depend on source identity:
+
+```text
+same package source_library_id as destination meta.library_id
+  -> preserve sentence IDs, approval, and QA when restoring/updating the same library
+
+different or missing source_library_id
+  -> allocate local sentence IDs for new rows
+  -> origin = imported
+  -> active = false
+  -> qa_checked_at = NULL
+  -> store source_library_id/source_package_id/source_sentence_id
+```
+
+A future explicit trust option may preserve external approval/QA, but default cross-library import should require local re-approval.
+
+## Decision: approval is a workflow step
+
+The default workflow is now:
+
+```text
+extract -> apply -> enrich -> apply -> QA recommended -> approve -> audio -> publish
+```
+
+Architecture exposes approval as a use case. CLI can surface it as a dedicated command or as bulk edit/approval behavior, but status ranking should treat “enriched but unapproved” as a real gap before study/Anki publish.

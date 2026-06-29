@@ -6,6 +6,8 @@
 Library
   └── Deck
         └── Sentence
+              ├── SentenceOrigin
+              ├── ApprovalState
               ├── FieldAuthoritySet
               ├── SentenceTokenBreakdown
               ├── QaState
@@ -23,6 +25,20 @@ The domain model expresses invariants. It does not know SQL rows, files, termina
 
 IDs validate shape but expose no semantic parsing.
 
+Generated sentence IDs use the real format:
+
+```text
+sen-<ulid>
+```
+
+Example:
+
+```text
+sen-01jx9m7q8v6f2x4k9d3p1r0t5w
+```
+
+The prefix is a kind marker only. Code must not parse deck slug, position, creation time, or any other business fact out of the suffix.
+
 ```rust
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SentenceId(String);
@@ -30,7 +46,7 @@ pub struct SentenceId(String);
 impl SentenceId {
     pub fn parse(raw: impl Into<String>) -> Result<Self, SentenceIdError> {
         let raw = raw.into();
-        if !is_valid_public_id(&raw, "sen-") {
+        if !is_valid_sentence_id(&raw) {
             return Err(SentenceIdError::Invalid { raw });
         }
         Ok(Self(raw))
@@ -42,7 +58,24 @@ impl SentenceId {
 }
 ```
 
-Do not add methods that infer deck slug, stage, sequence, or date from an ID.
+Forbidden API:
+
+```rust
+sentence_id.deck_slug();
+sentence_id.position();
+sentence_id.created_at_from_ulid();
+```
+
+CLI docs may use friendlier sample IDs such as `sen-ch01-01` in examples. Those are illustrative only and must not define the generated ID contract.
+
+Other durable IDs are also value objects:
+
+```rust
+pub struct LibraryId(String);   // lib-<random/ulid-ish opaque value>
+pub struct DeckId(String);      // internal opaque id
+pub struct RunId(String);       // opaque, even if human-readable
+pub struct PackageId(String);   // package manifest identity
+```
 
 ## Slug and profile values
 
@@ -113,6 +146,99 @@ pub enum VisibleSentenceStatus {
 }
 ```
 
+## Sentence origin
+
+Origin is durable sentence provenance. It survives run cleanup and package round-trips.
+
+```rust
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum SentenceOrigin {
+    Generated(GeneratedOrigin),
+    Imported(ImportedOrigin),
+    Manual(ManualOrigin),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GeneratedOrigin {
+    source_extract_run_id: Option<RunIdText>,
+    source_label: Option<SourceLabel>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ImportedOrigin {
+    source_library_id: LibraryId,
+    source_package_id: PackageId,
+    source_sentence_id: SourceSentenceId,
+    source_label: Option<SourceLabel>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManualOrigin {
+    source_label: Option<SourceLabel>,
+}
+```
+
+`RunIdText` is intentionally a stored string wrapper, not necessarily a live foreign-key reference. Old run rows may be cleaned up.
+
+Creation rules:
+
+```text
+apply extract reply -> Generated { source_extract_run_id: run id, source_label: raw path/deck source }
+manual add/edit UI  -> Manual { source_label: optional }
+import package      -> Imported { source_library_id, source_package_id, source_sentence_id }
+```
+
+No separate origin timestamp exists on the origin value. `Sentence.created_at` is the local entry timestamp. Package manifests carry their own generation timestamp.
+
+## Approval state
+
+Approval is a real gate for study-facing export.
+
+```rust
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ApprovalState {
+    Unapproved,
+    Approved,
+}
+
+impl ApprovalState {
+    pub fn is_approved(self) -> bool {
+        matches!(self, Self::Approved)
+    }
+}
+```
+
+Invariant:
+
+```text
+Approved implies SentenceLifecycle::Enriched.
+```
+
+The domain should make invalid states unrepresentable through operations:
+
+```rust
+impl Sentence {
+    pub fn approve(&mut self) -> Result<(), ApprovalError> {
+        if self.lifecycle != SentenceLifecycle::Enriched {
+            return Err(ApprovalError::CannotApproveDraft { id: self.id.clone() });
+        }
+        self.approval = ApprovalState::Approved;
+        Ok(())
+    }
+
+    pub fn unapprove(&mut self) {
+        self.approval = ApprovalState::Unapproved;
+    }
+
+    fn downgrade_to_draft(&mut self) {
+        self.lifecycle = SentenceLifecycle::Draft;
+        self.approval = ApprovalState::Unapproved;
+    }
+}
+```
+
+QA is not part of this invariant.
+
 ## Sentence aggregate
 
 ```rust
@@ -121,8 +247,9 @@ pub struct Sentence {
     deck_id: DeckId,
     position: SentencePosition,
     lifecycle: SentenceLifecycle,
-    active: ActiveFlag,
+    approval: ApprovalState,
     qa: QaState,
+    origin: SentenceOrigin,
     text: SentenceText,
     authority: FieldAuthoritySet,
     tags: SentenceTags,
@@ -134,8 +261,9 @@ pub struct Sentence {
 
 impl Sentence {
     pub fn lifecycle(&self) -> SentenceLifecycle { self.lifecycle }
-    pub fn active(&self) -> ActiveFlag { self.active }
+    pub fn approval(&self) -> ApprovalState { self.approval }
     pub fn qa_state(&self) -> &QaState { &self.qa }
+    pub fn origin(&self) -> &SentenceOrigin { &self.origin }
     pub fn target(&self) -> &TargetText { self.text.target() }
 }
 ```
@@ -273,168 +401,19 @@ pub trait LanguageProfile {
     fn romanisation_convention(&self) -> &RomanisationConvention;
 
     fn target_identity_key(&self, target: &TargetText) -> TargetIdentityKey;
+    fn audio_input_key(&self, target: &TargetText) -> AudioInputText;
     fn classify_target_edit(&self, before: &TargetText, after: &TargetText) -> TargetEditImpact;
     fn derive_word_key(&self, input: WordKeyInput<'_>) -> Result<WordKey, WordKeyError>;
     fn normalize_for_audio(&self, target: &TargetText) -> AudioInputText;
 }
 ```
 
-Profiles are explicit built-ins. Do not add plugin loading.
+The classifier rule is:
 
-## Target edit impact
-
-```rust
-pub enum TargetEditImpact {
-    NoContentChange,
-    AudioOnlyChange,
-    SemanticChange,
-}
-
-pub enum DerivedFieldPolicy {
-    InvalidateWhenStale,
-    PreserveWithWarning,
-}
-
-pub struct TargetEditReport {
-    pub impact: TargetEditImpact,
-    pub invalidated_fields: Vec<SentenceField>,
-    pub preserved_human_fields: Vec<SentenceField>,
-    pub audio_marked_stale: bool,
-    pub lifecycle_changed: bool,
-}
+```text
+SemanticChange  if target_identity_key changes
+AudioOnlyChange if target identity is same but audio input key changes
+NoContentChange if both are same
 ```
 
-## Editing sentence text
-
-```rust
-impl Sentence {
-    pub fn edit_target(
-        &mut self,
-        new_target: TargetText,
-        profile: &dyn LanguageProfile,
-        policy: DerivedFieldPolicy,
-        now: UtcTimestamp,
-    ) -> TargetEditReport {
-        let impact = profile.classify_target_edit(self.text.target(), &new_target);
-        self.text.set_target(new_target);
-        self.authority.mark_human(SentenceField::Target);
-        self.updated_at = now;
-
-        match (impact, policy) {
-            (TargetEditImpact::NoContentChange, _) => TargetEditReport::no_content_change(),
-            (TargetEditImpact::AudioOnlyChange, _) => {
-                self.mark_audio_stale();
-                TargetEditReport::audio_only()
-            }
-            (TargetEditImpact::SemanticChange, DerivedFieldPolicy::PreserveWithWarning) => {
-                self.mark_audio_stale();
-                self.qa = QaState::Unchecked;
-                TargetEditReport::preserved_with_warning()
-            }
-            (TargetEditImpact::SemanticChange, DerivedFieldPolicy::InvalidateWhenStale) => {
-                self.invalidate_ai_derived_fields();
-                self.tokens = SentenceTokenBreakdown::empty();
-                self.qa = QaState::Unchecked;
-                self.lifecycle = SentenceLifecycle::Draft;
-                self.mark_audio_stale();
-                TargetEditReport::semantic_invalidation()
-            }
-        }
-    }
-}
-```
-
-`active` is intentionally untouched.
-
-## Run aggregate
-
-```rust
-pub struct Run {
-    id: RunId,
-    stage: RunStage,
-    status: RunStatus,
-    deck_id: Option<DeckId>,
-    task_path: RunRelativePath,
-    reply_path: RunRelativePath,
-    reply_sha256: Option<ContentHash>,
-    created_at: UtcTimestamp,
-    applied_at: Option<UtcTimestamp>,
-    reset_at: Option<UtcTimestamp>,
-    abandoned_at: Option<UtcTimestamp>,
-    last_validation_error: Option<ValidationErrorText>,
-}
-
-pub enum RunStage { Extract, Enrich, Qa }
-pub enum RunStatus { Pending, Applied, Reset, Abandoned }
-```
-
-A pending run with `last_validation_error` can be displayed as `failed` in CLI, but the durable status remains `pending` so it is retryable.
-
-## Run sentence participation
-
-```rust
-pub struct RunSentenceClaim {
-    run_id: RunId,
-    sentence_id: SentenceId,
-    position: RunSentencePosition,
-}
-```
-
-`run_sentences` is used both for pending claims and post-apply provenance.
-
-## Audio asset
-
-```rust
-pub struct AudioAsset {
-    file_sha256: ContentHash,
-    input_fingerprint: AudioInputFingerprint,
-    backend: AudioBackendId,
-    profile_id: ProfileId,
-    language: LanguageCode,
-    voice: Option<AudioVoice>,
-    model: Option<AudioModel>,
-    generated_at: UtcTimestamp,
-}
-
-pub struct AudioInputFingerprint(ContentHash);
-
-pub struct AudioFingerprintInput<'a> {
-    pub target: &'a TargetText,
-    pub profile: &'a dyn LanguageProfile,
-    pub backend: AudioBackendId,
-    pub voice: Option<&'a AudioVoice>,
-    pub model: Option<&'a AudioModel>,
-}
-
-impl AudioInputFingerprint {
-    pub fn derive(input: AudioFingerprintInput<'_>) -> Self {
-        let audio_text = input.profile.normalize_for_audio(input.target);
-        let canonical = CanonicalFingerprint::new()
-            .field("profile", input.profile.id().as_str())
-            .field("lang", input.profile.audio_language_code().as_str())
-            .field("backend", input.backend.wire_name())
-            .optional_field("voice", input.voice.map(AudioVoice::as_str))
-            .optional_field("model", input.model.map(AudioModel::as_str))
-            .field("text", audio_text.as_str())
-            .finish();
-        Self(ContentHash::sha256(canonical.as_bytes()))
-    }
-}
-```
-
-## Deck aggregate
-
-```rust
-pub struct Deck {
-    id: DeckId,
-    slug: DeckSlug,
-    title: Option<DeckTitle>,
-    subtitle: Option<DeckSubtitle>,
-    source_path: Option<WorkspaceRelativePath>,
-    position: DeckPosition,
-    created_at: UtcTimestamp,
-    updated_at: UtcTimestamp,
-}
-```
-
-Changing `slug` changes display and future commands only. It does not change sentence IDs, run IDs, audio filenames, or study/Anki identity.
+Audio fingerprints then combine profile/audio input with backend/voice/model/language.
