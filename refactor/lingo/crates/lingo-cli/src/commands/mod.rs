@@ -4,6 +4,7 @@ pub mod check;
 pub mod doctor;
 pub mod export;
 pub mod import;
+pub mod import_package;
 pub mod init;
 pub mod lang;
 pub mod package;

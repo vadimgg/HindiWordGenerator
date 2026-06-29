@@ -215,6 +215,29 @@ fn respond_generated_sentences(
             .and_then(Value::as_str)
             .cmp(&b.get("file").and_then(Value::as_str))
     });
+
+    // Per-sentence layer (sentences/<batch>__<item>.json): the canonical unit
+    // the Sentences/Organize tabs render, ordered by each file's `order`.
+    let mut sentences = Vec::new();
+    if let Ok(entries) = fs::read_dir(workspace_root.join("sentences")) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+                continue;
+            }
+            let Ok(text) = fs::read_to_string(&path) else {
+                continue;
+            };
+            if let Ok(value) = serde_json::from_str::<Value>(&text) {
+                sentences.push(value);
+            }
+        }
+    }
+    sentences.sort_by(|a, b| {
+        let order = |value: &Value| value.get("order").and_then(Value::as_i64).unwrap_or(i64::MAX);
+        order(a).cmp(&order(b))
+    });
+
     if head_only {
         request.respond(with_content_type(
             Response::empty(StatusCode(200)),
@@ -222,7 +245,7 @@ fn respond_generated_sentences(
         ))?;
         return Ok(());
     }
-    let body = json!({ "files": files });
+    let body = json!({ "files": files, "sentences": sentences });
     let text = serde_json::to_string(&body)?;
     let response = Response::from_string(text).with_status_code(StatusCode(200));
     request.respond(with_content_type(

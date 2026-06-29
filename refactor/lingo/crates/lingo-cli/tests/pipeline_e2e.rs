@@ -110,7 +110,7 @@ fn complete_pipeline_produces_verified_package_and_anki_export() {
         .assert()
         .success()
         .stdout(predicate::str::contains(package.display().to_string()));
-    verify_package(&package);
+    verify_package(&package, workspace.source_item_id("chapter-01").as_str());
 
     let export = workspace.path("exports/chapter-01.apkg");
     workspace
@@ -128,7 +128,7 @@ fn complete_pipeline_produces_verified_package_and_anki_export() {
     assert!(!workspace.path("eval").exists());
 }
 
-fn verify_package(root: &std::path::Path) {
+fn verify_package(root: &std::path::Path, source_item: &str) {
     let manifest_path = root.join("manifest.json");
     let manifest: Value =
         serde_json::from_slice(&fs::read(&manifest_path).expect("package manifest should exist"))
@@ -137,7 +137,10 @@ fn verify_package(root: &std::path::Path) {
     assert_eq!(manifest["counts"]["batches"].as_u64(), Some(1));
     assert_eq!(manifest["counts"]["cards"].as_u64(), Some(1));
     assert_eq!(manifest["counts"]["audio_files"].as_u64(), Some(1));
-    assert!(root.join("cards/chapter-01.json").is_file());
+    assert!(
+        root.join(format!("cards/chapter-01/{source_item}.json"))
+            .is_file()
+    );
     assert!(root.join("cards.jsonl").is_file());
 
     let checksums = manifest["integrity"]["files"]

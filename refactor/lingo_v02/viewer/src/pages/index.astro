@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en" data-theme="lingo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content="Lingo Viewer" />
+    <title>Lingo Viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Tiro+Devanagari+Hindi&display=swap"
+    />
+    <link rel="stylesheet" href="/viewer/viewer.css" />
+  </head>
+  <body>
+    <div class="app" data-app>
+      <header class="topbar">
+        <button class="brand" type="button" data-page-link="organize" aria-label="Go to Organize">
+          <span class="brand-mark">✦</span>
+          <strong data-workspace-name>Lingo</strong>
+          <small><span data-workspace-language></span> · <span data-workspace-library></span></small>
+        </button>
+        <nav class="nav" aria-label="Lingo pages">
+          <button data-page-link="generate" type="button">Generate</button>
+          <button data-page-link="import" type="button">Import</button>
+          <button data-page-link="organize" type="button" aria-current="page">Organize</button>
+          <button data-page-link="words" type="button">Words</button>
+          <button data-page-link="audio" type="button">Audio</button>
+          <button data-page-link="anki" type="button">Anki</button>
+          <button data-page-link="package" type="button">Package</button>
+        </nav>
+        <div class="shell-actions">
+          <button class="icon-btn" type="button" data-drawer-open="cli">⌘</button>
+          <button class="icon-btn" type="button" data-drawer-open="help">?</button>
+          <button class="icon-btn" type="button" data-drawer-open="settings">⚙</button>
+        </div>
+      </header>
+
+      <section class="statusbar" aria-label="Library status">
+        <span><i class="dot ready"></i><strong data-summary-sentences>0</strong> sentences</span>
+        <span><i class="dot draft"></i><strong data-summary-draft>0</strong> draft</span>
+        <span><i class="dot wait"></i><strong data-summary-enriching>0</strong> enriching</span>
+        <span><i class="dot ready"></i><strong data-summary-audio>0/0</strong> audio</span>
+        <span><i class="dot neutral"></i><strong data-summary-words>0</strong> words</span>
+        <span class="server-pill" data-server-status><i class="dot wait"></i> checking server</span>
+      </section>
+
+      <main class="canvas" aria-live="polite">
+        <!-- Generate -->
+        <section class="page" data-page="generate" aria-labelledby="generate-title" hidden>
+          <div class="page-head"><div><h1 id="generate-title">Generate</h1></div></div>
+          <div class="producer">
+            <div class="head-actions">
+              <label class="field compact"><span>Subtitle</span><input data-control="section" value="Chapter 02" /></label>
+              <label class="field compact"><span>Limit</span><input data-control="limit" type="number" min="1" value="20" /></label>
+            </div>
+            <label class="field"><span>Raw source</span>
+              <textarea class="raw-box" data-control="rawText" placeholder="Paste source text, learner notes, or sentences with your own translations…"></textarea>
+            </label>
+            <div class="head-actions">
+              <button class="btn primary" type="button" data-action="extract">Extract →</button>
+              <button class="btn secondary" type="button" data-action="copy-cli" data-command-key="generate.extract">Copy CLI</button>
+            </div>
+            <div class="producer-panel" data-producer-panel></div>
+            <div class="queue-block">
+              <div class="section-title"><span>Draft queue</span><span data-count-draft>0</span></div>
+              <div class="queue-list" data-generate-queue></div>
+              <div class="head-actions" style="margin-top:0.75rem">
+                <button class="btn primary" type="button" data-action="enrich">Enrich next batch →</button>
+                <button class="btn secondary" type="button" data-action="reset-enrich">Reset abandoned claims</button>
+                <span class="spacer"></span>
+                <button class="btn secondary" type="button" data-action="package-export" title="Write the library to the package files / db copy">⤓ Save to package</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Import -->
+        <section class="page" data-page="import" aria-labelledby="import-title" hidden>
+          <div class="page-head"><div><h1 id="import-title">Import</h1></div></div>
+          <div class="producer">
+            <label class="field"><span>Source package</span><input data-control="importPath" placeholder="/path/to/package" /></label>
+            <div class="head-actions">
+              <button class="btn primary" type="button" data-action="import">Scan package →</button>
+              <button class="btn secondary" type="button" data-action="copy-cli" data-command-key="import">Copy CLI</button>
+            </div>
+          </div>
+          <div class="import-preview" data-import-preview></div>
+        </section>
+
+        <!-- Organize -->
+        <section class="page" data-page="organize" aria-labelledby="organize-title">
+          <div class="page-head">
+            <div><h1 id="organize-title">Organize</h1></div>
+            <label class="field search"><input data-control="search" placeholder="Search target, romanisation, English, tag…" /></label>
+            <label class="field compact"><select data-control="statusFilter">
+              <option value="active">Active</option><option value="enriched">Review</option>
+              <option value="draft">Draft</option><option value="enriching">Enriching</option>
+              <option value="all">All</option><option value="missing-audio">Missing audio</option>
+            </select></label>
+          </div>
+          <div class="sentence-list" data-sentence-list></div>
+        </section>
+
+        <!-- Words -->
+        <section class="page" data-page="words" aria-labelledby="words-title" hidden>
+          <div class="page-head">
+            <div><h1 id="words-title">Words</h1></div>
+            <label class="field search"><input data-control="wordSearch" placeholder="Search word, roman, meaning…" /></label>
+            <label class="field compact"><span>Min</span><input data-control="minCount" type="number" min="1" value="1" /></label>
+          </div>
+          <div class="word-grid">
+            <div class="word-list" data-word-list></div>
+            <div data-word-detail>
+              <div class="empty-state"><strong>Select a word</strong><span>Its meanings and sentences appear here.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Audio -->
+        <section class="page" data-page="audio" aria-labelledby="audio-title" hidden>
+          <div class="page-head">
+            <div><h1 id="audio-title">Audio</h1></div>
+            <label class="field compact"><span>Backend</span><select data-control="audioBackend"><option value="gtts">gTTS</option><option value="elevenlabs">ElevenLabs</option></select></label>
+            <label class="field compact"><span>Voice</span><input data-control="audioVoice" placeholder="voice id" /></label>
+          </div>
+          <div class="head-actions" style="margin-bottom:1rem">
+            <span class="metric"><i class="dot ready"></i><strong data-audio-ready>0</strong> ready</span>
+            <span class="metric"><i class="dot missing"></i><strong data-audio-missing>0</strong> missing</span>
+            <span class="spacer"></span>
+            <button class="btn primary" type="button" data-action="audio-missing">Generate missing</button>
+            <button class="btn secondary" type="button" data-action="audio-regenerate">Regenerate selected</button>
+          </div>
+          <div class="audio-list" data-audio-list></div>
+        </section>
+
+        <!-- Anki -->
+        <section class="page" data-page="anki" aria-labelledby="anki-title" hidden>
+          <div class="page-head"><div><h1 id="anki-title">Anki</h1></div></div>
+          <div class="publish-panel">
+            <div class="publish-summary" data-anki-summary></div>
+            <div class="publish-target">
+              <label class="field grow"><span>Deck</span><input data-control="ankiDeck" value="Hindi::Sentences" /></label>
+              <label class="switch"><input data-control="ankiReplace" type="checkbox" /> <span>Replace existing deck</span></label>
+            </div>
+            <div class="head-actions">
+              <button class="btn primary" type="button" data-action="anki-export">Send to Anki</button>
+              <button class="btn secondary" type="button" data-action="copy-cli" data-command-key="anki">Copy CLI</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Package -->
+        <section class="page" data-page="package" aria-labelledby="package-title" hidden>
+          <div class="page-head"><div><h1 id="package-title">Package</h1></div></div>
+          <div class="publish-panel">
+            <div class="publish-summary" data-package-summary></div>
+            <div class="publish-target">
+              <label class="field grow"><span>Destination</span><input data-control="packageDest" value="packages/sentences" /></label>
+              <label class="field compact"><span>Format</span><select data-control="packageFormat"><option value="json">JSON</option><option value="db">DB copy</option></select></label>
+            </div>
+            <div class="head-actions">
+              <button class="btn primary" type="button" data-action="package-export">Export package</button>
+              <button class="btn secondary" type="button" data-action="copy-cli" data-command-key="package">Copy CLI</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- floating selection bar -->
+      <div class="selectionbar" data-selectionbar hidden>
+        <span><strong data-selection-count>0</strong> selected</span>
+        <button class="btn primary" type="button" data-action="confirm-active">✓ Confirm active</button>
+        <input class="bulk-section" data-bulk-section placeholder="Move to subtitle…" />
+        <button class="btn secondary" type="button" data-action="set-section">Set</button>
+        <button class="btn secondary" type="button" data-action="clear-selection">Clear</button>
+      </div>
+
+      <!-- drawers -->
+      <div class="drawer-backdrop" data-drawer-backdrop hidden></div>
+      <aside class="drawer" data-drawer="cli" aria-label="CLI commands" hidden>
+        <div class="drawer-head"><h2>Equivalent CLI</h2><button type="button" data-drawer-close>×</button></div>
+        <p class="subtle">The viewer is a helper. These are the scriptable commands for this page.</p>
+        <pre class="cli-snippet"><code data-active-cli>lingo ls</code></pre>
+        <div class="command-list" data-cli-list></div>
+      </aside>
+      <aside class="drawer" data-drawer="help" aria-label="Help" hidden>
+        <div class="drawer-head"><h2>Help</h2><button type="button" data-drawer-close>×</button></div>
+        <details open><summary>Pipeline model</summary><p>Generate runs extract then bounded enrich. Organize, Words, Audio, Anki, and Package all read from the same library.</p></details>
+        <details><summary>Field authority</summary><p>Human-authored fields show a lock. Editing a field marks it human-authored so enrichment can't overwrite it.</p></details>
+        <details><summary>Anki & ElevenLabs</summary><p>Export with <code>lingo export</code>. Add an ElevenLabs key in Settings or via the configured env var before launching the viewer.</p></details>
+      </aside>
+      <aside class="drawer" data-drawer="settings" aria-label="Settings" hidden>
+        <div class="drawer-head"><h2>Settings</h2><button type="button" data-drawer-close>×</button></div>
+        <form class="settings-form" data-settings-form>
+          <fieldset>
+            <legend>Deck</legend>
+            <label class="field"><span>Collection title</span><input name="collectionTitle" data-setting="workspace.name" /></label>
+            <label class="field"><span>Language</span><input name="language" data-setting="workspace.language" /></label>
+          </fieldset>
+          <fieldset>
+            <legend>Display</legend>
+            <label class="field"><span>Lead</span><select name="displayLead" data-setting="config.display.lead"><option value="romanisation">Romanisation</option><option value="target">Target</option></select></label>
+            <label class="switch"><input name="showSecondary" data-setting="config.display.showSecondary" type="checkbox" /> <span>Show secondary line</span></label>
+          </fieldset>
+          <fieldset>
+            <legend>Audio</legend>
+            <label class="field"><span>Default backend</span><select name="audioBackend" data-setting="config.audio.backend"><option value="gtts">gTTS</option><option value="elevenlabs">ElevenLabs</option></select></label>
+            <label class="field"><span>ElevenLabs voice</span><input name="audioVoice" data-setting="config.audio.voice" /></label>
+          </fieldset>
+          <fieldset>
+            <legend>Publish</legend>
+            <label class="field"><span>Anki deck</span><input name="ankiDeck" data-setting="config.anki.deck" /></label>
+            <label class="field"><span>Package destination</span><input name="packageDest" data-setting="config.package.destination" /></label>
+          </fieldset>
+          <button class="btn primary full" type="submit">Save settings</button>
+        </form>
+      </aside>
+
+      <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
+    </div>
+    <script type="module" src="/viewer/app.mjs"></script>
+  </body>
+</html>

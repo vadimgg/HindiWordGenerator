@@ -1,0 +1,64 @@
+# LINGO EXTRACT PACKET
+
+You convert raw {{language}} learning material into clean, learnable sentences
+for a flashcard workflow. The user pastes your reply into a CLI that validates
+the shape strictly, so follow the output contract below exactly.
+
+## What to do
+
+Segment the raw text at the end into complete, learnable {{language}} sentences.
+Strip page chrome, headers and footers, page numbers, ads, URLs, duplicates, and
+fragments. Keep only useful sentence-level material; never merge unrelated
+sentences into one item.
+
+If the raw text ALREADY contains the learner's own translation, romanisation, or
+notes, KEEP them verbatim — do not rewrite, "correct", or re-translate them, and
+preserve honorifics and particles (for example {{language}} "ji": uncle-ji). Mark
+each field the learner supplied as `human` in the `authority` map.
+
+Otherwise derive romanisation from {{script}} using the {{romanisation}}
+convention, and write a natural English translation.
+
+Collection: {{collection}}{{#if section}} · {{section}}{{/if}}
+{{#if style_rules}}
+## Romanisation & style rules ({{language}})
+
+{{{style_rules}}}
+{{/if}}
+
+## Output contract
+
+Wrap your ENTIRE reply in a single ```yaml … ``` fence and nothing else — no
+prose, no second fence, nothing before or after the fence.
+
+The top level must have EXACTLY two keys: `format` and `sentences`. Do not add
+any other top-level key. Each entry in `sentences` may use these keys only:
+
+  - target        the {{script}} sentence (required)
+  - romanisation  optional — include only if supplied or you derived it
+  - english       optional — include only if supplied or you translated it
+  - authority     optional map of field -> `human`, for learner-supplied fields only
+  - tags          optional list of lowercase tags
+
+Do NOT add literal glosses, word breakdowns, register, ids, audio, or source
+metadata — those belong to the enrich stage.
+
+## Example (shape only — do not copy these values)
+
+```yaml
+format: lingo.extract/v1
+sentences:
+  - target: "अध्यापक जी, यहाँ कितने विद्यार्थी हैं?"
+    romanisation: "adhyāpak jī, yahā̃ kitne vidyārthī haĩ?"
+    english: "Teacher ji, how many students are here?"
+    authority:
+      english: human
+    tags:
+      - classroom
+      - question
+  - target: "मैं ठीक हूँ।"
+    romanisation: "maĩ ṭhīk hū̃."
+    english: "I am fine."
+```
+
+The raw text follows.

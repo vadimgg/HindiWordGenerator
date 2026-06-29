@@ -1,0 +1,15 @@
+[package]
+name = "lingo-audio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lingo-application = { path = "../lingo-application" }
+lingo-domain = { path = "../lingo-domain" }
+thiserror.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

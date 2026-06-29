@@ -29,6 +29,7 @@ fn main() -> ExitCode {
         Command::Check(args) => commands::check::run(args, &output),
         Command::Audio(args) => commands::audio::run(args, &output),
         Command::Package(args) => commands::package::run(args, &output),
+        Command::ImportPackage(args) => commands::import_package::run(args, &output),
         Command::Export(args) => commands::export::run(args, &output),
         Command::Status(args) => commands::status::run(args, &output),
         Command::Lang(args) => commands::lang::run(args, &output),

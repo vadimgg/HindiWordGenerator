@@ -1,0 +1,45 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/lingo-domain",
+  "crates/lingo-application",
+  "crates/lingo-workspace-fs",
+  "crates/lingo-prompt",
+  "crates/lingo-audio",
+  "crates/lingo-artifacts",
+  "crates/lingo-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.145"
+serde_yaml = "=0.9.34"
+thiserror = "=2.0.18"
+sha2 = "=0.11.0"
+unicode-normalization = "=0.1.25"
+clap = { version = "=4.6.1", features = ["derive"] }
+handlebars = "=6.4.1"
+toml = "=0.9.8"
+dirs = "=6.0.0"
+tempfile = "=3.23.0"
+zip = { version = "=2.4.2", default-features = false, features = ["deflate"] }
+rusqlite = { version = "=0.37.0", features = ["bundled"] }
+tiny_http = "=0.12.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"

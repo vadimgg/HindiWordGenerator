@@ -42,11 +42,29 @@ fn build_plan(material: &PublishMaterial) -> Result<PublicationPlan, ArtifactErr
     let mut files = Vec::new();
     let mut stream = Vec::new();
     for batch in &material.batches {
-        let mut cards = Vec::new();
         for card in batch.cards.cards() {
             let audio_path = package_audio_path(card)?;
-            let projection = PackageCard::from_card(card, audio_path.as_str());
-            cards.push(projection);
+
+            // One self-contained file per sentence: cards/<batch>/<item>.json.
+            let card_file = PackageCardFile {
+                format: "lingo.package-card/v1",
+                batch: batch.cards.batch_id().as_str(),
+                title: batch.cards.title().as_str(),
+                subtitle: batch.cards.subtitle().map(|value| value.as_str()),
+                card: PackageCard::from_card(card, audio_path.as_str()),
+            };
+            let mut bytes = serde_json::to_vec_pretty(&card_file)?;
+            bytes.push(b'\n');
+            files.push(ArtifactFile {
+                path: ArtifactPath::parse(format!(
+                    "cards/{}/{}.json",
+                    batch.cards.batch_id().as_str(),
+                    card.id().source_item().as_str()
+                ))?,
+                bytes,
+            });
+
+            // Aggregate index — one line per sentence across the whole package.
             let flattened = FlattenedCard {
                 batch: batch.cards.batch_id().as_str(),
                 title: batch.cards.title().as_str(),
@@ -56,19 +74,6 @@ fn build_plan(material: &PublishMaterial) -> Result<PublicationPlan, ArtifactErr
             serde_json::to_writer(&mut stream, &flattened)?;
             stream.push(b'\n');
         }
-        let batch_file = PackageBatch {
-            format: "lingo.package-cards/v1",
-            batch: batch.cards.batch_id().as_str(),
-            title: batch.cards.title().as_str(),
-            subtitle: batch.cards.subtitle().map(|value| value.as_str()),
-            cards,
-        };
-        let mut bytes = serde_json::to_vec_pretty(&batch_file)?;
-        bytes.push(b'\n');
-        files.push(ArtifactFile {
-            path: ArtifactPath::parse(format!("cards/{}.json", batch.cards.batch_id().as_str()))?,
-            bytes,
-        });
         for asset in &batch.audio {
             let path = ArtifactPath::parse(format!(
                 "audio/{}/{}.mp3",
@@ -149,13 +154,13 @@ fn package_audio_path(card: &Card) -> Result<ArtifactPath, ArtifactError> {
 }
 
 #[derive(Serialize)]
-struct PackageBatch<'a> {
+struct PackageCardFile<'a> {
     format: &'static str,
     batch: &'a str,
     title: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     subtitle: Option<&'a str>,
-    cards: Vec<PackageCard<'a>>,
+    card: PackageCard<'a>,
 }
 
 #[derive(Serialize)]

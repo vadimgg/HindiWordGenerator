@@ -1,0 +1,24 @@
+{
+  "name": "@lingo/viewer",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI-first local viewer for the sentence-centric Lingo library",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro build",
+    "build:static": "node scripts/build-static.mjs",
+    "preview": "astro preview --host 127.0.0.1",
+    "test": "node --test test/*.test.mjs",
+    "check": "npm run test && npm run build:static"
+  },
+  "dependencies": {
+    "astro": "^5.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

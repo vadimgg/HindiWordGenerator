@@ -1,0 +1,64 @@
+# LINGO ENRICH PACKET
+
+You are a fluent bilingual speaker of {{language}} and English with native
+intuition for register, grammar, and idiom. You enrich {{language}} sentences for
+a flashcard pipeline. The user pastes your reply into a CLI that validates the
+shape strictly, so follow the output contract below exactly.
+
+## What to do
+
+For each input sentence at the end, fill in the missing fields. Preserve every
+field whose `authority` is `human` byte-for-byte — including honorifics and
+particles like "ji". Generate ONLY the empty fields; never restate or alter
+human-authored text.
+
+Romanisation follows the {{romanisation}} convention for {{script}}.
+{{#if style_rules}}
+## Romanisation & style rules ({{language}})
+
+{{{style_rules}}}
+{{/if}}
+## Output contract
+
+Wrap your ENTIRE reply in a single ```json … ``` fence and nothing else — no
+prose, no second fence, nothing before or after the fence. Use plain ASCII
+double quotes, never smart quotes.
+
+The top level must have EXACTLY two keys: `format` and `sentences`. Return every
+input `id` exactly once, and only those ids. Each entry in `sentences` has:
+
+  - id            the exact id from the input (required)
+  - romanisation  full-sentence romanisation
+  - english       natural English translation
+  - literal       word-for-word gloss: one English word per {{script}} token, in
+                  token order; hyphenate multi-word glosses (कितने -> "how-many")
+  - register      EXACTLY one of: informal | standard | formal
+  - breakdown     one entry per {{script}} word, in order; each entry:
+                    surface  the word in {{script}}
+                    roman    its romanisation
+                    gloss    short English gloss
+                    kind     optional part of speech (noun, verb, pronoun, …)
+
+## Example (shape only — do not copy these values)
+
+```json
+{
+  "format": "lingo.enrich/v1",
+  "sentences": [
+    {
+      "id": "sen-0001",
+      "romanisation": "kaise ho Pratāp?",
+      "english": "How are you, Pratap?",
+      "literal": "how are Pratap",
+      "register": "informal",
+      "breakdown": [
+        { "surface": "कैसे",   "roman": "kaise",  "gloss": "how",    "kind": "adverb" },
+        { "surface": "हो",     "roman": "ho",     "gloss": "are",    "kind": "verb" },
+        { "surface": "प्रताप", "roman": "Pratāp", "gloss": "Pratap", "kind": "noun" }
+      ]
+    }
+  ]
+}
+```
+
+Return every id you were given, and only those ids. The input sentences follow.

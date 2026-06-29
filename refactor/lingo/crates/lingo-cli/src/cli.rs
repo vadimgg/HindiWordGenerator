@@ -63,6 +63,8 @@ pub enum Command {
     Audio(AudioArgs),
     /// Publish a self-contained portable package.
     Package(PackageArgs),
+    /// Import a portable package's sentences into the per-sentence layer.
+    ImportPackage(ImportPackageArgs),
     /// Export an Anki APKG.
     Export(ExportArgs),
     /// Show pipeline state and the next useful command.
@@ -190,6 +192,13 @@ pub struct PackageArgs {
     pub batch: Option<String>,
     #[arg(long = "dest")]
     pub destination: Option<PathBuf>,
+}
+
+#[derive(Debug, Args)]
+pub struct ImportPackageArgs {
+    /// Folder of a portable package (as produced by `lingo package`).
+    #[arg(long = "from", value_name = "DIR")]
+    pub from: PathBuf,
 }
 
 #[derive(Debug, Args)]

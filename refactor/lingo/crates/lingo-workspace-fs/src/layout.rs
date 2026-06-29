@@ -59,6 +59,12 @@ impl WorkspaceLayout {
             .join(format!("{}.mp3", card.source_item().as_str()))
     }
 
+    /// Canonical per-sentence layer: one file per sentence, the unit the
+    /// Organize tab reorders/retitles and the package export mirrors.
+    pub fn sentences_dir(&self) -> PathBuf {
+        self.root.join("sentences")
+    }
+
     pub fn run_dir(&self, stage: PromptStage, run: &RunId) -> PathBuf {
         self.root
             .join("runs")

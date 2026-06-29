@@ -23,12 +23,18 @@ async function refreshLiveSentences() {
   }
 
   const files = Array.isArray(payload.files) ? payload.files : [];
-  const signature = files.map(file => `${file.file}:${JSON.stringify(file.data).length}`).join('|');
+  const layer = Array.isArray(payload.sentences) ? payload.sentences : [];
+
+  // Prefer the canonical per-sentence layer; fall back to output batches.
+  const signature = layer.length > 0
+    ? `layer:${layer.map(record => `${record.batch}/${record.card?.id ?? ''}:${record.order}:${JSON.stringify(record).length}`).join('|')}`
+    : files.map(file => `${file.file}:${JSON.stringify(file.data).length}`).join('|');
   if (signature === loadedSignature) return;
   loadedSignature = signature;
 
-  const sentenceBatches = buildSentenceFiles(files);
-  const sentenceGroups = buildSentenceGroups(sentenceBatches);
+  const sentenceGroups = layer.length > 0
+    ? buildGroupsFromLayer(layer)
+    : buildSentenceGroups(buildSentenceFiles(files));
   const allSentences = sentenceGroups.flatMap(group => group.sentences);
   const sentenceGroupLabels = sentenceGroups.flatMap(group => group.sentences.map(() => group.label));
   const sentenceSearchIndex = allSentences.map((sentence, i) => ({
@@ -246,6 +252,36 @@ function buildSentenceFiles(sentenceFiles) {
       return { groupLabel: meta.label, title: meta.title, subtitle: meta.subtitle, stem, sentences };
     })
     .filter(batch => batch.sentences.length > 0);
+}
+
+// Build display groups from the canonical per-sentence layer
+// (sentences/<batch>__<item>.json). Title is shared; sentences group by their
+// own subtitle and render in `order`.
+function buildGroupsFromLayer(records) {
+  const sorted = [...records].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const merged = new Map();
+  for (const record of sorted) {
+    const title = typeof record.title === 'string' && record.title.trim()
+      ? record.title
+      : String(record.batch ?? '').replace(/_/g, ' ');
+    const subtitle = typeof record.subtitle === 'string' ? record.subtitle : '';
+    const label = [title, subtitle].filter(Boolean).join(' ');
+    const sentence = {
+      ...normalizeLingoCard(record.card ?? {}),
+      title,
+      subtitle,
+      groupLabel: label,
+      audioBatch: record.batch,
+      order: record.order,
+    };
+    if (!merged.has(label)) {
+      merged.set(label, { label, title, subtitle, sentences: [], batches: [] });
+    }
+    const group = merged.get(label);
+    group.sentences.push(sentence);
+    if (record.batch && !group.batches.includes(record.batch)) group.batches.push(record.batch);
+  }
+  return [...merged.values()];
 }
 
 function buildSentenceGroups(sentenceBatchFiles) {
